@@ -65,7 +65,3 @@ Current file: source/via.s
 000000r 1               VIA_IER   = __VIA_START__ + VIA_REGISTER_IER
 000000r 1               VIA_PANH  = __VIA_START__ + VIA_REGISTER_PANH
 000000r 1               
-000000r 1  EA           nop
-000001r 1  EA           nop
-000002r 1  EA           nop
-000002r 1               

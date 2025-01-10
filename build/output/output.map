@@ -5,7 +5,6 @@ blink.o:
 reset_interrupt.o:
     VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
 via.o:
-    VIA_SEGMENT       Offs=000000  Size=000003  Align=00001  Fill=0000
 
 
 Segment list:
@@ -13,7 +12,6 @@ Segment list:
 Name                   Start     End    Size  Align
 ----------------------------------------------------
 CODE                  008000  008010  000011  00001
-VIA_SEGMENT           008011  008013  000003  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
