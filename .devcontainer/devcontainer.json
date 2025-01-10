@@ -1,0 +1,39 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/debian
+{
+	"name": "cc65 development template",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/base:debian",
+	"features": {	
+		"ghcr.io/dhirsch1138/cc65_feature/cc65:2.0.11": {},
+		"ghcr.io/dhirsch1138/minipro_feature/minipro:2": {}
+	},
+	"customizations": {
+		"vscode": {"extensions": [
+			                      "ms-vscode.makefile-tools",
+								  "github.vscode-github-actions",
+								  "tlgkccampbell.code-ca65"
+								  ]}
+	},
+
+	//hack to make fakeroot performant (I run Fedora, seems to affect that OS per report)
+	//https://github.com/containerd/containerd/pull/7566
+	"runArgs": ["--ulimit=nofile=1024:1048576"],
+
+    "onCreateCommand": "sudo apt update -q && sudo apt upgrade -yq",
+
+	"privileged": true
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Configure tool-specific properties.
+	// "customizations": {},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+	
+}

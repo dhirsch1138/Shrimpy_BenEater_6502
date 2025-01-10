@@ -1,0 +1,44 @@
+Modules list:
+-------------
+blink.o:
+    CODE              Offs=000000  Size=000011  Align=00001  Fill=0000
+reset_interrupt.o:
+    VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
+via.o:
+    VIA_SEGMENT       Offs=000000  Size=000003  Align=00001  Fill=0000
+
+
+Segment list:
+-------------
+Name                   Start     End    Size  Align
+----------------------------------------------------
+CODE                  008000  008010  000011  00001
+VIA_SEGMENT           008011  008013  000003  00001
+VECTORS               00FFFA  00FFFF  000006  00001
+
+
+Exports list by name:
+---------------------
+VIA_DDRB                  006002 REA    VIA_PORTB                 006000 REA    
+__CODE_LOAD__             008000 RLA    __VIA_START__             006000 RLA    
+
+
+
+Exports list by value:
+----------------------
+VIA_PORTB                 006000 REA    __VIA_START__             006000 RLA    
+VIA_DDRB                  006002 REA    __CODE_LOAD__             008000 RLA    
+
+
+
+Imports list:
+-------------
+VIA_DDRB (via.o):
+    blink.o                   source/via.s_imports(6)
+VIA_PORTB (via.o):
+    blink.o                   source/via.s_imports(7)
+__CODE_LOAD__ ([linker generated]):
+    reset_interrupt.o         source/reset_interrupt.s(6)
+__VIA_START__ ([linker generated]):
+    via.o                     source/via.s(11)
+
