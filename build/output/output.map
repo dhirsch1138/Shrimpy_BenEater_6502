@@ -1,7 +1,8 @@
 Modules list:
 -------------
-blink.o:
-    CODE              Offs=000000  Size=000011  Align=00001  Fill=0000
+lcd.o:
+main.o:
+    CODE              Offs=000000  Size=0000CE  Align=00001  Fill=0000
 reset_interrupt.o:
     VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
 via.o:
@@ -11,7 +12,7 @@ Segment list:
 -------------
 Name                   Start     End    Size  Align
 ----------------------------------------------------
-CODE                  008000  008010  000011  00001
+CODE                  008000  0080CD  0000CE  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
@@ -32,9 +33,9 @@ VIA_DDRB                  006002 REA    __CODE_LOAD__             008000 RLA
 Imports list:
 -------------
 VIA_DDRB (via.o):
-    blink.o                   source/via.s_imports(6)
+    main.o                    source/via.s_imports(4)
 VIA_PORTB (via.o):
-    blink.o                   source/via.s_imports(7)
+    main.o                    source/via.s_imports(5)
 __CODE_LOAD__ ([linker generated]):
     reset_interrupt.o         source/reset_interrupt.s(6)
 __VIA_START__ ([linker generated]):
