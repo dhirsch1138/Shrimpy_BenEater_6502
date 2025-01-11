@@ -10,6 +10,27 @@
   .code
 
 reset:
+;Description
+;  The reset entrypoint for this project
+;Arguments
+;  None (called from reset)
+;Preconditions
+;  Invoked from reset vector
+;Side Effects
+;  * VIA pot B is set to output on all bits
+;  * intializes LCD
+;    * for 4bit
+;    * 2 line display
+;    * 5x8 fonts
+;  * enables LCD
+;    * Dislay on
+;    * cursor on
+;    * blink off
+;  * sets LCD parameters
+;    * increment cursor on update
+;    * shift cursor on update
+;    * do NOT shift display on update
+
   ldx #$ff
   txs
   lda #%11111111 ; Set all pins on port B to output
@@ -26,6 +47,27 @@ reset:
   ldx #0
 
 print:
+;Description
+;  Prints the message to the LCD charater by character
+;Arguments
+;  X register should be 0
+;Preconditions
+;  Expected to be called from reset
+;  symbol 'message' exists as null terminated string
+;Side Effects
+;  * VIA pot B is set to output on all bits
+;  * intializes LCD
+;    * for 4bit
+;    * 2 line display
+;    * 5x8 fonts
+;  * enables LCD
+;    * Dislay on
+;    * cursor on
+;    * blink off
+;  * sets LCD parameters
+;    * increment cursor on update
+;    * shift cursor on update
+;    * do NOT shift display on update
   lda message,x
   beq loop
   jsr lcd_print_char
@@ -33,8 +75,14 @@ print:
   jmp print
 
 loop:
+;Description
+;  Primary program loop: this one just does nothing
+;Arguments
+;  None
+;Preconditions
+;  Does nothing
+;Side Effects
   nop
-  ;jump back to the loop reference. We are now looping forever and ever and ever
   jmp loop
 
 message: .asciiz "Jackie is cute!"

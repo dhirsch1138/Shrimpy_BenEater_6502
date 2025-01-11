@@ -1,5 +1,6 @@
 ;PURPOSE - defines the static register references & lcd functions 
 ;  interface as provided by Ben Eater's videos https://eater.net/6502
+; adaptation from Ben Eater's keyboard.s https://eater.net/downloads/keyboard.s
 
 .export lcd_instruction
 .export lcd_print_char

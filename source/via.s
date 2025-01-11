@@ -1,10 +1,6 @@
 ;PURPOSE - defines the static register references for the via interface as provided by Ben Eater's videos https://eater.net/6502
 ;
 ;This file was based on https://github.com/dbuchwald/cc65-tools/blob/main/tutorial/03_blink/blink.s (aside from the comments)
-;
-;This first bit is important. It issues cc65 magic to get the start address of the VIA memory block defined in firmware.cfg
-;Seeing the pattern? By defining memory spaces and static addresses in firmware.cfg, the rest of the code doesn't need to be aware
-;of the actual static values
 
 .segment "VIA_SEGMENT"
 
