@@ -2,7 +2,7 @@ Modules list:
 -------------
 lcd.o:
 main.o:
-    CODE              Offs=000000  Size=0000CE  Align=00001  Fill=0000
+    CODE              Offs=000000  Size=0000D3  Align=00001  Fill=0000
 reset_interrupt.o:
     VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
 via.o:
@@ -12,7 +12,7 @@ Segment list:
 -------------
 Name                   Start     End    Size  Align
 ----------------------------------------------------
-CODE                  008000  0080CD  0000CE  00001
+CODE                  008000  0080D2  0000D3  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 

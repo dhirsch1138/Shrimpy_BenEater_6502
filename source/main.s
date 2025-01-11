@@ -1,5 +1,8 @@
 ;PURPOSE -  main code file
 ;
+; adaptation from Ben Eater's keyboard.s https://eater.net/downloads/keyboard.s
+; mostly I am using it to learn to talk to the lcd in 4-bit mode
+;
 ;Includes
   .include "via.s_imports"
   ;.include "lcd.s_imports"
@@ -13,6 +16,8 @@ LCD_4BIT_RS = %00010000
 reset:
   ldx #$ff
   txs
+  lda #%11111111 ; Set all pins on port B to output
+  sta VIA_DDRB
   jsr lcd_init
   lda #%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
   jsr lcd_instruction
