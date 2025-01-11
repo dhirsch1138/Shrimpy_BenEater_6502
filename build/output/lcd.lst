@@ -22,10 +22,11 @@ Current file: source/lcd.s
 000000r 1               .segment "LCD_RAM"
 000000r 1               
 000000r 1  00           LCD_RS_ENABLE:        .res 1, $00
-000001r 1               ;Description: Used to store if RS should be applied to the LCD instruction
+000001r 1               ;Description: (Boolean) Used to store if RS should be applied to the LCD instruction
 000001r 1               ;Values:
-000001r 1               ; * zero for non-RS instructions
-000001r 1               ; * non-zero for RS instructions (like printing characters)
+000001r 1               ; * False - $00 for non-RS instructions (default)
+000001r 1               ; * True - $FF for RS instructions (like printing characters)
+000001r 1               ;Note: should be flagged with DEC as needed, always remember that its default state should be $00.
 000001r 1               
 000001r 1               ;Includes
 000001r 1               .include "via.s_imports"
@@ -77,109 +78,101 @@ Current file: source/lcd.s
 000007r 1  8D rr rr       sta VIA_PORTB
 00000Ar 1  29 0F          and #%00001111
 00000Cr 1  8D rr rr       sta VIA_PORTB
-00000Fr 1  60             rts
-000010r 1               
-000010r 1               lcd_instruction:
-000010r 1               ;Description
-000010r 1               ;  Sends instruction byte to the LCD
-000010r 1               ;Arguments
-000010r 1               ;  A - LCD instruction byte
-000010r 1               ;Preconditions
-000010r 1               ;  LCD is initialized and has its parameters set
-000010r 1               ;  LCD is in 4 bit mode
-000010r 1               ;Side Effects
-000010r 1               ;  Instruction byte is sent to the LCD in 4-bit mode
-000010r 1               ;  Register A is squished
-000010r 1  20 rr rr       jsr lcd_wait
-000013r 1  48             pha
-000014r 1  4A             lsr
-000015r 1  4A             lsr
-000016r 1  4A             lsr
-000017r 1  4A             lsr            ; Send high 4 bits
-000018r 1  8D rr rr       sta VIA_PORTB
-00001Br 1  09 40          ora #LCD_4BIT_E        ; Set E bit to send instruction
-00001Dr 1  8D rr rr       sta VIA_PORTB
-000020r 1  49 40          eor #LCD_4BIT_E         ; Clear E bit
+00000Fr 1  9C rr rr       stz LCD_RS_ENABLE  ;LCD_RS_ENABLE should be false
+000012r 1  60             rts
+000013r 1               
+000013r 1               lcd_instruction:
+000013r 1               ;Description
+000013r 1               ;  Sends instruction byte to the LCD
+000013r 1               ;Arguments
+000013r 1               ;  A - LCD instruction byte
+000013r 1               ;Preconditions
+000013r 1               ;  LCD is initialized and has its parameters set
+000013r 1               ;  LCD is in 4 bit mode
+000013r 1               ;Side Effects
+000013r 1               ;  Instruction byte is sent to the LCD in 4-bit mode
+000013r 1               ;  Register A is squished
+000013r 1  20 rr rr       jsr lcd_wait
+000016r 1  48             pha
+000017r 1  4A             lsr
+000018r 1  4A             lsr
+000019r 1  4A             lsr
+00001Ar 1  4A             lsr            ; Send high 4 bits
+00001Br 1  2C rr rr       bit LCD_RS_ENABLE ; enabled RS = $FF
+00001Er 1  10 02          bpl lcd_sendhigh ; IF RS is NOT enabled THEN skip applying the RS mask
+000020r 1  09 10          ora #LCD_4BIT_RS
+000022r 1               lcd_sendhigh:
 000022r 1  8D rr rr       sta VIA_PORTB
-000025r 1  68             pla
-000026r 1  29 0F          and #%00001111 ; Send low 4 bits
-000028r 1  8D rr rr       sta VIA_PORTB
-00002Br 1  09 40          ora #LCD_4BIT_E         ; Set E bit to send instruction
-00002Dr 1  8D rr rr       sta VIA_PORTB
-000030r 1  49 40          eor #LCD_4BIT_E         ; Clear E bit
-000032r 1  8D rr rr       sta VIA_PORTB
-000035r 1  60             rts
-000036r 1               
-000036r 1               lcd_wait:
-000036r 1               ;Description
-000036r 1               ;  Loops until the LCD no longer shows a busy status
-000036r 1               ;Arguments
-000036r 1               ;  None
-000036r 1               ;Preconditions
-000036r 1               ;  LCD is initialized and has its parameters set
-000036r 1               ;  LCD is in 4 bit mode
-000036r 1               ;Side Effects
-000036r 1               ;  None
-000036r 1  48             pha
-000037r 1  A9 F0          lda #%11110000  ; LCD data is input
-000039r 1  8D rr rr       sta VIA_DDRB
-00003Cr 1               lcdbusy:
-00003Cr 1  A9 20          lda #LCD_4BIT_RW
+000025r 1  09 40          ora #LCD_4BIT_E        ; Set E bit to send instruction
+000027r 1  8D rr rr       sta VIA_PORTB
+00002Ar 1  49 40          eor #LCD_4BIT_E         ; Clear E bit
+00002Cr 1  8D rr rr       sta VIA_PORTB
+00002Fr 1  68             pla
+000030r 1  29 0F          and #%00001111 ; Send low 4 bits
+000032r 1  2C rr rr       bit LCD_RS_ENABLE ; enabled RS = $FF
+000035r 1  10 02          bpl lcd_sendlow ;IF RS is NOT enabled THEN skip applying the RS mask
+000037r 1  09 10          ora #LCD_4BIT_RS
+000039r 1               lcd_sendlow:
+000039r 1  8D rr rr       sta VIA_PORTB
+00003Cr 1  09 40          ora #LCD_4BIT_E         ; Set E bit to send instruction
 00003Er 1  8D rr rr       sta VIA_PORTB
-000041r 1  A9 60          lda #(LCD_4BIT_RW | LCD_4BIT_E)
+000041r 1  49 40          eor #LCD_4BIT_E         ; Clear E bit
 000043r 1  8D rr rr       sta VIA_PORTB
-000046r 1  AD rr rr       lda VIA_PORTB       ; Read high nibble
-000049r 1  48             pha             ; and put on stack since it has the busy flag
-00004Ar 1  A9 20          lda #LCD_4BIT_RW
-00004Cr 1  8D rr rr       sta VIA_PORTB
-00004Fr 1  A9 60          lda #(LCD_4BIT_RW | LCD_4BIT_E)
-000051r 1  8D rr rr       sta VIA_PORTB
-000054r 1  AD rr rr       lda VIA_PORTB       ; Read low nibble
-000057r 1  68             pla             ; Get high nibble off stack
-000058r 1  29 08          and #%00001000
-00005Ar 1  D0 E0          bne lcdbusy
-00005Cr 1                 ; logical break, we aren't busy anymore
-00005Cr 1  A9 20          lda #LCD_4BIT_RW
+000046r 1  60             rts
+000047r 1               
+000047r 1               lcd_print_char:
+000047r 1               ;Description
+000047r 1               ;  Sends character to LCD
+000047r 1               ;Arguments
+000047r 1               ;  A - character byte to send
+000047r 1               ;Preconditions
+000047r 1               ;  LCD is initialized and has its parameters set
+000047r 1               ;  LCD is in 4 bit mode
+000047r 1               ;Side Effects
+000047r 1               ;  char byte is sent to the LCD in 4-bit mode
+000047r 1               ;  register A is squished
+000047r 1               ;Note
+000047r 1               ;  wrapper for lcd_instruction that also sets the LCD_RS_ENABLE flag
+000047r 1               ;  I know this is trading ROM (which I have a lot of) for RAM
+000047r 1               ;  (which I have less of); but I want practice utilizing RAM
+000047r 1  CE rr rr       dec LCD_RS_ENABLE ;$00 is default (disabled). $FF = enabled
+00004Ar 1  20 rr rr       jsr lcd_instruction
+00004Dr 1  EE rr rr       inc LCD_RS_ENABLE
+000050r 1  60             rts
+000051r 1               
+000051r 1               lcd_wait:
+000051r 1               ;Description
+000051r 1               ;  Loops until the LCD no longer shows a busy status
+000051r 1               ;Arguments
+000051r 1               ;  None
+000051r 1               ;Preconditions
+000051r 1               ;  LCD is initialized and has its parameters set
+000051r 1               ;  LCD is in 4 bit mode
+000051r 1               ;Side Effects
+000051r 1               ;  None
+000051r 1  48             pha
+000052r 1  A9 F0          lda #%11110000  ; LCD data is input
+000054r 1  8D rr rr       sta VIA_DDRB
+000057r 1               lcdbusy:
+000057r 1  A9 20          lda #LCD_4BIT_RW
+000059r 1  8D rr rr       sta VIA_PORTB
+00005Cr 1  A9 60          lda #(LCD_4BIT_RW | LCD_4BIT_E)
 00005Er 1  8D rr rr       sta VIA_PORTB
-000061r 1  A9 FF          lda #%11111111  ; LCD data is output
-000063r 1  8D rr rr       sta VIA_DDRB
-000066r 1  68             pla
-000067r 1  60             rts
-000068r 1               
-000068r 1               lcd_print_char:
-000068r 1               ;Description
-000068r 1               ;  Sends character to LCD
-000068r 1               ;Arguments
-000068r 1               ;  A - character byte to send
-000068r 1               ;Preconditions
-000068r 1               ;  LCD is initialized and has its parameters set
-000068r 1               ;  LCD is in 4 bit mode
-000068r 1               ;Side Effects
-000068r 1               ;  char byte is sent to the LCD in 4-bit mode
-000068r 1               ;  register A is squished
-000068r 1               ;Note
-000068r 1               ;  Is this just lcd_instruction that just sets RS?
-000068r 1               ;Todo
-000068r 1               ;  compare this to lcd_instruction and collape as possible
-000068r 1  20 rr rr       jsr lcd_wait
-00006Br 1  48             pha
-00006Cr 1  4A             lsr
-00006Dr 1  4A             lsr
-00006Er 1  4A             lsr
-00006Fr 1  4A             lsr             ; Send high 4 bits
-000070r 1  09 10          ora #LCD_4BIT_RS         ; Set RS
-000072r 1  8D rr rr       sta VIA_PORTB
-000075r 1  09 40          ora #LCD_4BIT_E          ; Set E bit to send instruction
-000077r 1  8D rr rr       sta VIA_PORTB
-00007Ar 1  49 40          eor #LCD_4BIT_E          ; Clear E bit
-00007Cr 1  8D rr rr       sta VIA_PORTB
-00007Fr 1  68             pla
-000080r 1  29 0F          and #%00001111  ; Send low 4 bits
-000082r 1  09 10          ora #LCD_4BIT_RS         ; Set RS
-000084r 1  8D rr rr       sta VIA_PORTB
-000087r 1  09 40          ora #LCD_4BIT_E          ; Set E bit to send instruction
-000089r 1  8D rr rr       sta VIA_PORTB
-00008Cr 1  49 40          eor #LCD_4BIT_E          ; Clear E bit
-00008Er 1  8D rr rr       sta VIA_PORTB
-000091r 1  60             rts
-000091r 1               
+000061r 1  AD rr rr       lda VIA_PORTB       ; Read high nibble
+000064r 1  48             pha             ; and put on stack since it has the busy flag
+000065r 1  A9 20          lda #LCD_4BIT_RW
+000067r 1  8D rr rr       sta VIA_PORTB
+00006Ar 1  A9 60          lda #(LCD_4BIT_RW | LCD_4BIT_E)
+00006Cr 1  8D rr rr       sta VIA_PORTB
+00006Fr 1  AD rr rr       lda VIA_PORTB       ; Read low nibble
+000072r 1  68             pla             ; Get high nibble off stack
+000073r 1  29 08          and #%00001000
+000075r 1  D0 E0          bne lcdbusy
+000077r 1                 ; logical break, we aren't busy anymore
+000077r 1  A9 20          lda #LCD_4BIT_RW
+000079r 1  8D rr rr       sta VIA_PORTB
+00007Cr 1  A9 FF          lda #%11111111  ; LCD data is output
+00007Er 1  8D rr rr       sta VIA_DDRB
+000081r 1  68             pla
+000082r 1  60             rts
+000082r 1               

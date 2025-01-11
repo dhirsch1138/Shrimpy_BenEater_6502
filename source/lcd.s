@@ -18,10 +18,11 @@
 .segment "LCD_RAM"
 
 LCD_RS_ENABLE:        .res 1, $00
-;Description: Used to store if RS should be applied to the LCD instruction
+;Description: (Boolean) Used to store if RS should be applied to the LCD instruction
 ;Values:
-; * zero for non-RS instructions
-; * non-zero for RS instructions (like printing characters)
+; * False - $00 for non-RS instructions (default)
+; * True - $FF for RS instructions (like printing characters)
+;Note: should be flagged with DEC as needed, always remember that its default state should be $00.
 
 ;Includes
 .include "via.s_imports"
@@ -53,6 +54,7 @@ lcd_init:
   sta VIA_PORTB
   and #%00001111
   sta VIA_PORTB
+  stz LCD_RS_ENABLE  ;LCD_RS_ENABLE should be false
   rts
 
 lcd_instruction:
@@ -72,6 +74,10 @@ lcd_instruction:
   lsr
   lsr
   lsr            ; Send high 4 bits
+  bit LCD_RS_ENABLE ; enabled RS = $FF
+  bpl lcd_sendhigh ; IF RS is NOT enabled THEN skip applying the RS mask
+  ora #LCD_4BIT_RS
+lcd_sendhigh:
   sta VIA_PORTB
   ora #LCD_4BIT_E        ; Set E bit to send instruction
   sta VIA_PORTB
@@ -79,11 +85,35 @@ lcd_instruction:
   sta VIA_PORTB
   pla
   and #%00001111 ; Send low 4 bits
+  bit LCD_RS_ENABLE ; enabled RS = $FF
+  bpl lcd_sendlow ;IF RS is NOT enabled THEN skip applying the RS mask
+  ora #LCD_4BIT_RS
+lcd_sendlow: 
   sta VIA_PORTB
   ora #LCD_4BIT_E         ; Set E bit to send instruction
   sta VIA_PORTB
   eor #LCD_4BIT_E         ; Clear E bit
   sta VIA_PORTB
+  rts
+
+lcd_print_char:
+;Description
+;  Sends character to LCD
+;Arguments
+;  A - character byte to send
+;Preconditions
+;  LCD is initialized and has its parameters set
+;  LCD is in 4 bit mode
+;Side Effects
+;  char byte is sent to the LCD in 4-bit mode
+;  register A is squished
+;Note
+;  wrapper for lcd_instruction that also sets the LCD_RS_ENABLE flag
+;  I know this is trading ROM (which I have a lot of) for RAM
+;  (which I have less of); but I want practice utilizing RAM
+  dec LCD_RS_ENABLE ;$00 is default (disabled). $FF = enabled
+  jsr lcd_instruction
+  inc LCD_RS_ENABLE
   rts
 
 lcd_wait:
@@ -120,41 +150,4 @@ lcdbusy:
   lda #%11111111  ; LCD data is output
   sta VIA_DDRB
   pla
-  rts
-
-lcd_print_char:
-;Description
-;  Sends character to LCD
-;Arguments
-;  A - character byte to send
-;Preconditions
-;  LCD is initialized and has its parameters set
-;  LCD is in 4 bit mode
-;Side Effects
-;  char byte is sent to the LCD in 4-bit mode
-;  register A is squished
-;Note
-;  Is this just lcd_instruction that just sets RS?
-;Todo
-;  compare this to lcd_instruction and collape as possible
-  jsr lcd_wait
-  pha
-  lsr
-  lsr
-  lsr
-  lsr             ; Send high 4 bits
-  ora #LCD_4BIT_RS         ; Set RS
-  sta VIA_PORTB
-  ora #LCD_4BIT_E          ; Set E bit to send instruction
-  sta VIA_PORTB
-  eor #LCD_4BIT_E          ; Clear E bit
-  sta VIA_PORTB
-  pla
-  and #%00001111  ; Send low 4 bits
-  ora #LCD_4BIT_RS         ; Set RS
-  sta VIA_PORTB
-  ora #LCD_4BIT_E          ; Set E bit to send instruction
-  sta VIA_PORTB
-  eor #LCD_4BIT_E          ; Clear E bit
-  sta VIA_PORTB
   rts

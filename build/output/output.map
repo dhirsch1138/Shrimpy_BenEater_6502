@@ -2,7 +2,7 @@ Modules list:
 -------------
 lcd.o:
     LCD_RAM           Offs=000000  Size=000001  Align=00001  Fill=0000
-    LCD_SEGMENT       Offs=000000  Size=000092  Align=00001  Fill=0000
+    LCD_SEGMENT       Offs=000000  Size=000083  Align=00001  Fill=0000
 main.o:
     CODE              Offs=000000  Size=000041  Align=00001  Fill=0000
 reset_interrupt.o:
@@ -16,7 +16,7 @@ Name                   Start     End    Size  Align
 ----------------------------------------------------
 LCD_RAM               000200  000200  000001  00001
 CODE                  008000  008040  000041  00001
-LCD_SEGMENT           008041  0080D2  000092  00001
+LCD_SEGMENT           008041  0080C3  000083  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
@@ -24,16 +24,16 @@ Exports list by name:
 ---------------------
 VIA_DDRB                  006002 REA    VIA_PORTB                 006000 REA    
 __CODE_LOAD__             008000 RLA    __VIA_START__             006000 RLA    
-lcd_init                  008041 RLA    lcd_instruction           008051 RLA    
-lcd_print_char            0080A9 RLA    
+lcd_init                  008041 RLA    lcd_instruction           008054 RLA    
+lcd_print_char            008088 RLA    
 
 
 Exports list by value:
 ----------------------
 VIA_PORTB                 006000 REA    __VIA_START__             006000 RLA    
 VIA_DDRB                  006002 REA    __CODE_LOAD__             008000 RLA    
-lcd_init                  008041 RLA    lcd_instruction           008051 RLA    
-lcd_print_char            0080A9 RLA    
+lcd_init                  008041 RLA    lcd_instruction           008054 RLA    
+lcd_print_char            008088 RLA    
 
 
 Imports list:
