@@ -44,7 +44,8 @@ reset:
   jsr lcd_instruction
   lda #%00000001 ; Clear display
   jsr lcd_instruction
-  ldx #0
+  ldx #0 ;move this into print?
+  ; presumes we will continue executing into 'print'
 
 print:
 ;Description
