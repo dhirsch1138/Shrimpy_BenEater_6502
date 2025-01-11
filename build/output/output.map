@@ -1,6 +1,7 @@
 Modules list:
 -------------
 lcd.o:
+    LCD_RAM           Offs=000000  Size=000001  Align=00001  Fill=0000
     LCD_SEGMENT       Offs=000000  Size=000092  Align=00001  Fill=0000
 main.o:
     CODE              Offs=000000  Size=000041  Align=00001  Fill=0000
@@ -13,6 +14,7 @@ Segment list:
 -------------
 Name                   Start     End    Size  Align
 ----------------------------------------------------
+LCD_RAM               000200  000200  000001  00001
 CODE                  008000  008040  000041  00001
 LCD_SEGMENT           008041  0080D2  000092  00001
 VECTORS               00FFFA  00FFFF  000006  00001

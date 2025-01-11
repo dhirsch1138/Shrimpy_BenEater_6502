@@ -18,30 +18,39 @@ Current file: source/lcd.s
 000000r 1               .export lcd_print_char
 000000r 1               .export lcd_init
 000000r 1               
-000000r 1               ;Includes
-000000r 1               .include "via.s_imports"
-000000r 2               ;PURPOSE - Imports needed symbols defined in via.s
-000000r 2               ;
-000000r 2               
-000000r 2                 .import VIA_DDRB
-000000r 2                 .import VIA_PORTB
-000000r 2                 .import VIA_DDRA
-000000r 2                 .import VIA_PORTA
-000000r 2                 .import VIA_T1CL
-000000r 2                 .import VIA_T1CH
-000000r 2                 .import VIA_T1LL
-000000r 2                 .import VIA_T1LH
-000000r 2                 .import VIA_T2CL
-000000r 2                 .import VIA_T2CH
-000000r 2                 .import VIA_SR
-000000r 2                 .import VIA_ACR
-000000r 2                 .import VIA_PCR
-000000r 2                 .import VIA_IFR
-000000r 2                 .import VIA_IER
-000000r 2                 .import VIA_PANH
-000000r 2               
+000000r 1               ;allocate addresses & space for LCD variables
+000000r 1               .segment "LCD_RAM"
 000000r 1               
-000000r 1               .segment "LCD_SEGMENT"
+000000r 1  00           LCD_RS_ENABLE:        .res 1, $00
+000001r 1               ;Description: Used to store if RS should be applied to the LCD instruction
+000001r 1               ;Values:
+000001r 1               ; * zero for non-RS instructions
+000001r 1               ; * non-zero for RS instructions (like printing characters)
+000001r 1               
+000001r 1               ;Includes
+000001r 1               .include "via.s_imports"
+000001r 2               ;PURPOSE - Imports needed symbols defined in via.s
+000001r 2               ;
+000001r 2               
+000001r 2                 .import VIA_DDRB
+000001r 2                 .import VIA_PORTB
+000001r 2                 .import VIA_DDRA
+000001r 2                 .import VIA_PORTA
+000001r 2                 .import VIA_T1CL
+000001r 2                 .import VIA_T1CH
+000001r 2                 .import VIA_T1LL
+000001r 2                 .import VIA_T1LH
+000001r 2                 .import VIA_T2CL
+000001r 2                 .import VIA_T2CH
+000001r 2                 .import VIA_SR
+000001r 2                 .import VIA_ACR
+000001r 2                 .import VIA_PCR
+000001r 2                 .import VIA_IFR
+000001r 2                 .import VIA_IER
+000001r 2                 .import VIA_PANH
+000001r 2               
+000001r 1               
+000001r 1               .segment "LCD_SEGMENT"
 000000r 1               
 000000r 1               LCD_4BIT_E  = %01000000
 000000r 1               LCD_4BIT_RW = %00100000
@@ -49,13 +58,19 @@ Current file: source/lcd.s
 000000r 1               
 000000r 1               lcd_init:
 000000r 1               ;Description
-000000r 1               ;  <TODO: Add description>
+000000r 1               ;  Inializes the lcd, sets 4 bit mode
 000000r 1               ;Arguments
-000000r 1               ;  <TODO: Add arguments>
+000000r 1               ;  None
 000000r 1               ;Preconditions
-000000r 1               ;  <TODO: Add precondtions>
+000000r 1               ;  VIA DDRB must have the LCD's bits set to output
 000000r 1               ;Side Effects
-000000r 1               ;  <TODO: Add side effects>
+000000r 1               ;  LCD is set to accept 4-bit mode
+000000r 1               ;  Register A is squished
+000000r 1               ;Notes
+000000r 1               ;  Does not include a wait for the LCD to be ready for the next command,
+000000r 1               ;  presuming that the code invoking the command will be smart enough to wait
+000000r 1               ;Todo
+000000r 1               ;  Should I be pushing A onto the stack such that this is transparent?
 000000r 1  A9 02          lda #%00000010 ; Set 4-bit mode
 000002r 1  8D rr rr       sta VIA_PORTB
 000005r 1  09 40          ora #LCD_4BIT_E
@@ -66,13 +81,15 @@ Current file: source/lcd.s
 000010r 1               
 000010r 1               lcd_instruction:
 000010r 1               ;Description
-000010r 1               ;  <TODO: Add description>
+000010r 1               ;  Sends instruction byte to the LCD
 000010r 1               ;Arguments
-000010r 1               ;  <TODO: Add arguments>
+000010r 1               ;  A - LCD instruction byte
 000010r 1               ;Preconditions
-000010r 1               ;  <TODO: Add precondtions>
+000010r 1               ;  LCD is initialized and has its parameters set
+000010r 1               ;  LCD is in 4 bit mode
 000010r 1               ;Side Effects
-000010r 1               ;  <TODO: Add side effects>
+000010r 1               ;  Instruction byte is sent to the LCD in 4-bit mode
+000010r 1               ;  Register A is squished
 000010r 1  20 rr rr       jsr lcd_wait
 000013r 1  48             pha
 000014r 1  4A             lsr
@@ -95,13 +112,14 @@ Current file: source/lcd.s
 000036r 1               
 000036r 1               lcd_wait:
 000036r 1               ;Description
-000036r 1               ;  <TODO: Add description>
+000036r 1               ;  Loops until the LCD no longer shows a busy status
 000036r 1               ;Arguments
-000036r 1               ;  <TODO: Add arguments>
+000036r 1               ;  None
 000036r 1               ;Preconditions
-000036r 1               ;  <TODO: Add precondtions>
+000036r 1               ;  LCD is initialized and has its parameters set
+000036r 1               ;  LCD is in 4 bit mode
 000036r 1               ;Side Effects
-000036r 1               ;  <TODO: Add side effects>
+000036r 1               ;  None
 000036r 1  48             pha
 000037r 1  A9 F0          lda #%11110000  ; LCD data is input
 000039r 1  8D rr rr       sta VIA_DDRB
@@ -130,13 +148,19 @@ Current file: source/lcd.s
 000068r 1               
 000068r 1               lcd_print_char:
 000068r 1               ;Description
-000068r 1               ;  <TODO: Add description>
+000068r 1               ;  Sends character to LCD
 000068r 1               ;Arguments
-000068r 1               ;  <TODO: Add arguments>
+000068r 1               ;  A - character byte to send
 000068r 1               ;Preconditions
-000068r 1               ;  <TODO: Add precondtions>
+000068r 1               ;  LCD is initialized and has its parameters set
+000068r 1               ;  LCD is in 4 bit mode
 000068r 1               ;Side Effects
-000068r 1               ;  <TODO: Add side effects>
+000068r 1               ;  char byte is sent to the LCD in 4-bit mode
+000068r 1               ;  register A is squished
+000068r 1               ;Note
+000068r 1               ;  Is this just lcd_instruction that just sets RS?
+000068r 1               ;Todo
+000068r 1               ;  compare this to lcd_instruction and collape as possible
 000068r 1  20 rr rr       jsr lcd_wait
 00006Br 1  48             pha
 00006Cr 1  4A             lsr

@@ -14,6 +14,15 @@
 .export lcd_print_char
 .export lcd_init
 
+;allocate addresses & space for LCD variables
+.segment "LCD_RAM"
+
+LCD_RS_ENABLE:        .res 1, $00
+;Description: Used to store if RS should be applied to the LCD instruction
+;Values:
+; * zero for non-RS instructions
+; * non-zero for RS instructions (like printing characters)
+
 ;Includes
 .include "via.s_imports"
 
@@ -125,7 +134,7 @@ lcd_print_char:
 ;  char byte is sent to the LCD in 4-bit mode
 ;  register A is squished
 ;Note
-;  Is this just lcd_instruction ?
+;  Is this just lcd_instruction that just sets RS?
 ;Todo
 ;  compare this to lcd_instruction and collape as possible
   jsr lcd_wait
