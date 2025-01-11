@@ -1,8 +1,9 @@
 Modules list:
 -------------
 lcd.o:
+    LCD_SEGMENT       Offs=000000  Size=000092  Align=00001  Fill=0000
 main.o:
-    CODE              Offs=000000  Size=0000D3  Align=00001  Fill=0000
+    CODE              Offs=000000  Size=000041  Align=00001  Fill=0000
 reset_interrupt.o:
     VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
 via.o:
@@ -12,7 +13,8 @@ Segment list:
 -------------
 Name                   Start     End    Size  Align
 ----------------------------------------------------
-CODE                  008000  0080D2  0000D3  00001
+CODE                  008000  008040  000041  00001
+LCD_SEGMENT           008041  0080D2  000092  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
@@ -20,24 +22,33 @@ Exports list by name:
 ---------------------
 VIA_DDRB                  006002 REA    VIA_PORTB                 006000 REA    
 __CODE_LOAD__             008000 RLA    __VIA_START__             006000 RLA    
-
+lcd_init                  008041 RLA    lcd_instruction           008051 RLA    
+lcd_print_char            0080A9 RLA    
 
 
 Exports list by value:
 ----------------------
 VIA_PORTB                 006000 REA    __VIA_START__             006000 RLA    
 VIA_DDRB                  006002 REA    __CODE_LOAD__             008000 RLA    
-
+lcd_init                  008041 RLA    lcd_instruction           008051 RLA    
+lcd_print_char            0080A9 RLA    
 
 
 Imports list:
 -------------
 VIA_DDRB (via.o):
     main.o                    source/via.s_imports(4)
+    lcd.o                     source/via.s_imports(4)
 VIA_PORTB (via.o):
-    main.o                    source/via.s_imports(5)
+    lcd.o                     source/via.s_imports(5)
 __CODE_LOAD__ ([linker generated]):
     reset_interrupt.o         source/reset_interrupt.s(6)
 __VIA_START__ ([linker generated]):
     via.o                     source/via.s(11)
+lcd_init (lcd.o):
+    main.o                    source/lcd.s_imports(6)
+lcd_instruction (lcd.o):
+    main.o                    source/lcd.s_imports(4)
+lcd_print_char (lcd.o):
+    main.o                    source/lcd.s_imports(5)
 

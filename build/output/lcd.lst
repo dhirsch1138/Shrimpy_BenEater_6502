@@ -5,12 +5,116 @@ Current file: source/lcd.s
 000000r 1               ;PURPOSE - defines the static register references & lcd functions
 000000r 1               ;  interface as provided by Ben Eater's videos https://eater.net/6502
 000000r 1               
+000000r 1               .export lcd_instruction
+000000r 1               .export lcd_print_char
+000000r 1               .export lcd_init
 000000r 1               
-000000r 1               .export LCD_4BIT_E
-000000r 1               .export LCD_4BIT_RW
-000000r 1               .export LCD_4BIT_RS
+000000r 1               ;Includes
+000000r 1                 .include "via.s_imports"
+000000r 2               ;PURPOSE - Imports needed symbols defined in via.s
+000000r 2               ;
+000000r 2               
+000000r 2                 .import VIA_DDRB
+000000r 2                 .import VIA_PORTB
+000000r 2                 .import VIA_DDRA
+000000r 2                 .import VIA_PORTA
+000000r 2                 .import VIA_T1CL
+000000r 2                 .import VIA_T1CH
+000000r 2                 .import VIA_T1LL
+000000r 2                 .import VIA_T1LH
+000000r 2                 .import VIA_T2CL
+000000r 2                 .import VIA_T2CH
+000000r 2                 .import VIA_SR
+000000r 2                 .import VIA_ACR
+000000r 2                 .import VIA_PCR
+000000r 2                 .import VIA_IFR
+000000r 2                 .import VIA_IER
+000000r 2                 .import VIA_PANH
+000000r 2               
+000000r 1               
+000000r 1               .segment "LCD_SEGMENT"
 000000r 1               
 000000r 1               LCD_4BIT_E  = %01000000
 000000r 1               LCD_4BIT_RW = %00100000
 000000r 1               LCD_4BIT_RS = %00010000
 000000r 1               
+000000r 1               lcd_init:
+000000r 1  A9 02          lda #%00000010 ; Set 4-bit mode
+000002r 1  8D rr rr       sta VIA_PORTB
+000005r 1  09 40          ora #LCD_4BIT_E
+000007r 1  8D rr rr       sta VIA_PORTB
+00000Ar 1  29 0F          and #%00001111
+00000Cr 1  8D rr rr       sta VIA_PORTB
+00000Fr 1  60             rts
+000010r 1               
+000010r 1               lcd_instruction:
+000010r 1  20 rr rr       jsr lcd_wait
+000013r 1  48             pha
+000014r 1  4A             lsr
+000015r 1  4A             lsr
+000016r 1  4A             lsr
+000017r 1  4A             lsr            ; Send high 4 bits
+000018r 1  8D rr rr       sta VIA_PORTB
+00001Br 1  09 40          ora #LCD_4BIT_E        ; Set E bit to send instruction
+00001Dr 1  8D rr rr       sta VIA_PORTB
+000020r 1  49 40          eor #LCD_4BIT_E         ; Clear E bit
+000022r 1  8D rr rr       sta VIA_PORTB
+000025r 1  68             pla
+000026r 1  29 0F          and #%00001111 ; Send low 4 bits
+000028r 1  8D rr rr       sta VIA_PORTB
+00002Br 1  09 40          ora #LCD_4BIT_E         ; Set E bit to send instruction
+00002Dr 1  8D rr rr       sta VIA_PORTB
+000030r 1  49 40          eor #LCD_4BIT_E         ; Clear E bit
+000032r 1  8D rr rr       sta VIA_PORTB
+000035r 1  60             rts
+000036r 1               
+000036r 1               lcd_wait:
+000036r 1  48             pha
+000037r 1  A9 F0          lda #%11110000  ; LCD data is input
+000039r 1  8D rr rr       sta VIA_DDRB
+00003Cr 1               lcdbusy:
+00003Cr 1  A9 20          lda #LCD_4BIT_RW
+00003Er 1  8D rr rr       sta VIA_PORTB
+000041r 1  A9 60          lda #(LCD_4BIT_RW | LCD_4BIT_E)
+000043r 1  8D rr rr       sta VIA_PORTB
+000046r 1  AD rr rr       lda VIA_PORTB       ; Read high nibble
+000049r 1  48             pha             ; and put on stack since it has the busy flag
+00004Ar 1  A9 20          lda #LCD_4BIT_RW
+00004Cr 1  8D rr rr       sta VIA_PORTB
+00004Fr 1  A9 60          lda #(LCD_4BIT_RW | LCD_4BIT_E)
+000051r 1  8D rr rr       sta VIA_PORTB
+000054r 1  AD rr rr       lda VIA_PORTB       ; Read low nibble
+000057r 1  68             pla             ; Get high nibble off stack
+000058r 1  29 08          and #%00001000
+00005Ar 1  D0 E0          bne lcdbusy
+00005Cr 1               
+00005Cr 1  A9 20          lda #LCD_4BIT_RW
+00005Er 1  8D rr rr       sta VIA_PORTB
+000061r 1  A9 FF          lda #%11111111  ; LCD data is output
+000063r 1  8D rr rr       sta VIA_DDRB
+000066r 1  68             pla
+000067r 1  60             rts
+000068r 1               
+000068r 1               lcd_print_char:
+000068r 1  20 rr rr       jsr lcd_wait
+00006Br 1  48             pha
+00006Cr 1  4A             lsr
+00006Dr 1  4A             lsr
+00006Er 1  4A             lsr
+00006Fr 1  4A             lsr             ; Send high 4 bits
+000070r 1  09 10          ora #LCD_4BIT_RS         ; Set RS
+000072r 1  8D rr rr       sta VIA_PORTB
+000075r 1  09 40          ora #LCD_4BIT_E          ; Set E bit to send instruction
+000077r 1  8D rr rr       sta VIA_PORTB
+00007Ar 1  49 40          eor #LCD_4BIT_E          ; Clear E bit
+00007Cr 1  8D rr rr       sta VIA_PORTB
+00007Fr 1  68             pla
+000080r 1  29 0F          and #%00001111  ; Send low 4 bits
+000082r 1  09 10          ora #LCD_4BIT_RS         ; Set RS
+000084r 1  8D rr rr       sta VIA_PORTB
+000087r 1  09 40          ora #LCD_4BIT_E          ; Set E bit to send instruction
+000089r 1  8D rr rr       sta VIA_PORTB
+00008Cr 1  49 40          eor #LCD_4BIT_E          ; Clear E bit
+00008Er 1  8D rr rr       sta VIA_PORTB
+000091r 1  60             rts
+000091r 1               

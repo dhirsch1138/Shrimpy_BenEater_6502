@@ -1,6 +1,6 @@
-;PURPOSE - Imports needed registers defined in lcd.s
+;PURPOSE - Imports needed symbols defined in lcd.s
 ;
 
-.import LCD_4BIT_E
-.import LCD_4BIT_RW
-.import LCD_4BIT_RS
+.import lcd_instruction
+.import lcd_print_char
+.import lcd_init

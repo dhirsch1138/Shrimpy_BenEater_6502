@@ -1,4 +1,4 @@
-;PURPOSE - Imports needed registers defined in via.s
+;PURPOSE - Imports needed symbols defined in via.s
 ;
 
   .import VIA_DDRB
