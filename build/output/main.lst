@@ -41,6 +41,27 @@ Current file: source/main.s
 000000r 1                 .code
 000000r 1               
 000000r 1               reset:
+000000r 1               ;Description
+000000r 1               ;  The reset entrypoint for this project
+000000r 1               ;Arguments
+000000r 1               ;  None (called from reset)
+000000r 1               ;Preconditions
+000000r 1               ;  Invoked from reset vector
+000000r 1               ;Side Effects
+000000r 1               ;  * VIA pot B is set to output on all bits
+000000r 1               ;  * intializes LCD
+000000r 1               ;    * for 4bit
+000000r 1               ;    * 2 line display
+000000r 1               ;    * 5x8 fonts
+000000r 1               ;  * enables LCD
+000000r 1               ;    * Dislay on
+000000r 1               ;    * cursor on
+000000r 1               ;    * blink off
+000000r 1               ;  * sets LCD parameters
+000000r 1               ;    * increment cursor on update
+000000r 1               ;    * shift cursor on update
+000000r 1               ;    * do NOT shift display on update
+000000r 1               
 000000r 1  A2 FF          ldx #$ff
 000002r 1  9A             txs
 000003r 1  A9 FF          lda #%11111111 ; Set all pins on port B to output
@@ -54,9 +75,31 @@ Current file: source/main.s
 000017r 1  20 rr rr       jsr lcd_instruction
 00001Ar 1  A9 01          lda #%00000001 ; Clear display
 00001Cr 1  20 rr rr       jsr lcd_instruction
-00001Fr 1  A2 00          ldx #0
+00001Fr 1  A2 00          ldx #0 ;move this into print?
+000021r 1                 ; presumes we will continue executing into 'print'
 000021r 1               
 000021r 1               print:
+000021r 1               ;Description
+000021r 1               ;  Prints the message to the LCD charater by character
+000021r 1               ;Arguments
+000021r 1               ;  X register should be 0
+000021r 1               ;Preconditions
+000021r 1               ;  Expected to be called from reset
+000021r 1               ;  symbol 'message' exists as null terminated string
+000021r 1               ;Side Effects
+000021r 1               ;  * VIA pot B is set to output on all bits
+000021r 1               ;  * intializes LCD
+000021r 1               ;    * for 4bit
+000021r 1               ;    * 2 line display
+000021r 1               ;    * 5x8 fonts
+000021r 1               ;  * enables LCD
+000021r 1               ;    * Dislay on
+000021r 1               ;    * cursor on
+000021r 1               ;    * blink off
+000021r 1               ;  * sets LCD parameters
+000021r 1               ;    * increment cursor on update
+000021r 1               ;    * shift cursor on update
+000021r 1               ;    * do NOT shift display on update
 000021r 1  BD rr rr       lda message,x
 000024r 1  F0 07          beq loop
 000026r 1  20 rr rr       jsr lcd_print_char
@@ -64,8 +107,14 @@ Current file: source/main.s
 00002Ar 1  4C rr rr       jmp print
 00002Dr 1               
 00002Dr 1               loop:
+00002Dr 1               ;Description
+00002Dr 1               ;  Primary program loop: this one just does nothing
+00002Dr 1               ;Arguments
+00002Dr 1               ;  None
+00002Dr 1               ;Preconditions
+00002Dr 1               ;  Does nothing
+00002Dr 1               ;Side Effects
 00002Dr 1  EA             nop
-00002Er 1                 ;jump back to the loop reference. We are now looping forever and ever and ever
 00002Er 1  4C rr rr       jmp loop
 000031r 1               
 000031r 1  4A 61 63 6B  message: .asciiz "Jackie is cute!"

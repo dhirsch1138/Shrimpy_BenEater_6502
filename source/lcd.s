@@ -15,7 +15,7 @@
 .export lcd_init
 
 ;Includes
-  .include "via.s_imports"
+.include "via.s_imports"
 
 .segment "LCD_SEGMENT"
 
@@ -25,13 +25,19 @@ LCD_4BIT_RS = %00010000
 
 lcd_init:
 ;Description
-;  <TODO: Add description>
+;  Inializes the lcd, sets 4 bit mode
 ;Arguments
-;  <TODO: Add arguments>
+;  None
 ;Preconditions
-;  <TODO: Add precondtions>
+;  VIA DDRB must have the LCD's bits set to output
 ;Side Effects
-;  <TODO: Add side effects>
+;  LCD is set to accept 4-bit mode
+;  Register A is squished
+;Notes
+;  Does not include a wait for the LCD to be ready for the next command,
+;  presuming that the code invoking the command will be smart enough to wait
+;Todo
+;  Should I be pushing A onto the stack such that this is transparent?
   lda #%00000010 ; Set 4-bit mode
   sta VIA_PORTB
   ora #LCD_4BIT_E
@@ -42,13 +48,15 @@ lcd_init:
 
 lcd_instruction:
 ;Description
-;  <TODO: Add description>
+;  Sends instruction byte to the LCD
 ;Arguments
-;  <TODO: Add arguments>
+;  A - LCD instruction byte
 ;Preconditions
-;  <TODO: Add precondtions>
+;  LCD is initialized and has its parameters set
+;  LCD is in 4 bit mode
 ;Side Effects
-;  <TODO: Add side effects>
+;  Instruction byte is sent to the LCD in 4-bit mode
+;  Register A is squished
   jsr lcd_wait
   pha
   lsr
@@ -71,13 +79,14 @@ lcd_instruction:
 
 lcd_wait:
 ;Description
-;  <TODO: Add description>
+;  Loops until the LCD no longer shows a busy status
 ;Arguments
-;  <TODO: Add arguments>
+;  None
 ;Preconditions
-;  <TODO: Add precondtions>
+;  LCD is initialized and has its parameters set
+;  LCD is in 4 bit mode
 ;Side Effects
-;  <TODO: Add side effects>
+;  None
   pha
   lda #%11110000  ; LCD data is input
   sta VIA_DDRB
@@ -106,13 +115,19 @@ lcdbusy:
 
 lcd_print_char:
 ;Description
-;  <TODO: Add description>
+;  Sends character to LCD
 ;Arguments
-;  <TODO: Add arguments>
+;  A - character byte to send
 ;Preconditions
-;  <TODO: Add precondtions>
+;  LCD is initialized and has its parameters set
+;  LCD is in 4 bit mode
 ;Side Effects
-;  <TODO: Add side effects>
+;  char byte is sent to the LCD in 4-bit mode
+;  register A is squished
+;Note
+;  Is this just lcd_instruction ?
+;Todo
+;  compare this to lcd_instruction and collape as possible
   jsr lcd_wait
   pha
   lsr

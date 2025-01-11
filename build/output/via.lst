@@ -5,10 +5,6 @@ Current file: source/via.s
 000000r 1               ;PURPOSE - defines the static register references for the via interface as provided by Ben Eater's videos https://eater.net/6502
 000000r 1               ;
 000000r 1               ;This file was based on https://github.com/dbuchwald/cc65-tools/blob/main/tutorial/03_blink/blink.s (aside from the comments)
-000000r 1               ;
-000000r 1               ;This first bit is important. It issues cc65 magic to get the start address of the VIA memory block defined in firmware.cfg
-000000r 1               ;Seeing the pattern? By defining memory spaces and static addresses in firmware.cfg, the rest of the code doesn't need to be aware
-000000r 1               ;of the actual static values
 000000r 1               
 000000r 1               .segment "VIA_SEGMENT"
 000000r 1               

@@ -9,8 +9,8 @@ Current file: source/reset_interrupt.s
 000000r 1               ;'code' segment is loaded.
 000000r 1               .import __CODE_LOAD__
 000000r 1               
-000000r 1               ;The reset references the segment "VECTORS" is defined in firmware.cfg
-000000r 1               ;see how we can define addresses in the firmware.cfg and cc65 just knows where to put stuff? Neat!
+000000r 1               ;The reset references the segment "VECTORS" is defined in linker.cfg
+000000r 1               ;see how we can define addresses in the linker.cfg and cc65 just knows where to put stuff? Neat!
 000000r 1               .segment "VECTORS"
 000000r 1  00 00          .word $0000
 000002r 1  rr rr          .word __CODE_LOAD__

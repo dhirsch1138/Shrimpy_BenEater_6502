@@ -4,13 +4,22 @@ Current file: source/lcd.s
 
 000000r 1               ;PURPOSE - defines the static register references & lcd functions
 000000r 1               ;  interface as provided by Ben Eater's videos https://eater.net/6502
-000000r 1               
+000000r 1               ; adaptation from Ben Eater's keyboard.s https://eater.net/downloads/keyboard.s
+000000r 1               ;  much of the code is just copied from his work, but there are many changes from me.
+000000r 1               ;  rather than try to keep a diff in comments, I would encourage the reader to just diff
+000000r 1               ;  this code against the linked code above.
+000000r 1               ;
+000000r 1               ;NOTE/TODO-
+000000r 1               ;  While the LCD doesn't use all of PORTB of the VIA, this code will clobber
+000000r 1               ;  DDRB for the non-LCD ports right now (basically presuming they are output)
+000000r 1               ;  ideally we should try to preserve the non-LCD DDRB bits.
+000000r 1               ;
 000000r 1               .export lcd_instruction
 000000r 1               .export lcd_print_char
 000000r 1               .export lcd_init
 000000r 1               
 000000r 1               ;Includes
-000000r 1                 .include "via.s_imports"
+000000r 1               .include "via.s_imports"
 000000r 2               ;PURPOSE - Imports needed symbols defined in via.s
 000000r 2               ;
 000000r 2               
@@ -39,6 +48,14 @@ Current file: source/lcd.s
 000000r 1               LCD_4BIT_RS = %00010000
 000000r 1               
 000000r 1               lcd_init:
+000000r 1               ;Description
+000000r 1               ;  <TODO: Add description>
+000000r 1               ;Arguments
+000000r 1               ;  <TODO: Add arguments>
+000000r 1               ;Preconditions
+000000r 1               ;  <TODO: Add precondtions>
+000000r 1               ;Side Effects
+000000r 1               ;  <TODO: Add side effects>
 000000r 1  A9 02          lda #%00000010 ; Set 4-bit mode
 000002r 1  8D rr rr       sta VIA_PORTB
 000005r 1  09 40          ora #LCD_4BIT_E
@@ -48,6 +65,14 @@ Current file: source/lcd.s
 00000Fr 1  60             rts
 000010r 1               
 000010r 1               lcd_instruction:
+000010r 1               ;Description
+000010r 1               ;  <TODO: Add description>
+000010r 1               ;Arguments
+000010r 1               ;  <TODO: Add arguments>
+000010r 1               ;Preconditions
+000010r 1               ;  <TODO: Add precondtions>
+000010r 1               ;Side Effects
+000010r 1               ;  <TODO: Add side effects>
 000010r 1  20 rr rr       jsr lcd_wait
 000013r 1  48             pha
 000014r 1  4A             lsr
@@ -69,6 +94,14 @@ Current file: source/lcd.s
 000035r 1  60             rts
 000036r 1               
 000036r 1               lcd_wait:
+000036r 1               ;Description
+000036r 1               ;  <TODO: Add description>
+000036r 1               ;Arguments
+000036r 1               ;  <TODO: Add arguments>
+000036r 1               ;Preconditions
+000036r 1               ;  <TODO: Add precondtions>
+000036r 1               ;Side Effects
+000036r 1               ;  <TODO: Add side effects>
 000036r 1  48             pha
 000037r 1  A9 F0          lda #%11110000  ; LCD data is input
 000039r 1  8D rr rr       sta VIA_DDRB
@@ -87,7 +120,7 @@ Current file: source/lcd.s
 000057r 1  68             pla             ; Get high nibble off stack
 000058r 1  29 08          and #%00001000
 00005Ar 1  D0 E0          bne lcdbusy
-00005Cr 1               
+00005Cr 1                 ; logical break, we aren't busy anymore
 00005Cr 1  A9 20          lda #LCD_4BIT_RW
 00005Er 1  8D rr rr       sta VIA_PORTB
 000061r 1  A9 FF          lda #%11111111  ; LCD data is output
@@ -96,6 +129,14 @@ Current file: source/lcd.s
 000067r 1  60             rts
 000068r 1               
 000068r 1               lcd_print_char:
+000068r 1               ;Description
+000068r 1               ;  <TODO: Add description>
+000068r 1               ;Arguments
+000068r 1               ;  <TODO: Add arguments>
+000068r 1               ;Preconditions
+000068r 1               ;  <TODO: Add precondtions>
+000068r 1               ;Side Effects
+000068r 1               ;  <TODO: Add side effects>
 000068r 1  20 rr rr       jsr lcd_wait
 00006Br 1  48             pha
 00006Cr 1  4A             lsr

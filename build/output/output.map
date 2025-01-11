@@ -44,7 +44,7 @@ VIA_PORTB (via.o):
 __CODE_LOAD__ ([linker generated]):
     reset_interrupt.o         source/reset_interrupt.s(6)
 __VIA_START__ ([linker generated]):
-    via.o                     source/via.s(11)
+    via.o                     source/via.s(7)
 lcd_init (lcd.o):
     main.o                    source/lcd.s_imports(6)
 lcd_instruction (lcd.o):
