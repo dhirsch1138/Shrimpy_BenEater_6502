@@ -14,8 +14,12 @@
 .export lcd_print_char
 .export lcd_init
 
+
+
 ;allocate addresses & space for LCD variables
 .segment "LCD_RAM"
+
+.segment "LCD_PAGEZERO"
 
 LCD_RS_ENABLE:        .res 1, $00
 ;Description: (Boolean) Used to store if RS should be applied to the LCD instruction
@@ -94,6 +98,10 @@ lcd_sendlow:
   sta VIA_PORTB
   eor #LCD_4BIT_E         ; Clear E bit
   sta VIA_PORTB
+  bit LCD_RS_ENABLE ; enabled RS = $FF
+  bpl lcd_instruction_done ;IF RS is enabled THEN return to lcd_print_char
+  bra lcd_print_char_done ;jmp
+lcd_instruction_done:
   rts
 
 lcd_print_char:
@@ -111,9 +119,10 @@ lcd_print_char:
 ;  wrapper for lcd_instruction that also sets the LCD_RS_ENABLE flag
 ;  I know this is trading ROM (which I have a lot of) for RAM
 ;  (which I have less of); but I want practice utilizing RAM
-  dec LCD_RS_ENABLE ;$00 is default (disabled). $FF = enabled
-  jsr lcd_instruction
-  inc LCD_RS_ENABLE
+  dec LCD_RS_ENABLE ;$00 - 1 = $FF (enabled)
+  bra lcd_instruction ;doing a direct jmp to spare the work of stacking subroutines
+lcd_print_char_done:
+  stz LCD_RS_ENABLE ;$00 (disabled), saves up to three cycles over inc 
   rts
 
 lcd_wait:

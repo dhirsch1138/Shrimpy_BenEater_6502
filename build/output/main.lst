@@ -101,23 +101,23 @@ Current file: source/main.s
 000021r 1               ;    * shift cursor on update
 000021r 1               ;    * do NOT shift display on update
 000021r 1  BD rr rr       lda message,x
-000024r 1  F0 07          beq loop
+000024r 1  F0 06          beq loop
 000026r 1  20 rr rr       jsr lcd_print_char
 000029r 1  E8             inx
-00002Ar 1  4C rr rr       jmp print
-00002Dr 1               
-00002Dr 1               loop:
-00002Dr 1               ;Description
-00002Dr 1               ;  Primary program loop: this one just does nothing
-00002Dr 1               ;Arguments
-00002Dr 1               ;  None
-00002Dr 1               ;Preconditions
-00002Dr 1               ;  Does nothing
-00002Dr 1               ;Side Effects
-00002Dr 1  EA             nop
-00002Er 1  4C rr rr       jmp loop
-000031r 1               
-000031r 1  4A 61 63 6B  message: .asciiz "Jackie is cute!"
-000035r 1  69 65 20 69  
-000039r 1  73 20 63 75  
-000040r 1               
+00002Ar 1  80 F5          bra print ;jmp
+00002Cr 1               
+00002Cr 1               loop:
+00002Cr 1               ;Description
+00002Cr 1               ;  Primary program loop: this one just does nothing
+00002Cr 1               ;Arguments
+00002Cr 1               ;  None
+00002Cr 1               ;Preconditions
+00002Cr 1               ;  Does nothing
+00002Cr 1               ;Side Effects
+00002Cr 1  EA             nop
+00002Dr 1  80 FD          bra loop ;jmp
+00002Fr 1               
+00002Fr 1  4A 61 63 6B  message: .asciiz "Jackie is cute!"
+000033r 1  69 65 20 69  
+000037r 1  73 20 63 75  
+00003Er 1               

@@ -73,7 +73,7 @@ print:
   beq loop
   jsr lcd_print_char
   inx
-  jmp print
+  bra print ;jmp
 
 loop:
 ;Description
@@ -84,6 +84,6 @@ loop:
 ;  Does nothing
 ;Side Effects
   nop
-  jmp loop
+  bra loop ;jmp
 
 message: .asciiz "Jackie is cute!"
