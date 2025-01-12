@@ -18,7 +18,6 @@ Current file: source/lcd.s
 000000r 1               ;Exports
 000000r 1               ;subroutines
 000000r 1               .export lcd_instruction
-000000r 1               .export lcd_print_char
 000000r 1               .export lcd_init
 000000r 1               ;variables
 000000r 1               .export LCD_RS_ENABLE
@@ -127,60 +126,39 @@ Current file: source/lcd.s
 000043r 1  8D rr rr       sta VIA_PORTB
 000046r 1  60             rts
 000047r 1               
-000047r 1               lcd_print_char:
+000047r 1               lcd_wait:
 000047r 1               ;Description
-000047r 1               ;  Sends character to LCD
+000047r 1               ;  Loops until the LCD no longer shows a busy status
 000047r 1               ;Arguments
-000047r 1               ;  A - character byte to send
+000047r 1               ;  None
 000047r 1               ;Preconditions
 000047r 1               ;  LCD is initialized and has its parameters set
 000047r 1               ;  LCD is in 4 bit mode
 000047r 1               ;Side Effects
-000047r 1               ;  char byte is sent to the LCD in 4-bit mode
-000047r 1               ;  register A is squished
-000047r 1               ;Note
-000047r 1               ;  wrapper for lcd_instruction that also sets the LCD_RS_ENABLE flag
-000047r 1               ;  I know this is trading ROM (which I have a lot of) for RAM
-000047r 1               ;  (which I have less of); but I want practice utilizing RAM
-000047r 1  CE rr rr       dec LCD_RS_ENABLE ;$00 - 1 = $FF (enabled)
-00004Ar 1  80 C7          bra lcd_instruction ;doing a direct jmp to spare the work of stacking subroutines
-00004Cr 1               lcd_print_char_done:
-00004Cr 1  9C rr rr       stz LCD_RS_ENABLE ;$00 (disabled), saves up to three cycles over inc
-00004Fr 1  60             rts
-000050r 1               
-000050r 1               lcd_wait:
-000050r 1               ;Description
-000050r 1               ;  Loops until the LCD no longer shows a busy status
-000050r 1               ;Arguments
-000050r 1               ;  None
-000050r 1               ;Preconditions
-000050r 1               ;  LCD is initialized and has its parameters set
-000050r 1               ;  LCD is in 4 bit mode
-000050r 1               ;Side Effects
-000050r 1               ;  None
-000050r 1  48             pha
-000051r 1  A9 F0          lda #%11110000  ; LCD data is input
-000053r 1  8D rr rr       sta VIA_DDRB
-000056r 1               lcdbusy:
-000056r 1  A9 20          lda #LCD_4BIT_RW
-000058r 1  8D rr rr       sta VIA_PORTB
-00005Br 1  A9 60          lda #(LCD_4BIT_RW | LCD_4BIT_E)
+000047r 1               ;  None
+000047r 1  48             pha
+000048r 1  A9 F0          lda #%11110000  ; LCD data is input
+00004Ar 1  8D rr rr       sta VIA_DDRB
+00004Dr 1               lcdbusy:
+00004Dr 1  A9 20          lda #LCD_4BIT_RW
+00004Fr 1  8D rr rr       sta VIA_PORTB
+000052r 1  A9 60          lda #(LCD_4BIT_RW | LCD_4BIT_E)
+000054r 1  8D rr rr       sta VIA_PORTB
+000057r 1  AD rr rr       lda VIA_PORTB       ; Read high nibble
+00005Ar 1  48             pha             ; and put on stack since it has the busy flag
+00005Br 1  A9 20          lda #LCD_4BIT_RW
 00005Dr 1  8D rr rr       sta VIA_PORTB
-000060r 1  AD rr rr       lda VIA_PORTB       ; Read high nibble
-000063r 1  48             pha             ; and put on stack since it has the busy flag
-000064r 1  A9 20          lda #LCD_4BIT_RW
-000066r 1  8D rr rr       sta VIA_PORTB
-000069r 1  A9 60          lda #(LCD_4BIT_RW | LCD_4BIT_E)
-00006Br 1  8D rr rr       sta VIA_PORTB
-00006Er 1  AD rr rr       lda VIA_PORTB       ; Read low nibble
-000071r 1  68             pla             ; Get high nibble off stack
-000072r 1  29 08          and #%00001000
-000074r 1  D0 E0          bne lcdbusy
-000076r 1                 ; logical break, we aren't busy anymore
-000076r 1  A9 20          lda #LCD_4BIT_RW
-000078r 1  8D rr rr       sta VIA_PORTB
-00007Br 1  A9 FF          lda #%11111111  ; LCD data is output
-00007Dr 1  8D rr rr       sta VIA_DDRB
-000080r 1  68             pla
-000081r 1  60             rts
-000081r 1               
+000060r 1  A9 60          lda #(LCD_4BIT_RW | LCD_4BIT_E)
+000062r 1  8D rr rr       sta VIA_PORTB
+000065r 1  AD rr rr       lda VIA_PORTB       ; Read low nibble
+000068r 1  68             pla             ; Get high nibble off stack
+000069r 1  29 08          and #%00001000
+00006Br 1  D0 E0          bne lcdbusy
+00006Dr 1                 ; logical break, we aren't busy anymore
+00006Dr 1  A9 20          lda #LCD_4BIT_RW
+00006Fr 1  8D rr rr       sta VIA_PORTB
+000072r 1  A9 FF          lda #%11111111  ; LCD data is output
+000074r 1  8D rr rr       sta VIA_DDRB
+000077r 1  68             pla
+000078r 1  60             rts
+000078r 1               

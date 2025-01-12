@@ -2,7 +2,6 @@
 ;
 
 .import lcd_instruction
-.import lcd_print_char
 .import lcd_init
 .import LCD_RS_ENABLE
 

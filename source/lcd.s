@@ -14,7 +14,6 @@
 ;Exports
 ;subroutines
 .export lcd_instruction
-.export lcd_print_char
 .export lcd_init
 ;variables
 .export LCD_RS_ENABLE
@@ -101,27 +100,6 @@ lcd_sendlow:
   sta VIA_PORTB
   eor #LCD_4BIT_E         ; Clear E bit
   sta VIA_PORTB
-  rts
-
-lcd_print_char:
-;Description
-;  Sends character to LCD
-;Arguments
-;  A - character byte to send
-;Preconditions
-;  LCD is initialized and has its parameters set
-;  LCD is in 4 bit mode
-;Side Effects
-;  char byte is sent to the LCD in 4-bit mode
-;  register A is squished
-;Note
-;  wrapper for lcd_instruction that also sets the LCD_RS_ENABLE flag
-;  I know this is trading ROM (which I have a lot of) for RAM
-;  (which I have less of); but I want practice utilizing RAM
-  dec LCD_RS_ENABLE ;$00 - 1 = $FF (enabled)
-  bra lcd_instruction ;doing a direct jmp to spare the work of stacking subroutines
-lcd_print_char_done:
-  stz LCD_RS_ENABLE ;$00 (disabled), saves up to three cycles over inc 
   rts
 
 lcd_wait:

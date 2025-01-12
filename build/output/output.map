@@ -2,7 +2,7 @@ Modules list:
 -------------
 lcd.o:
     LCD_PAGEZERO      Offs=000000  Size=000001  Align=00001  Fill=0000
-    LCD_CODE          Offs=000000  Size=000082  Align=00001  Fill=0000
+    LCD_CODE          Offs=000000  Size=000079  Align=00001  Fill=0000
 main.o:
     CODE              Offs=000000  Size=000045  Align=00001  Fill=0000
 reset_interrupt.o:
@@ -16,7 +16,7 @@ Name                   Start     End    Size  Align
 ----------------------------------------------------
 LCD_PAGEZERO          000000  000000  000001  00001
 CODE                  008000  008044  000045  00001
-LCD_CODE              008045  0080C6  000082  00001
+LCD_CODE              008045  0080BD  000079  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
