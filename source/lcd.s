@@ -68,6 +68,8 @@ lcd_wait_busy:
   sta VIA_PORTB
   lda #(LCD_4BIT_RW | LCD_4BIT_E)
   sta VIA_PORTB
+  ;TODO is this lda doing anything? seems like it is superceded immediately by the pla. 
+  ;unless reading from the via port triggers something on the lcd?
   lda VIA_PORTB       ; Read low nibble
   pla             ; Get high nibble off stack
   and #%00001000
