@@ -6,8 +6,8 @@ Current file: source/via.s
 000000r 1               ;
 000000r 1               ;This file was based on https://github.com/dbuchwald/cc65-tools/blob/main/tutorial/03_blink/blink.s (aside from the comments)
 000000r 1               
-000000r 1               .segment "VIA_SEGMENT"
-000000r 1               
+000000r 1               ;====================================================
+000000r 1               ;Exports
 000000r 1                 .import __VIA_START__
 000000r 1               
 000000r 1                 .export VIA_PORTB
@@ -60,4 +60,20 @@ Current file: source/via.s
 000000r 1               VIA_IFR   = __VIA_START__ + VIA_REGISTER_IFR
 000000r 1               VIA_IER   = __VIA_START__ + VIA_REGISTER_IER
 000000r 1               VIA_PANH  = __VIA_START__ + VIA_REGISTER_PANH
+000000r 1               
+000000r 1               ;====================================================
+000000r 1               ;Reserve RAM addresses
+000000r 1               ;nothing here
+000000r 1               
+000000r 1               ;====================================================
+000000r 1               ;Includes
+000000r 1               ;nothing here
+000000r 1               
+000000r 1               ;====================================================
+000000r 1               ;Macros
+000000r 1               ;nothing here
+000000r 1               
+000000r 1               ;====================================================
+000000r 1               ;Code
+000000r 1               .segment "VIA_SEGMENT"
 000000r 1               

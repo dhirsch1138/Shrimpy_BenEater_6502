@@ -11,15 +11,20 @@
 ;  ideally we should try to preserve the non-LCD DDRB bits.
 ;
 
+;====================================================
 ;Exports
+
 ;subroutines
 .export lcd_instruction
 .export lcd_init
 ;variables
 .export LCD_RS_ENABLE
 
-;allocate addresses & space for LCD variables
+;====================================================
+;Reserve RAM addresses
+
 .segment "LCD_RAM"
+;Nothing here
 
 .segment "LCD_PAGEZERO"
 
@@ -30,26 +35,24 @@ LCD_RS_ENABLE:        .res 1, $00
 ; * True - $FF for RS instructions (like printing characters)
 ;Note: should be flagged with DEC as needed, always remember that its default state should be $00.
 
+;====================================================
 ;Includes
+
 .include "via.s_imports"
 
-.segment "LCD_CODE"
-
-LCD_4BIT_E  = %01000000
-LCD_4BIT_RW = %00100000
-LCD_4BIT_RS = %00010000 
-
+;====================================================
 ;Macros
-.macro  lcd_wait_macro     ; Loops until the LCD no longer shows a busy status
-        ;Description
-        ;  Loops until the LCD no longer shows a busy status
-        ;Arguments
-        ;  None
-        ;Preconditions
-        ;  LCD is initialized and has its parameters set
-        ;  LCD is in 4 bit mode
-        ;Side Effects
-        ;  None
+
+.macro  lcd_wait_macro
+;Description
+;  Loops until the LCD no longer shows a busy status
+;Arguments
+;  None
+;Preconditions
+;  LCD is initialized and has its parameters set
+;  LCD is in 4 bit mode
+;Side Effects
+;  None
   .local lcd_wait_busy ;limit scope of this symbol to this macro
   pha
   lda #%11110000  ; LCD data is input
@@ -76,6 +79,14 @@ lcd_wait_busy:
   sta VIA_DDRB
   pla
 .endmacro
+
+;====================================================
+;Code
+.segment "LCD_CODE"
+
+LCD_4BIT_E  = %01000000
+LCD_4BIT_RW = %00100000
+LCD_4BIT_RS = %00010000 
 
 lcd_init:
 ;Description

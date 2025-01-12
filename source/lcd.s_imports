@@ -8,6 +8,6 @@
 ;Macros
 .macro  lcd_print_char_macro     ; Print a character to the lcd
         dec LCD_RS_ENABLE        ;$00 - 1 = $FF (enabled)
-        jsr lcd_instruction      ;doing a direct jmp to spare the work of stacking subroutines
+        jsr lcd_instruction
         stz LCD_RS_ENABLE        ;$00 (disabled), saves up to three cycles over inc 
 .endmacro

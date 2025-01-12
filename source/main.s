@@ -3,9 +3,27 @@
 ; adaptation from Ben Eater's keyboard.s https://eater.net/downloads/keyboard.s
 ; mostly I am using it to learn to talk to the lcd in 4-bit mode
 ;
+
+;====================================================
+;Exports
+;nothing here
+
+;====================================================
+;Reserve RAM addresses
+;nothing here
+
+;====================================================
 ;Includes
+
   .include "via.s_imports"
   .include "lcd.s_imports"
+
+;====================================================
+;Macros
+;nothing here
+
+;====================================================
+;Code
 
   .code
 
@@ -30,7 +48,6 @@ reset:
 ;    * increment cursor on update
 ;    * shift cursor on update
 ;    * do NOT shift display on update
-
   ldx #$ff
   txs
   lda #%11111111 ; Set all pins on port B to output

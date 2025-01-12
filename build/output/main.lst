@@ -7,6 +7,15 @@ Current file: source/main.s
 000000r 1               ; adaptation from Ben Eater's keyboard.s https://eater.net/downloads/keyboard.s
 000000r 1               ; mostly I am using it to learn to talk to the lcd in 4-bit mode
 000000r 1               ;
+000000r 1               
+000000r 1               ;====================================================
+000000r 1               ;Exports
+000000r 1               
+000000r 1               ;====================================================
+000000r 1               ;Reserve RAM addresses
+000000r 1               ;nothing here
+000000r 1               
+000000r 1               ;====================================================
 000000r 1               ;Includes
 000000r 1                 .include "via.s_imports"
 000000r 2               ;PURPOSE - Imports needed symbols defined in via.s
@@ -40,11 +49,17 @@ Current file: source/main.s
 000000r 2               ;Macros
 000000r 2               .macro  lcd_print_char_macro     ; Print a character to the lcd
 000000r 2                       dec LCD_RS_ENABLE        ;$00 - 1 = $FF (enabled)
-000000r 2                       jsr lcd_instruction      ;doing a direct jmp to spare the work of stacking subroutines
+000000r 2                       jsr lcd_instruction
 000000r 2                       stz LCD_RS_ENABLE        ;$00 (disabled), saves up to three cycles over inc
 000000r 2               .endmacro
 000000r 2               
 000000r 1               
+000000r 1               ;====================================================
+000000r 1               ;Macros
+000000r 1               ;nothing here
+000000r 1               
+000000r 1               ;====================================================
+000000r 1               ;Code
 000000r 1                 .code
 000000r 1               
 000000r 1               reset:
@@ -68,7 +83,6 @@ Current file: source/main.s
 000000r 1               ;    * increment cursor on update
 000000r 1               ;    * shift cursor on update
 000000r 1               ;    * do NOT shift display on update
-000000r 1               
 000000r 1  A2 FF          ldx #$ff
 000002r 1  9A             txs
 000003r 1  A9 FF          lda #%11111111 ; Set all pins on port B to output

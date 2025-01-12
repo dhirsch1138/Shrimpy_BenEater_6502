@@ -15,6 +15,7 @@ Current file: source/lcd.s
 000000r 1               ;  ideally we should try to preserve the non-LCD DDRB bits.
 000000r 1               ;
 000000r 1               
+000000r 1               ;====================================================
 000000r 1               ;Exports
 000000r 1               ;subroutines
 000000r 1               .export lcd_instruction
@@ -22,8 +23,11 @@ Current file: source/lcd.s
 000000r 1               ;variables
 000000r 1               .export LCD_RS_ENABLE
 000000r 1               
-000000r 1               ;allocate addresses & space for LCD variables
+000000r 1               ;====================================================
+000000r 1               ;Reserve RAM addresses
+000000r 1               
 000000r 1               .segment "LCD_RAM"
+000000r 1               ;Nothing here
 000000r 1               
 000000r 1               .segment "LCD_PAGEZERO"
 000000r 1               
@@ -34,6 +38,7 @@ Current file: source/lcd.s
 000001r 1               ; * True - $FF for RS instructions (like printing characters)
 000001r 1               ;Note: should be flagged with DEC as needed, always remember that its default state should be $00.
 000001r 1               
+000001r 1               ;====================================================
 000001r 1               ;Includes
 000001r 1               .include "via.s_imports"
 000001r 2               ;PURPOSE - Imports needed symbols defined in via.s
@@ -57,49 +62,52 @@ Current file: source/lcd.s
 000001r 2                 .import VIA_PANH
 000001r 2               
 000001r 1               
+000001r 1               ;====================================================
+000001r 1               ;Macros
+000001r 1               .macro  lcd_wait_macro     ; Loops until the LCD no longer shows a busy status
+000001r 1                       ;Description
+000001r 1                       ;  Loops until the LCD no longer shows a busy status
+000001r 1                       ;Arguments
+000001r 1                       ;  None
+000001r 1                       ;Preconditions
+000001r 1                       ;  LCD is initialized and has its parameters set
+000001r 1                       ;  LCD is in 4 bit mode
+000001r 1                       ;Side Effects
+000001r 1                       ;  None
+000001r 1                 .local lcd_wait_busy ;limit scope of this symbol to this macro
+000001r 1                 pha
+000001r 1                 lda #%11110000  ; LCD data is input
+000001r 1                 sta VIA_DDRB
+000001r 1               lcd_wait_busy:
+000001r 1                 lda #LCD_4BIT_RW
+000001r 1                 sta VIA_PORTB
+000001r 1                 lda #(LCD_4BIT_RW | LCD_4BIT_E)
+000001r 1                 sta VIA_PORTB
+000001r 1                 lda VIA_PORTB       ; Read high nibble
+000001r 1                 pha             ; and put on stack since it has the busy flag
+000001r 1                 lda #LCD_4BIT_RW
+000001r 1                 sta VIA_PORTB
+000001r 1                 lda #(LCD_4BIT_RW | LCD_4BIT_E)
+000001r 1                 sta VIA_PORTB
+000001r 1                 lda VIA_PORTB       ; Read low nibble
+000001r 1                 pla             ; Get high nibble off stack
+000001r 1                 and #%00001000
+000001r 1                 bne lcd_wait_busy
+000001r 1                 ; logical break, we aren't busy anymore
+000001r 1                 lda #LCD_4BIT_RW
+000001r 1                 sta VIA_PORTB
+000001r 1                 lda #%11111111  ; LCD data is output
+000001r 1                 sta VIA_DDRB
+000001r 1                 pla
+000001r 1               .endmacro
+000001r 1               
+000001r 1               ;====================================================
+000001r 1               ;Code
 000001r 1               .segment "LCD_CODE"
 000000r 1               
 000000r 1               LCD_4BIT_E  = %01000000
 000000r 1               LCD_4BIT_RW = %00100000
 000000r 1               LCD_4BIT_RS = %00010000
-000000r 1               
-000000r 1               ;Macros
-000000r 1               .macro  lcd_wait_macro     ; Loops until the LCD no longer shows a busy status
-000000r 1                       ;Description
-000000r 1                       ;  Loops until the LCD no longer shows a busy status
-000000r 1                       ;Arguments
-000000r 1                       ;  None
-000000r 1                       ;Preconditions
-000000r 1                       ;  LCD is initialized and has its parameters set
-000000r 1                       ;  LCD is in 4 bit mode
-000000r 1                       ;Side Effects
-000000r 1                       ;  None
-000000r 1                 .local lcd_wait_busy ;limit scope of this symbol to this macro
-000000r 1                 pha
-000000r 1                 lda #%11110000  ; LCD data is input
-000000r 1                 sta VIA_DDRB
-000000r 1               lcd_wait_busy:
-000000r 1                 lda #LCD_4BIT_RW
-000000r 1                 sta VIA_PORTB
-000000r 1                 lda #(LCD_4BIT_RW | LCD_4BIT_E)
-000000r 1                 sta VIA_PORTB
-000000r 1                 lda VIA_PORTB       ; Read high nibble
-000000r 1                 pha             ; and put on stack since it has the busy flag
-000000r 1                 lda #LCD_4BIT_RW
-000000r 1                 sta VIA_PORTB
-000000r 1                 lda #(LCD_4BIT_RW | LCD_4BIT_E)
-000000r 1                 sta VIA_PORTB
-000000r 1                 lda VIA_PORTB       ; Read low nibble
-000000r 1                 pla             ; Get high nibble off stack
-000000r 1                 and #%00001000
-000000r 1                 bne lcd_wait_busy
-000000r 1                 ; logical break, we aren't busy anymore
-000000r 1                 lda #LCD_4BIT_RW
-000000r 1                 sta VIA_PORTB
-000000r 1                 lda #%11111111  ; LCD data is output
-000000r 1                 sta VIA_DDRB
-000000r 1                 pla
-000000r 1               .endmacro
 000000r 1               
 000000r 1               lcd_init:
 000000r 1               ;Description

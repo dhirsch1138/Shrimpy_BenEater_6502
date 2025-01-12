@@ -2,8 +2,8 @@
 ;
 ;This file was based on https://github.com/dbuchwald/cc65-tools/blob/main/tutorial/03_blink/blink.s (aside from the comments)
 
-.segment "VIA_SEGMENT"
-
+;====================================================
+;Exports
   .import __VIA_START__
 
   .export VIA_PORTB
@@ -56,3 +56,19 @@ VIA_PCR   = __VIA_START__ + VIA_REGISTER_PCR
 VIA_IFR   = __VIA_START__ + VIA_REGISTER_IFR
 VIA_IER   = __VIA_START__ + VIA_REGISTER_IER
 VIA_PANH  = __VIA_START__ + VIA_REGISTER_PANH
+
+;====================================================
+;Reserve RAM addresses
+;nothing here
+
+;====================================================
+;Includes
+;nothing here
+
+;====================================================
+;Macros
+;nothing here
+
+;====================================================
+;Code
+.segment "VIA_SEGMENT"
