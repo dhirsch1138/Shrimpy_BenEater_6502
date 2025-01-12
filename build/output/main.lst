@@ -75,40 +75,32 @@ Current file: source/main.s
 000017r 1  20 rr rr       jsr lcd_instruction
 00001Ar 1  A9 01          lda #%00000001 ; Clear display
 00001Cr 1  20 rr rr       jsr lcd_instruction
-00001Fr 1  A2 00          ldx #0 ;move this into print?
-000021r 1                 ; presumes we will continue executing into 'print'
-000021r 1               
-000021r 1               print:
-000021r 1               ;Description
-000021r 1               ;  Prints the message to the LCD charater by character
-000021r 1               ;Arguments
-000021r 1               ;  X register should be 0
-000021r 1               ;Preconditions
-000021r 1               ;  Expected to be called from reset
-000021r 1               ;  symbol 'message' exists as null terminated string
-000021r 1               ;Side Effects
-000021r 1               ;  * VIA pot B is set to output on all bits
-000021r 1               ;  * intializes LCD
-000021r 1               ;    * for 4bit
-000021r 1               ;    * 2 line display
-000021r 1               ;    * 5x8 fonts
-000021r 1               ;  * enables LCD
-000021r 1               ;    * Dislay on
-000021r 1               ;    * cursor on
-000021r 1               ;    * blink off
-000021r 1               ;  * sets LCD parameters
-000021r 1               ;    * increment cursor on update
-000021r 1               ;    * shift cursor on update
-000021r 1               ;    * do NOT shift display on update
+00001Fr 1                 ; presumes we will continue executing into 'print'
+00001Fr 1               
+00001Fr 1               print:
+00001Fr 1               ;Description
+00001Fr 1               ;  Prints the message to the LCD charater by character
+00001Fr 1               ;Arguments
+00001Fr 1               ;  None
+00001Fr 1               ;Preconditions
+00001Fr 1               ;  Expected to be called from reset
+00001Fr 1               ;  symbol 'message' exists as null terminated string
+00001Fr 1               ;Side Effects
+00001Fr 1               ;  * a character from message, indexed w/ x
+00001Fr 1               ;  * if we find the null at the end of message jump to the nop loop
+00001Fr 1               ;  * the character is printed to the lcd
+00001Fr 1               ;  * x is incremented
+00001Fr 1  A2 00          ldx #0
+000021r 1               print_loop:
 000021r 1  BD rr rr       lda message,x
 000024r 1  F0 06          beq loop
 000026r 1  20 rr rr       jsr lcd_print_char
 000029r 1  E8             inx
-00002Ar 1  80 F5          bra print ;jmp
+00002Ar 1  80 F5          bra print_loop ;jmp
 00002Cr 1               
 00002Cr 1               loop:
 00002Cr 1               ;Description
-00002Cr 1               ;  Primary program loop: this one just does nothing
+00002Cr 1               ;  Loops on nop.
 00002Cr 1               ;Arguments
 00002Cr 1               ;  None
 00002Cr 1               ;Preconditions

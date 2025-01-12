@@ -14,8 +14,6 @@
 .export lcd_print_char
 .export lcd_init
 
-
-
 ;allocate addresses & space for LCD variables
 .segment "LCD_RAM"
 

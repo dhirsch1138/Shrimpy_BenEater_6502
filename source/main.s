@@ -44,40 +44,32 @@ reset:
   jsr lcd_instruction
   lda #%00000001 ; Clear display
   jsr lcd_instruction
-  ldx #0 ;move this into print?
   ; presumes we will continue executing into 'print'
 
 print:
 ;Description
 ;  Prints the message to the LCD charater by character
 ;Arguments
-;  X register should be 0
+;  None
 ;Preconditions
 ;  Expected to be called from reset
 ;  symbol 'message' exists as null terminated string
 ;Side Effects
-;  * VIA pot B is set to output on all bits
-;  * intializes LCD
-;    * for 4bit
-;    * 2 line display
-;    * 5x8 fonts
-;  * enables LCD
-;    * Dislay on
-;    * cursor on
-;    * blink off
-;  * sets LCD parameters
-;    * increment cursor on update
-;    * shift cursor on update
-;    * do NOT shift display on update
+;  * a character from message, indexed w/ x
+;  * if we find the null at the end of message jump to the nop loop
+;  * the character is printed to the lcd
+;  * x is incremented
+  ldx #0
+print_loop:
   lda message,x
   beq loop
   jsr lcd_print_char
   inx
-  bra print ;jmp
+  bra print_loop ;jmp
 
 loop:
 ;Description
-;  Primary program loop: this one just does nothing
+;  Loops on nop. 
 ;Arguments
 ;  None
 ;Preconditions
