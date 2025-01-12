@@ -2,7 +2,7 @@ Modules list:
 -------------
 lcd.o:
     LCD_PAGEZERO      Offs=000000  Size=000001  Align=00001  Fill=0000
-    LCD_CODE          Offs=000000  Size=000079  Align=00001  Fill=0000
+    LCD_CODE          Offs=000000  Size=000075  Align=00001  Fill=0000
 main.o:
     CODE              Offs=000000  Size=000045  Align=00001  Fill=0000
 reset_interrupt.o:
@@ -16,7 +16,7 @@ Name                   Start     End    Size  Align
 ----------------------------------------------------
 LCD_PAGEZERO          000000  000000  000001  00001
 CODE                  008000  008044  000045  00001
-LCD_CODE              008045  0080BD  000079  00001
+LCD_CODE              008045  0080B9  000075  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
@@ -39,7 +39,7 @@ lcd_instruction           008058 RLA
 Imports list:
 -------------
 LCD_RS_ENABLE (lcd.o):
-    main.o                    source/lcd.s_imports(7)
+    main.o                    source/lcd.s_imports(6)
 VIA_DDRB (via.o):
     main.o                    source/via.s_imports(4)
     lcd.o                     source/via.s_imports(4)
@@ -50,7 +50,7 @@ __CODE_LOAD__ ([linker generated]):
 __VIA_START__ ([linker generated]):
     via.o                     source/via.s(7)
 lcd_init (lcd.o):
-    main.o                    source/lcd.s_imports(6)
+    main.o                    source/lcd.s_imports(5)
 lcd_instruction (lcd.o):
     main.o                    source/lcd.s_imports(4)
 

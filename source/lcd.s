@@ -39,6 +39,44 @@ LCD_4BIT_E  = %01000000
 LCD_4BIT_RW = %00100000
 LCD_4BIT_RS = %00010000 
 
+;Macros
+.macro  lcd_wait_macro     ; Loops until the LCD no longer shows a busy status
+        ;Description
+        ;  Loops until the LCD no longer shows a busy status
+        ;Arguments
+        ;  None
+        ;Preconditions
+        ;  LCD is initialized and has its parameters set
+        ;  LCD is in 4 bit mode
+        ;Side Effects
+        ;  None
+  .local lcd_wait_busy ;limit scope of this symbol to this macro
+  pha
+  lda #%11110000  ; LCD data is input
+  sta VIA_DDRB
+lcd_wait_busy:
+  lda #LCD_4BIT_RW
+  sta VIA_PORTB
+  lda #(LCD_4BIT_RW | LCD_4BIT_E)
+  sta VIA_PORTB
+  lda VIA_PORTB       ; Read high nibble
+  pha             ; and put on stack since it has the busy flag
+  lda #LCD_4BIT_RW
+  sta VIA_PORTB
+  lda #(LCD_4BIT_RW | LCD_4BIT_E)
+  sta VIA_PORTB
+  lda VIA_PORTB       ; Read low nibble
+  pla             ; Get high nibble off stack
+  and #%00001000
+  bne lcd_wait_busy
+  ; logical break, we aren't busy anymore
+  lda #LCD_4BIT_RW
+  sta VIA_PORTB
+  lda #%11111111  ; LCD data is output
+  sta VIA_DDRB
+  pla
+.endmacro
+
 lcd_init:
 ;Description
 ;  Inializes the lcd, sets 4 bit mode
@@ -74,16 +112,16 @@ lcd_instruction:
 ;Side Effects
 ;  Instruction byte is sent to the LCD in 4-bit mode
 ;  Register A is squished
-  jsr lcd_wait
+  lcd_wait_macro ;wait until lcd is no longer showing BUSY
   pha
   lsr
   lsr
   lsr
   lsr            ; Send high 4 bits
   bit LCD_RS_ENABLE ; enabled RS = $FF
-  bpl lcd_sendhigh ; IF RS is NOT enabled THEN skip applying the RS mask
+  bpl lcd_instruction_sendhigh ; IF RS is NOT enabled THEN skip applying the RS mask
   ora #LCD_4BIT_RS
-lcd_sendhigh:
+lcd_instruction_sendhigh:
   sta VIA_PORTB
   ora #LCD_4BIT_E        ; Set E bit to send instruction
   sta VIA_PORTB
@@ -92,48 +130,12 @@ lcd_sendhigh:
   pla
   and #%00001111 ; Send low 4 bits
   bit LCD_RS_ENABLE ; enabled RS = $FF
-  bpl lcd_sendlow ;IF RS is NOT enabled THEN skip applying the RS mask
+  bpl lcd_instruction_sendlow ;IF RS is NOT enabled THEN skip applying the RS mask
   ora #LCD_4BIT_RS
-lcd_sendlow: 
+lcd_instruction_sendlow: 
   sta VIA_PORTB
   ora #LCD_4BIT_E         ; Set E bit to send instruction
   sta VIA_PORTB
   eor #LCD_4BIT_E         ; Clear E bit
   sta VIA_PORTB
-  rts
-
-lcd_wait:
-;Description
-;  Loops until the LCD no longer shows a busy status
-;Arguments
-;  None
-;Preconditions
-;  LCD is initialized and has its parameters set
-;  LCD is in 4 bit mode
-;Side Effects
-;  None
-  pha
-  lda #%11110000  ; LCD data is input
-  sta VIA_DDRB
-lcdbusy:
-  lda #LCD_4BIT_RW
-  sta VIA_PORTB
-  lda #(LCD_4BIT_RW | LCD_4BIT_E)
-  sta VIA_PORTB
-  lda VIA_PORTB       ; Read high nibble
-  pha             ; and put on stack since it has the busy flag
-  lda #LCD_4BIT_RW
-  sta VIA_PORTB
-  lda #(LCD_4BIT_RW | LCD_4BIT_E)
-  sta VIA_PORTB
-  lda VIA_PORTB       ; Read low nibble
-  pla             ; Get high nibble off stack
-  and #%00001000
-  bne lcdbusy
-  ; logical break, we aren't busy anymore
-  lda #LCD_4BIT_RW
-  sta VIA_PORTB
-  lda #%11111111  ; LCD data is output
-  sta VIA_DDRB
-  pla
   rts
