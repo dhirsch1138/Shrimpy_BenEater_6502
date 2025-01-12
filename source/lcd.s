@@ -10,9 +10,14 @@
 ;  DDRB for the non-LCD ports right now (basically presuming they are output)
 ;  ideally we should try to preserve the non-LCD DDRB bits.
 ;
+
+;Exports
+;subroutines
 .export lcd_instruction
 .export lcd_print_char
 .export lcd_init
+;variables
+.export LCD_RS_ENABLE
 
 ;allocate addresses & space for LCD variables
 .segment "LCD_RAM"
@@ -96,10 +101,6 @@ lcd_sendlow:
   sta VIA_PORTB
   eor #LCD_4BIT_E         ; Clear E bit
   sta VIA_PORTB
-  bit LCD_RS_ENABLE ; enabled RS = $FF
-  bpl lcd_instruction_done ;IF RS is enabled THEN return to lcd_print_char
-  bra lcd_print_char_done ;jmp
-lcd_instruction_done:
   rts
 
 lcd_print_char:

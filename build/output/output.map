@@ -2,9 +2,9 @@ Modules list:
 -------------
 lcd.o:
     LCD_PAGEZERO      Offs=000000  Size=000001  Align=00001  Fill=0000
-    LCD_CODE          Offs=000000  Size=000089  Align=00001  Fill=0000
+    LCD_CODE          Offs=000000  Size=000082  Align=00001  Fill=0000
 main.o:
-    CODE              Offs=000000  Size=00003F  Align=00001  Fill=0000
+    CODE              Offs=000000  Size=000045  Align=00001  Fill=0000
 reset_interrupt.o:
     VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
 via.o:
@@ -15,29 +15,31 @@ Segment list:
 Name                   Start     End    Size  Align
 ----------------------------------------------------
 LCD_PAGEZERO          000000  000000  000001  00001
-CODE                  008000  00803E  00003F  00001
-LCD_CODE              00803F  0080C7  000089  00001
+CODE                  008000  008044  000045  00001
+LCD_CODE              008045  0080C6  000082  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
 Exports list by name:
 ---------------------
-VIA_DDRB                  006002 REA    VIA_PORTB                 006000 REA    
-__CODE_LOAD__             008000 RLA    __VIA_START__             006000 RLA    
-lcd_init                  00803F RLA    lcd_instruction           008052 RLA    
-lcd_print_char            00808D RLA    
+LCD_RS_ENABLE             000000 RLA    VIA_DDRB                  006002 REA    
+VIA_PORTB                 006000 REA    __CODE_LOAD__             008000 RLA    
+__VIA_START__             006000 RLA    lcd_init                  008045 RLA    
+lcd_instruction           008058 RLA    
 
 
 Exports list by value:
 ----------------------
-VIA_PORTB                 006000 REA    __VIA_START__             006000 RLA    
-VIA_DDRB                  006002 REA    __CODE_LOAD__             008000 RLA    
-lcd_init                  00803F RLA    lcd_instruction           008052 RLA    
-lcd_print_char            00808D RLA    
+LCD_RS_ENABLE             000000 RLA    VIA_PORTB                 006000 REA    
+__VIA_START__             006000 RLA    VIA_DDRB                  006002 REA    
+__CODE_LOAD__             008000 RLA    lcd_init                  008045 RLA    
+lcd_instruction           008058 RLA    
 
 
 Imports list:
 -------------
+LCD_RS_ENABLE (lcd.o):
+    main.o                    source/lcd.s_imports(7)
 VIA_DDRB (via.o):
     main.o                    source/via.s_imports(4)
     lcd.o                     source/via.s_imports(4)
@@ -51,6 +53,4 @@ lcd_init (lcd.o):
     main.o                    source/lcd.s_imports(6)
 lcd_instruction (lcd.o):
     main.o                    source/lcd.s_imports(4)
-lcd_print_char (lcd.o):
-    main.o                    source/lcd.s_imports(5)
 

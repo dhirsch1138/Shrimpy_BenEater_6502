@@ -59,11 +59,13 @@ print:
 ;  * if we find the null at the end of message jump to the nop loop
 ;  * the character is printed to the lcd
 ;  * x is incremented
+;Note
+;  The macro is overengineering, but I am using this to play with macros. "I'm learnding!"
   ldx #0
 print_loop:
   lda message,x
   beq loop
-  jsr lcd_print_char
+  lcd_print_char_macro ;macro to print character, defined in lcd.s_imports.
   inx
   bra print_loop ;jmp
 
