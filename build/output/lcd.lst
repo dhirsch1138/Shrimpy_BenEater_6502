@@ -53,7 +53,7 @@ Current file: source/lcd.s
 000001r 2                 .import VIA_PANH
 000001r 2               
 000001r 1               
-000001r 1               .segment "LCD_SEGMENT"
+000001r 1               .segment "LCD_CODE"
 000000r 1               
 000000r 1               LCD_4BIT_E  = %01000000
 000000r 1               LCD_4BIT_RW = %00100000

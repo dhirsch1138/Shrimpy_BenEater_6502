@@ -29,7 +29,7 @@ LCD_RS_ENABLE:        .res 1, $00
 ;Includes
 .include "via.s_imports"
 
-.segment "LCD_SEGMENT"
+.segment "LCD_CODE"
 
 LCD_4BIT_E  = %01000000
 LCD_4BIT_RW = %00100000
