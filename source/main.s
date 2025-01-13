@@ -96,8 +96,13 @@ half_second:
 ;  non
 ;Side Effects
 ;  nop
+;Note
+;  formula
+;    The delay is 9*(256*A+Y)+8 cycles
+;     9*($100*$d9+$01)+8 = $7A111 = 499985 
+;     499985 + JSR(6) + RTS(6) = 499997
   lda #$d9
-  ldy #$02
+  ldy #$01
 delay:
   cpy #1
   dey
