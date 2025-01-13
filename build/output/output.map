@@ -4,7 +4,7 @@ lcd.o:
     LCD_PAGEZERO      Offs=000000  Size=000001  Align=00001  Fill=0000
     LCD_CODE          Offs=000000  Size=000075  Align=00001  Fill=0000
 main.o:
-    CODE              Offs=000000  Size=00007A  Align=00001  Fill=0000
+    CODE              Offs=000000  Size=000076  Align=00001  Fill=0000
 reset_interrupt.o:
     VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
 via.o:
@@ -15,8 +15,8 @@ Segment list:
 Name                   Start     End    Size  Align
 ----------------------------------------------------
 LCD_PAGEZERO          000000  000000  000001  00001
-CODE                  008000  008079  00007A  00001
-LCD_CODE              00807A  0080EE  000075  00001
+CODE                  008000  008075  000076  00001
+LCD_CODE              008076  0080EA  000075  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
@@ -24,16 +24,16 @@ Exports list by name:
 ---------------------
 LCD_RS_ENABLE             000000 RLA    VIA_DDRB                  006002 REA    
 VIA_PORTB                 006000 REA    __CODE_LOAD__             008000 RLA    
-__VIA_START__             006000 RLA    lcd_init                  00807A RLA    
-lcd_instruction           00808D RLA    
+__VIA_START__             006000 RLA    lcd_init                  008076 RLA    
+lcd_instruction           008089 RLA    
 
 
 Exports list by value:
 ----------------------
 LCD_RS_ENABLE             000000 RLA    VIA_PORTB                 006000 REA    
 __VIA_START__             006000 RLA    VIA_DDRB                  006002 REA    
-__CODE_LOAD__             008000 RLA    lcd_init                  00807A RLA    
-lcd_instruction           00808D RLA    
+__CODE_LOAD__             008000 RLA    lcd_init                  008076 RLA    
+lcd_instruction           008089 RLA    
 
 
 Imports list:

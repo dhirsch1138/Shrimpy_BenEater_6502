@@ -96,8 +96,6 @@ half_second:
 ;  non
 ;Side Effects
 ;  nop
-  pha
-  phy
   lda #$d9
   ldy #$02
 delay:
@@ -105,6 +103,4 @@ delay:
   dey
   sbc #0
   bcs delay
-  phy
-  pla
   rts

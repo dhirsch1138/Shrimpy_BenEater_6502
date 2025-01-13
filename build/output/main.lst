@@ -167,16 +167,12 @@ Current file: source/main.s
 00006Ar 1               ;  non
 00006Ar 1               ;Side Effects
 00006Ar 1               ;  nop
-00006Ar 1  48             pha
-00006Br 1  5A             phy
-00006Cr 1  A9 D9          lda #$d9
-00006Er 1  A0 02          ldy #$02
-000070r 1               delay:
-000070r 1  C0 01          cpy #1
-000072r 1  88             dey
-000073r 1  E9 00          sbc #0
-000075r 1  B0 F9          bcs delay
-000077r 1  5A             phy
-000078r 1  68             pla
-000079r 1  60             rts
-000079r 1               
+00006Ar 1  A9 D9          lda #$d9
+00006Cr 1  A0 02          ldy #$02
+00006Er 1               delay:
+00006Er 1  C0 01          cpy #1
+000070r 1  88             dey
+000071r 1  E9 00          sbc #0
+000073r 1  B0 F9          bcs delay
+000075r 1  60             rts
+000075r 1               
