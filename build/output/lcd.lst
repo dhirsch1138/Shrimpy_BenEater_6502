@@ -17,6 +17,7 @@ Current file: source/lcd.s
 000000r 1               
 000000r 1               ;====================================================
 000000r 1               ;Exports
+000000r 1               
 000000r 1               ;subroutines
 000000r 1               .export lcd_instruction
 000000r 1               .export lcd_init
@@ -40,7 +41,8 @@ Current file: source/lcd.s
 000001r 1               
 000001r 1               ;====================================================
 000001r 1               ;Includes
-000001r 1               .include "via.s_imports"
+000001r 1               
+000001r 1               .include "via.inc"
 000001r 2               ;PURPOSE - Imports needed symbols defined in via.s
 000001r 2               ;
 000001r 2               
@@ -64,16 +66,17 @@ Current file: source/lcd.s
 000001r 1               
 000001r 1               ;====================================================
 000001r 1               ;Macros
-000001r 1               .macro  lcd_wait_macro     ; Loops until the LCD no longer shows a busy status
-000001r 1                       ;Description
-000001r 1                       ;  Loops until the LCD no longer shows a busy status
-000001r 1                       ;Arguments
-000001r 1                       ;  None
-000001r 1                       ;Preconditions
-000001r 1                       ;  LCD is initialized and has its parameters set
-000001r 1                       ;  LCD is in 4 bit mode
-000001r 1                       ;Side Effects
-000001r 1                       ;  None
+000001r 1               
+000001r 1               .macro  lcd_wait_macro
+000001r 1               ;Description
+000001r 1               ;  Loops until the LCD no longer shows a busy status
+000001r 1               ;Arguments
+000001r 1               ;  None
+000001r 1               ;Preconditions
+000001r 1               ;  LCD is initialized and has its parameters set
+000001r 1               ;  LCD is in 4 bit mode
+000001r 1               ;Side Effects
+000001r 1               ;  None
 000001r 1                 .local lcd_wait_busy ;limit scope of this symbol to this macro
 000001r 1                 pha
 000001r 1                 lda #%11110000  ; LCD data is input
@@ -89,6 +92,8 @@ Current file: source/lcd.s
 000001r 1                 sta VIA_PORTB
 000001r 1                 lda #(LCD_4BIT_RW | LCD_4BIT_E)
 000001r 1                 sta VIA_PORTB
+000001r 1                 ;TODO is this lda doing anything? seems like it is superceded immediately by the pla.
+000001r 1                 ;unless reading from the via port triggers something on the lcd?
 000001r 1                 lda VIA_PORTB       ; Read low nibble
 000001r 1                 pla             ; Get high nibble off stack
 000001r 1                 and #%00001000

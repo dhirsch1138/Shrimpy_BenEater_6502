@@ -15,8 +15,8 @@
 ;====================================================
 ;Includes
 
-  .include "via.s_imports"
-  .include "lcd.s_imports"
+  .include "via.inc"
+  .include "lcd.inc"
 
 ;====================================================
 ;Macros
@@ -61,40 +61,50 @@ reset:
   jsr lcd_instruction
   lda #%00000001 ; Clear display
   jsr lcd_instruction
-  ; presumes we will continue executing into 'print'
-
-print:
-;Description
-;  Prints the message to the LCD charater by character
-;Arguments
-;  None
-;Preconditions
-;  Expected to be called from reset
-;  symbol 'message' exists as null terminated string
-;Side Effects
-;  * a character from message, indexed w/ x
-;  * if we find the null at the end of message jump to the nop loop
-;  * the character is printed to the lcd
-;  * x is incremented
-;Note
-;  The macro is overengineering, but I am using this to play with macros. "I'm learnding!"
-  ldx #0
-print_loop:
-  lda message,x
-  beq loop
-  lcd_print_char_macro ;macro to print character, defined in lcd.s_imports.
-  inx
-  bra print_loop ;jmp
+  ; presumes we will continue executing into 'loop'
 
 loop:
 ;Description
-;  Loops on nop. 
+;  Loops forever updating lcd 
 ;Arguments
 ;  None
 ;Preconditions
-;  Does nothing
+;  lcd is intialized and setup for display
 ;Side Effects
-  nop
+;  Updates LCD with the possible asciiz
+  lcd_print_asciiz_macro hello ; lcd.inc
+  jsr half_second
+  jsr half_second
+  lda #%00000001 ; Clear display
+  jsr lcd_instruction
+  lcd_print_asciiz_macro world ; lcd.inc
+  jsr half_second
+  jsr half_second
+  lda #%00000001 ; Clear display
+  jsr lcd_instruction 
   bra loop ;jmp
 
-message: .asciiz "Jackie is cute!"
+hello: .asciiz "Hello"
+world: .asciiz "World!"
+
+half_second:
+;Description
+;  delays for approx 500k cycles (half second @ 1mhz)
+;Arguments
+;  None
+;Preconditions
+;  non
+;Side Effects
+;  nop
+  pha
+  phy
+  lda #$d9
+  ldy #$02
+delay:
+  cpy #1
+  dey
+  sbc #0
+  bcs delay
+  phy
+  pla
+  rts
