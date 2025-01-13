@@ -21,6 +21,8 @@ Current file: source/lcd.s
 000000r 1               ;subroutines
 000000r 1               .export lcd_instruction
 000000r 1               .export lcd_init
+000000r 1               .export lcd_print_char
+000000r 1               .export lcd_print_hex
 000000r 1               ;variables
 000000r 1               .export LCD_RS_ENABLE
 000000r 1               
@@ -178,4 +180,52 @@ Current file: source/lcd.s
 00006Fr 1  49 40          eor #LCD_4BIT_E         ; Clear E bit
 000071r 1  8D rr rr       sta VIA_PORTB
 000074r 1  60             rts
-000074r 1               
+000075r 1               
+000075r 1               lcd_print_char:
+000075r 1               ;Description
+000075r 1               ;  Sends char to the LCD
+000075r 1               ;Arguments
+000075r 1               ;  A - char to print
+000075r 1               ;Preconditions
+000075r 1               ;  Char is sent to lcd to get printed
+000075r 1               ;Side Effects
+000075r 1               ;  Instruction byte is sent to the LCD in 4-bit mode
+000075r 1               ;  Register A is squished
+000075r 1  CE rr rr       dec LCD_RS_ENABLE        ;$00 - 1 = $FF (enabled)
+000078r 1  20 rr rr       jsr lcd_instruction
+00007Br 1  9C rr rr       stz LCD_RS_ENABLE        ;$00 (disabled), saves up to three cycles over inc
+00007Er 1  60             rts
+00007Fr 1               
+00007Fr 1               lcd_print_hex:
+00007Fr 1               ;Description
+00007Fr 1               ;  Sends hex byte to the LCD
+00007Fr 1               ;Arguments
+00007Fr 1               ;  A - hex to print
+00007Fr 1               ;Preconditions
+00007Fr 1               ;  hex  is sent to lcd to get printed
+00007Fr 1               ;Side Effects
+00007Fr 1               ;  two hex characters are sent to the LCD
+00007Fr 1  DA             phx
+000080r 1  48             pha
+000081r 1  48             pha
+000082r 1  4A             lsr
+000083r 1  4A             lsr
+000084r 1  4A             lsr
+000085r 1  4A             lsr
+000086r 1  AA             tax
+000087r 1  BD rr rr       lda hexmap, x
+00008Ar 1  20 rr rr       jsr lcd_print_char
+00008Dr 1  68             pla
+00008Er 1  29 0F          and #$0F
+000090r 1  AA             tax
+000091r 1  BD rr rr       lda hexmap, x
+000094r 1  20 rr rr       jsr lcd_print_char
+000097r 1  68             pla
+000098r 1  FA             plx
+000099r 1  60             rts
+00009Ar 1               
+00009Ar 1                 hexmap:
+00009Ar 1  30 31 32 33    .byte "0123456789ABCDEF"
+00009Er 1  34 35 36 37  
+0000A2r 1  38 39 41 42  
+0000AAr 1               

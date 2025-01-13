@@ -17,6 +17,8 @@
 ;subroutines
 .export lcd_instruction
 .export lcd_init
+.export lcd_print_char
+.export lcd_print_hex
 ;variables
 .export LCD_RS_ENABLE
 
@@ -152,3 +154,49 @@ lcd_instruction_sendlow:
   eor #LCD_4BIT_E         ; Clear E bit
   sta VIA_PORTB
   rts
+
+lcd_print_char:
+;Description
+;  Sends char to the LCD
+;Arguments
+;  A - char to print
+;Preconditions
+;  Char is sent to lcd to get printed
+;Side Effects
+;  Instruction byte is sent to the LCD in 4-bit mode
+;  Register A is squished
+  dec LCD_RS_ENABLE        ;$00 - 1 = $FF (enabled)
+  jsr lcd_instruction
+  stz LCD_RS_ENABLE        ;$00 (disabled), saves up to three cycles over inc   
+  rts
+
+lcd_print_hex:
+;Description
+;  Sends hex byte to the LCD
+;Arguments
+;  A - hex to print
+;Preconditions
+;  hex  is sent to lcd to get printed
+;Side Effects
+;  two hex characters are sent to the LCD
+  phx
+  pha
+  pha
+  lsr
+  lsr
+  lsr
+  lsr
+  tax
+  lda hexmap, x
+  jsr lcd_print_char
+  pla
+  and #$0F
+  tax
+  lda hexmap, x
+  jsr lcd_print_char
+  pla
+  plx
+  rts
+ 
+  hexmap:
+  .byte "0123456789ABCDEF"

@@ -3,14 +3,12 @@
 
 .import lcd_instruction
 .import lcd_init
+.import lcd_print_char
+.import lcd_print_hex
+
 .import LCD_RS_ENABLE
 
 ;Macros
-.macro  lcd_print_char_macro     ; Print a character to the lcd
-  dec LCD_RS_ENABLE        ;$00 - 1 = $FF (enabled)
-  jsr lcd_instruction
-  stz LCD_RS_ENABLE        ;$00 (disabled), saves up to three cycles over inc 
-.endmacro
 
 .macro  lcd_print_asciiz_macro asciiz   ; Print an asciiz to the lcd
 ;Description
@@ -33,7 +31,7 @@
 lcd_print_asciiz_macro_print_loop:
   lda asciiz,x
   beq lcd_print_asciiz_macro_print_escape
-  lcd_print_char_macro ;macro to print character, defined in lcd.s_imports.
+  jsr lcd_print_char
   inx
   bra lcd_print_asciiz_macro_print_loop ;jmp
 lcd_print_asciiz_macro_print_escape:

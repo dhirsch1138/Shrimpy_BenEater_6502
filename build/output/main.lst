@@ -14,83 +14,83 @@ Current file: source/main.s
 000000r 1               
 000000r 1               ;====================================================
 000000r 1               ;Reserve RAM addresses
-000000r 1               ;nothing here
-000000r 1               
-000000r 1               ;====================================================
-000000r 1               ;Includes
-000000r 1               
-000000r 1                 .include "via.inc"
-000000r 2               ;PURPOSE - Imports needed symbols defined in via.s
-000000r 2               ;
-000000r 2               
-000000r 2                 .import VIA_DDRB
-000000r 2                 .import VIA_PORTB
-000000r 2                 .import VIA_DDRA
-000000r 2                 .import VIA_PORTA
-000000r 2                 .import VIA_T1CL
-000000r 2                 .import VIA_T1CH
-000000r 2                 .import VIA_T1LL
-000000r 2                 .import VIA_T1LH
-000000r 2                 .import VIA_T2CL
-000000r 2                 .import VIA_T2CH
-000000r 2                 .import VIA_SR
-000000r 2                 .import VIA_ACR
-000000r 2                 .import VIA_PCR
-000000r 2                 .import VIA_IFR
-000000r 2                 .import VIA_IER
-000000r 2                 .import VIA_PANH
-000000r 2               
-000000r 1                 .include "lcd.inc"
-000000r 2               ;PURPOSE - Imports needed symbols defined in lcd.s
-000000r 2               ;
-000000r 2               
-000000r 2               .import lcd_instruction
-000000r 2               .import lcd_init
-000000r 2               .import LCD_RS_ENABLE
-000000r 2               
-000000r 2               ;Macros
-000000r 2               .macro  lcd_print_char_macro     ; Print a character to the lcd
-000000r 2                 dec LCD_RS_ENABLE        ;$00 - 1 = $FF (enabled)
-000000r 2                 jsr lcd_instruction
-000000r 2                 stz LCD_RS_ENABLE        ;$00 (disabled), saves up to three cycles over inc
-000000r 2               .endmacro
-000000r 2               
-000000r 2               .macro  lcd_print_asciiz_macro asciiz   ; Print an asciiz to the lcd
-000000r 2               ;Description
-000000r 2               ;  Prints the message to the LCD character by character
-000000r 2               ;Arguments
-000000r 2               ;  None
-000000r 2               ;Preconditions
-000000r 2               ;  Expected to be called from reset
-000000r 2               ;  symbol 'message' exists as null terminated string
-000000r 2               ;Side Effects
-000000r 2               ;  * a character from message, indexed w/ x
-000000r 2               ;  * if we find the null at the end of message jump to the nop loop
-000000r 2               ;  * the character is printed to the lcd
-000000r 2               ;  * x is incremented
-000000r 2               ;Note
-000000r 2               ;  The macro is overengineering, but I am using this to play with macros. "I'm learnding!"
-000000r 2                 .local lcd_print_asciiz_macro_print_loop
-000000r 2                 .local lcd_print_asciiz_macro_print_escape
-000000r 2                 ldx #0
-000000r 2               lcd_print_asciiz_macro_print_loop:
-000000r 2                 lda asciiz,x
-000000r 2                 beq lcd_print_asciiz_macro_print_escape
-000000r 2                 lcd_print_char_macro ;macro to print character, defined in lcd.s_imports.
-000000r 2                 inx
-000000r 2                 bra lcd_print_asciiz_macro_print_loop ;jmp
-000000r 2               lcd_print_asciiz_macro_print_escape:
-000000r 2               .endmacro
-000000r 2               
-000000r 1               
-000000r 1               ;====================================================
-000000r 1               ;Macros
-000000r 1               ;nothing here
-000000r 1               
-000000r 1               ;====================================================
-000000r 1               ;Code
-000000r 1               
-000000r 1                 .code
+000000r 1               .segment "MAIN_RAM"
+000000r 1  00           MAIN_LOOP_COUNT:        .res 1, $00
+000001r 1               ;Description: (HEX) Used to store count of main loop iterations
+000001r 1               
+000001r 1               ;====================================================
+000001r 1               ;Includes
+000001r 1               
+000001r 1                 .include "via.inc"
+000001r 2               ;PURPOSE - Imports needed symbols defined in via.s
+000001r 2               ;
+000001r 2               
+000001r 2                 .import VIA_DDRB
+000001r 2                 .import VIA_PORTB
+000001r 2                 .import VIA_DDRA
+000001r 2                 .import VIA_PORTA
+000001r 2                 .import VIA_T1CL
+000001r 2                 .import VIA_T1CH
+000001r 2                 .import VIA_T1LL
+000001r 2                 .import VIA_T1LH
+000001r 2                 .import VIA_T2CL
+000001r 2                 .import VIA_T2CH
+000001r 2                 .import VIA_SR
+000001r 2                 .import VIA_ACR
+000001r 2                 .import VIA_PCR
+000001r 2                 .import VIA_IFR
+000001r 2                 .import VIA_IER
+000001r 2                 .import VIA_PANH
+000001r 2               
+000001r 1                 .include "lcd.inc"
+000001r 2               ;PURPOSE - Imports needed symbols defined in lcd.s
+000001r 2               ;
+000001r 2               
+000001r 2               .import lcd_instruction
+000001r 2               .import lcd_init
+000001r 2               .import lcd_print_char
+000001r 2               .import lcd_print_hex
+000001r 2               
+000001r 2               .import LCD_RS_ENABLE
+000001r 2               
+000001r 2               ;Macros
+000001r 2               
+000001r 2               .macro  lcd_print_asciiz_macro asciiz   ; Print an asciiz to the lcd
+000001r 2               ;Description
+000001r 2               ;  Prints the message to the LCD character by character
+000001r 2               ;Arguments
+000001r 2               ;  None
+000001r 2               ;Preconditions
+000001r 2               ;  Expected to be called from reset
+000001r 2               ;  symbol 'message' exists as null terminated string
+000001r 2               ;Side Effects
+000001r 2               ;  * a character from message, indexed w/ x
+000001r 2               ;  * if we find the null at the end of message jump to the nop loop
+000001r 2               ;  * the character is printed to the lcd
+000001r 2               ;  * x is incremented
+000001r 2               ;Note
+000001r 2               ;  The macro is overengineering, but I am using this to play with macros. "I'm learnding!"
+000001r 2                 .local lcd_print_asciiz_macro_print_loop
+000001r 2                 .local lcd_print_asciiz_macro_print_escape
+000001r 2                 ldx #0
+000001r 2               lcd_print_asciiz_macro_print_loop:
+000001r 2                 lda asciiz,x
+000001r 2                 beq lcd_print_asciiz_macro_print_escape
+000001r 2                 jsr lcd_print_char
+000001r 2                 inx
+000001r 2                 bra lcd_print_asciiz_macro_print_loop ;jmp
+000001r 2               lcd_print_asciiz_macro_print_escape:
+000001r 2               .endmacro
+000001r 2               
+000001r 1               
+000001r 1               ;====================================================
+000001r 1               ;Macros
+000001r 1               ;nothing here
+000001r 1               
+000001r 1               ;====================================================
+000001r 1               ;Code
+000001r 1               
+000001r 1                 .code
 000000r 1               
 000000r 1               reset:
 000000r 1               ;Description
@@ -126,53 +126,68 @@ Current file: source/main.s
 000017r 1  20 rr rr       jsr lcd_instruction
 00001Ar 1  A9 01          lda #%00000001 ; Clear display
 00001Cr 1  20 rr rr       jsr lcd_instruction
-00001Fr 1                 ; presumes we will continue executing into 'loop'
-00001Fr 1               
-00001Fr 1               loop:
-00001Fr 1               ;Description
-00001Fr 1               ;  Loops forever updating lcd
-00001Fr 1               ;Arguments
-00001Fr 1               ;  None
-00001Fr 1               ;Preconditions
-00001Fr 1               ;  lcd is intialized and setup for display
-00001Fr 1               ;Side Effects
-00001Fr 1               ;  Updates LCD with the possible asciiz
-00001Fr 1  A2 00 BD rr    lcd_print_asciiz_macro hello ; lcd.inc
-000023r 1  rr F0 0C CE  
-000027r 1  rr rr 20 rr  
-000032r 1  20 rr rr       jsr half_second
-000035r 1  20 rr rr       jsr half_second
-000038r 1  A9 01          lda #%00000001 ; Clear display
-00003Ar 1  20 rr rr       jsr lcd_instruction
-00003Dr 1  A2 00 BD rr    lcd_print_asciiz_macro world ; lcd.inc
-000041r 1  rr F0 0C CE  
-000045r 1  rr rr 20 rr  
-000050r 1  20 rr rr       jsr half_second
-000053r 1  20 rr rr       jsr half_second
-000056r 1  A9 01          lda #%00000001 ; Clear display
-000058r 1  20 rr rr       jsr lcd_instruction
-00005Br 1  80 C2          bra loop ;jmp
-00005Dr 1               
-00005Dr 1  48 65 6C 6C  hello: .asciiz "Hello"
-000061r 1  6F 00        
-000063r 1  57 6F 72 6C  world: .asciiz "World!"
-000067r 1  64 21 00     
-00006Ar 1               
-00006Ar 1               half_second:
-00006Ar 1               ;Description
-00006Ar 1               ;  delays for approx 500k cycles (half second @ 1mhz)
-00006Ar 1               ;Arguments
-00006Ar 1               ;  None
-00006Ar 1               ;Preconditions
-00006Ar 1               ;  non
-00006Ar 1               ;Side Effects
-00006Ar 1               ;  nop
-00006Ar 1  A9 D9          lda #$d9
-00006Cr 1  A0 02          ldy #$02
-00006Er 1               delay:
-00006Er 1  C0 01          cpy #1
-000070r 1  88             dey
-000071r 1  E9 00          sbc #0
-000073r 1  B0 F9          bcs delay
-000075r 1  60             rts
-000075r 1               
+00001Fr 1  9C rr rr       stz MAIN_LOOP_COUNT
+000022r 1                 ; presumes we will continue executing into 'loop'
+000022r 1               
+000022r 1               loop:
+000022r 1               ;Description
+000022r 1               ;  Loops forever updating lcd
+000022r 1               ;Arguments
+000022r 1               ;  None
+000022r 1               ;Preconditions
+000022r 1               ;  lcd is intialized and setup for display
+000022r 1               ;Side Effects
+000022r 1               ;  Updates LCD with the possible asciiz
+000022r 1  AD rr rr       lda MAIN_LOOP_COUNT
+000025r 1  20 rr rr       jsr lcd_print_hex
+000028r 1  A9 20          lda #$20
+00002Ar 1  20 rr rr       jsr lcd_print_char
+00002Dr 1  A2 00 BD rr    lcd_print_asciiz_macro hello ; lcd.inc
+000031r 1  rr F0 06 20  
+000035r 1  rr rr E8 80  
+00003Ar 1  20 rr rr       jsr half_second
+00003Dr 1  20 rr rr       jsr half_second
+000040r 1  A9 01          lda #%00000001 ; Clear display
+000042r 1  20 rr rr       jsr lcd_instruction
+000045r 1  AD rr rr       lda MAIN_LOOP_COUNT
+000048r 1  20 rr rr       jsr lcd_print_hex
+00004Br 1  A9 20          lda #$20
+00004Dr 1  20 rr rr       jsr lcd_print_char
+000050r 1  A2 00 BD rr    lcd_print_asciiz_macro world ; lcd.inc
+000054r 1  rr F0 06 20  
+000058r 1  rr rr E8 80  
+00005Dr 1  20 rr rr       jsr half_second
+000060r 1  20 rr rr       jsr half_second
+000063r 1  A9 01          lda #%00000001 ; Clear display
+000065r 1  20 rr rr       jsr lcd_instruction
+000068r 1  EE rr rr       inc MAIN_LOOP_COUNT
+00006Br 1  80 B5          bra loop ;jmp
+00006Dr 1               
+00006Dr 1  48 65 6C 6C  hello: .asciiz "Hello"
+000071r 1  6F 00        
+000073r 1  57 6F 72 6C  world: .asciiz "World!"
+000077r 1  64 21 00     
+00007Ar 1               
+00007Ar 1               half_second:
+00007Ar 1               ;Description
+00007Ar 1               ;  delays for approx 500k cycles (half second @ 1mhz)
+00007Ar 1               ;Arguments
+00007Ar 1               ;  None
+00007Ar 1               ;Preconditions
+00007Ar 1               ;  non
+00007Ar 1               ;Side Effects
+00007Ar 1               ;  nop
+00007Ar 1               ;Note
+00007Ar 1               ;  formula
+00007Ar 1               ;    The delay is 9*(256*A+Y)+8 cycles
+00007Ar 1               ;     9*($100*$d9+$01)+8 = $7A111 = 499985
+00007Ar 1               ;     499985 + JSR(6) + RTS(6) = 499997
+00007Ar 1  A9 D9          lda #$d9
+00007Cr 1  A0 01          ldy #$01
+00007Er 1               delay:
+00007Er 1  C0 01          cpy #1
+000080r 1  88             dey
+000081r 1  E9 00          sbc #0
+000083r 1  B0 F9          bcs delay
+000085r 1  60             rts
+000085r 1               

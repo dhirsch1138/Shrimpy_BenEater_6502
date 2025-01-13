@@ -10,7 +10,9 @@
 
 ;====================================================
 ;Reserve RAM addresses
-;nothing here
+.segment "MAIN_RAM"
+MAIN_LOOP_COUNT:        .res 1, $00
+;Description: (HEX) Used to store count of main loop iterations
 
 ;====================================================
 ;Includes
@@ -61,6 +63,7 @@ reset:
   jsr lcd_instruction
   lda #%00000001 ; Clear display
   jsr lcd_instruction
+  stz MAIN_LOOP_COUNT
   ; presumes we will continue executing into 'loop'
 
 loop:
@@ -72,16 +75,25 @@ loop:
 ;  lcd is intialized and setup for display
 ;Side Effects
 ;  Updates LCD with the possible asciiz
+  lda MAIN_LOOP_COUNT
+  jsr lcd_print_hex
+  lda #$20
+  jsr lcd_print_char
   lcd_print_asciiz_macro hello ; lcd.inc
   jsr half_second
   jsr half_second
   lda #%00000001 ; Clear display
   jsr lcd_instruction
+  lda MAIN_LOOP_COUNT
+  jsr lcd_print_hex
+  lda #$20
+  jsr lcd_print_char
   lcd_print_asciiz_macro world ; lcd.inc
   jsr half_second
   jsr half_second
   lda #%00000001 ; Clear display
-  jsr lcd_instruction 
+  jsr lcd_instruction
+  inc MAIN_LOOP_COUNT 
   bra loop ;jmp
 
 hello: .asciiz "Hello"
