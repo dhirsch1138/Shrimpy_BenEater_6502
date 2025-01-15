@@ -19,78 +19,70 @@ Current file: source/main.s
 000001r 1               ;Description: (HEX) Used to store count of main loop iterations
 000001r 1               
 000001r 1               ;====================================================
-000001r 1               ;Includes
-000001r 1               
-000001r 1                 .include "via.inc"
-000001r 2               ;PURPOSE - Imports needed symbols defined in via.s
-000001r 2               ;
-000001r 2               
-000001r 2                 .import VIA_DDRB
-000001r 2                 .import VIA_PORTB
-000001r 2                 .import VIA_DDRA
-000001r 2                 .import VIA_PORTA
-000001r 2                 .import VIA_T1CL
-000001r 2                 .import VIA_T1CH
-000001r 2                 .import VIA_T1LL
-000001r 2                 .import VIA_T1LH
-000001r 2                 .import VIA_T2CL
-000001r 2                 .import VIA_T2CH
-000001r 2                 .import VIA_SR
-000001r 2                 .import VIA_ACR
-000001r 2                 .import VIA_PCR
-000001r 2                 .import VIA_IFR
-000001r 2                 .import VIA_IER
-000001r 2                 .import VIA_PANH
-000001r 2               
-000001r 1                 .include "lcd.inc"
-000001r 2               ;PURPOSE - Imports needed symbols defined in lcd.s
-000001r 2               ;
-000001r 2               
-000001r 2               .import lcd_instruction
-000001r 2               .import lcd_init
-000001r 2               .import lcd_print_char
-000001r 2               .import lcd_print_hex
-000001r 2               
-000001r 2               .import LCD_RS_ENABLE
-000001r 2               
-000001r 2               ;Macros
-000001r 2               
-000001r 2               .macro  lcd_print_asciiz_macro asciiz   ; Print an asciiz to the lcd
-000001r 2               ;Description
-000001r 2               ;  Prints the message to the LCD character by character
-000001r 2               ;Arguments
-000001r 2               ;  None
-000001r 2               ;Preconditions
-000001r 2               ;  Expected to be called from reset
-000001r 2               ;  symbol 'message' exists as null terminated string
-000001r 2               ;Side Effects
-000001r 2               ;  * a character from message, indexed w/ x
-000001r 2               ;  * if we find the null at the end of message jump to the nop loop
-000001r 2               ;  * the character is printed to the lcd
-000001r 2               ;  * x is incremented
-000001r 2               ;Note
-000001r 2               ;  The macro is overengineering, but I am using this to play with macros. "I'm learnding!"
-000001r 2                 .local lcd_print_asciiz_macro_print_loop
-000001r 2                 .local lcd_print_asciiz_macro_print_escape
-000001r 2                 ldx #0
-000001r 2               lcd_print_asciiz_macro_print_loop:
-000001r 2                 lda asciiz,x
-000001r 2                 beq lcd_print_asciiz_macro_print_escape
-000001r 2                 jsr lcd_print_char
-000001r 2                 inx
-000001r 2                 bra lcd_print_asciiz_macro_print_loop ;jmp
-000001r 2               lcd_print_asciiz_macro_print_escape:
-000001r 2               .endmacro
-000001r 2               
-000001r 1               
-000001r 1               ;====================================================
 000001r 1               ;Macros
-000001r 1               ;nothing here
+000001r 1               .macro  load_addr_to_zp source_addr, zp_addr
+000001r 1               ;Description
+000001r 1               ;  loads the address into the specified zp
+000001r 1               ;Arguments
+000001r 1               ;  addr - static addr (like a symbol)
+000001r 1               ;  zp - zero page address
+000001r 1               ;Preconditions
+000001r 1               ;  none
+000001r 1               ;Side Effects
+000001r 1               ;  addr -> zp
+000001r 1               ;Note
+000001r 1               ;  The macro is overengineering, but I am using this to play with macros. "I'm learnding!"
+000001r 1                 ;pha
+000001r 1                 lda #<source_addr ; The low byte of the 16 bit address pointer is loaded into A
+000001r 1                 sta zp_addr
+000001r 1                 lda #>source_addr ; the high byte of the pointer
+000001r 1                 sta zp_addr+1
+000001r 1                 ;pla
+000001r 1               .endmacro
+000001r 1               
 000001r 1               
 000001r 1               ;====================================================
 000001r 1               ;Code
 000001r 1               
 000001r 1                 .code
+000000r 1               
+000000r 1               ;Includes
+000000r 1               
+000000r 1                 .include "via.inc"
+000000r 2               ;PURPOSE - Imports needed symbols defined in via.s
+000000r 2               ;
+000000r 2               
+000000r 2                 .import VIA_DDRB
+000000r 2                 .import VIA_PORTB
+000000r 2                 .import VIA_DDRA
+000000r 2                 .import VIA_PORTA
+000000r 2                 .import VIA_T1CL
+000000r 2                 .import VIA_T1CH
+000000r 2                 .import VIA_T1LL
+000000r 2                 .import VIA_T1LH
+000000r 2                 .import VIA_T2CL
+000000r 2                 .import VIA_T2CH
+000000r 2                 .import VIA_SR
+000000r 2                 .import VIA_ACR
+000000r 2                 .import VIA_PCR
+000000r 2                 .import VIA_IFR
+000000r 2                 .import VIA_IER
+000000r 2                 .import VIA_PANH
+000000r 2               
+000000r 1                 .include "lcd.inc"
+000000r 2               ;PURPOSE - Imports needed symbols defined in lcd.s
+000000r 2               ;
+000000r 2               
+000000r 2               .import lcd_instruction
+000000r 2               .import lcd_init
+000000r 2               .import lcd_print_asciiz_ZP
+000000r 2               .import lcd_print_char
+000000r 2               .import lcd_print_hex
+000000r 2               
+000000r 2               .importzp  LCD_PRINT_PTR
+000000r 2               
+000000r 2               ;Macros
+000000r 2               
 000000r 1               
 000000r 1               reset:
 000000r 1               ;Description
@@ -140,54 +132,56 @@ Current file: source/main.s
 000022r 1               ;  Updates LCD with the possible asciiz
 000022r 1  AD rr rr       lda MAIN_LOOP_COUNT
 000025r 1  20 rr rr       jsr lcd_print_hex
-000028r 1  A9 20          lda #$20
+000028r 1  A9 20          lda #$20 ;space
 00002Ar 1  20 rr rr       jsr lcd_print_char
-00002Dr 1  A2 00 BD rr    lcd_print_asciiz_macro hello ; lcd.inc
-000031r 1  rr F0 06 20  
-000035r 1  rr rr E8 80  
-00003Ar 1  20 rr rr       jsr half_second
-00003Dr 1  20 rr rr       jsr half_second
-000040r 1  A9 01          lda #%00000001 ; Clear display
-000042r 1  20 rr rr       jsr lcd_instruction
-000045r 1  AD rr rr       lda MAIN_LOOP_COUNT
-000048r 1  20 rr rr       jsr lcd_print_hex
-00004Br 1  A9 20          lda #$20
-00004Dr 1  20 rr rr       jsr lcd_print_char
-000050r 1  A2 00 BD rr    lcd_print_asciiz_macro world ; lcd.inc
-000054r 1  rr F0 06 20  
-000058r 1  rr rr E8 80  
-00005Dr 1  20 rr rr       jsr half_second
-000060r 1  20 rr rr       jsr half_second
-000063r 1  A9 01          lda #%00000001 ; Clear display
-000065r 1  20 rr rr       jsr lcd_instruction
-000068r 1  EE rr rr       inc MAIN_LOOP_COUNT
-00006Br 1  80 B5          bra loop ;jmp
-00006Dr 1               
-00006Dr 1  48 65 6C 6C  hello: .asciiz "Hello"
-000071r 1  6F 00        
-000073r 1  57 6F 72 6C  world: .asciiz "World!"
-000077r 1  64 21 00     
-00007Ar 1               
-00007Ar 1               half_second:
-00007Ar 1               ;Description
-00007Ar 1               ;  delays for approx 500k cycles (half second @ 1mhz)
-00007Ar 1               ;Arguments
-00007Ar 1               ;  None
-00007Ar 1               ;Preconditions
-00007Ar 1               ;  non
-00007Ar 1               ;Side Effects
-00007Ar 1               ;  nop
-00007Ar 1               ;Note
-00007Ar 1               ;  formula
-00007Ar 1               ;    The delay is 9*(256*A+Y)+8 cycles
-00007Ar 1               ;     9*($100*$d9+$01)+8 = $7A111 = 499985
-00007Ar 1               ;     499985 + JSR(6) + RTS(6) = 499997
-00007Ar 1  A9 D9          lda #$d9
-00007Cr 1  A0 01          ldy #$01
-00007Er 1               delay:
-00007Er 1  C0 01          cpy #1
-000080r 1  88             dey
-000081r 1  E9 00          sbc #0
-000083r 1  B0 F9          bcs delay
-000085r 1  60             rts
-000085r 1               
+00002Dr 1  A9 rr 85 rr    load_addr_to_zp hello, LCD_PRINT_PTR
+000031r 1  A9 rr 85 rr  
+000035r 1  20 rr rr       jsr lcd_print_asciiz_ZP
+000038r 1  20 rr rr       jsr half_second
+00003Br 1  20 rr rr       jsr half_second
+00003Er 1  A9 01          lda #%00000001 ; Clear display
+000040r 1  20 rr rr       jsr lcd_instruction
+000043r 1  AD rr rr       lda MAIN_LOOP_COUNT
+000046r 1  20 rr rr       jsr lcd_print_hex
+000049r 1  A9 20          lda #$20
+00004Br 1  20 rr rr       jsr lcd_print_char
+00004Er 1  A9 rr 85 rr    load_addr_to_zp world, LCD_PRINT_PTR
+000052r 1  A9 rr 85 rr  
+000056r 1  20 rr rr       jsr lcd_print_asciiz_ZP
+000059r 1  20 rr rr       jsr half_second
+00005Cr 1  20 rr rr       jsr half_second
+00005Fr 1  A9 01          lda #%00000001 ; Clear display
+000061r 1  20 rr rr       jsr lcd_instruction
+000064r 1  EE rr rr       inc MAIN_LOOP_COUNT
+000067r 1  80 B9          bra loop ;jmp
+000069r 1               
+000069r 1  48 65 6C 6C  hello: .asciiz "Hello"
+00006Dr 1  6F 00        
+00006Fr 1  57 6F 72 6C  world: .asciiz "World!"
+000073r 1  64 21 00     
+000076r 1               
+000076r 1               half_second:
+000076r 1               ;Description
+000076r 1               ;  delays for approx 500k cycles (half second @ 1mhz)
+000076r 1               ;Arguments
+000076r 1               ;  None
+000076r 1               ;Preconditions
+000076r 1               ;  non
+000076r 1               ;Side Effects
+000076r 1               ;  nop
+000076r 1               ;Note
+000076r 1               ;  formula
+000076r 1               ;    The delay is 9*(256*A+Y)+8 cycles
+000076r 1               ;     9*($100*$d9+$01)+8 = $7A111 = 499985
+000076r 1               ;     499985 + JSR(6) + RTS(6) = 499997
+000076r 1  A9 D9          lda #$d9
+000078r 1  A0 01          ldy #$01
+00007Ar 1               delay:
+00007Ar 1  C0 01          cpy #1
+00007Cr 1  88             dey
+00007Dr 1  E9 00          sbc #0
+00007Fr 1  B0 F9          bcs delay
+000081r 1  60             rts
+000082r 1               
+000082r 1               
+000082r 1               

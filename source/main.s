@@ -15,19 +15,37 @@ MAIN_LOOP_COUNT:        .res 1, $00
 ;Description: (HEX) Used to store count of main loop iterations
 
 ;====================================================
-;Includes
-
-  .include "via.inc"
-  .include "lcd.inc"
-
-;====================================================
 ;Macros
-;nothing here
+.macro  load_addr_to_zp source_addr, zp_addr
+;Description
+;  loads the address into the specified zp
+;Arguments
+;  addr - static addr (like a symbol)
+;  zp - zero page address
+;Preconditions
+;  none
+;Side Effects
+;  addr -> zp
+;Note
+;  The macro is overengineering, but I am using this to play with macros. "I'm learnding!"
+  ;pha
+  lda #<source_addr ; The low byte of the 16 bit address pointer is loaded into A
+  sta zp_addr
+  lda #>source_addr ; the high byte of the pointer
+  sta zp_addr+1
+  ;pla
+.endmacro
+
 
 ;====================================================
 ;Code
 
   .code
+
+;Includes
+
+  .include "via.inc"
+  .include "lcd.inc"
 
 reset:
 ;Description
@@ -77,9 +95,10 @@ loop:
 ;  Updates LCD with the possible asciiz
   lda MAIN_LOOP_COUNT
   jsr lcd_print_hex
-  lda #$20
+  lda #$20 ;space
   jsr lcd_print_char
-  lcd_print_asciiz_macro hello ; lcd.inc
+  load_addr_to_zp hello, LCD_PRINT_PTR
+  jsr lcd_print_asciiz_ZP
   jsr half_second
   jsr half_second
   lda #%00000001 ; Clear display
@@ -88,7 +107,8 @@ loop:
   jsr lcd_print_hex
   lda #$20
   jsr lcd_print_char
-  lcd_print_asciiz_macro world ; lcd.inc
+  load_addr_to_zp world, LCD_PRINT_PTR
+  jsr lcd_print_asciiz_ZP
   jsr half_second
   jsr half_second
   lda #%00000001 ; Clear display
@@ -121,3 +141,5 @@ delay:
   sbc #0
   bcs delay
   rts
+
+

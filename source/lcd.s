@@ -17,19 +17,16 @@
 ;subroutines
 .export lcd_instruction
 .export lcd_init
+.export lcd_print_asciiz_ZP
 .export lcd_print_char
 .export lcd_print_hex
 ;variables
-.export LCD_RS_ENABLE
+.export LCD_PRINT_PTR
 
 ;====================================================
 ;Reserve RAM addresses
 
 .segment "LCD_RAM"
-;Nothing here
-
-.segment "LCD_PAGEZERO"
-
 LCD_RS_ENABLE:        .res 1, $00
 ;Description: (Boolean) Used to store if RS should be applied to the LCD instruction
 ;Values:
@@ -37,10 +34,11 @@ LCD_RS_ENABLE:        .res 1, $00
 ; * True - $FF for RS instructions (like printing characters)
 ;Note: should be flagged with DEC as needed, always remember that its default state should be $00.
 
-;====================================================
-;Includes
+.segment "LCD_PAGEZERO": zeropage
+LCD_PRINT_PTR:        .res 2, $0000
 
-.include "via.inc"
+
+
 
 ;====================================================
 ;Macros
@@ -87,6 +85,10 @@ lcd_wait_busy:
 ;====================================================
 ;Code
 .segment "LCD_CODE"
+
+;Includes
+
+.include "via.inc"
 
 LCD_4BIT_E  = %01000000
 LCD_4BIT_RW = %00100000
@@ -165,9 +167,11 @@ lcd_print_char:
 ;Side Effects
 ;  Instruction byte is sent to the LCD in 4-bit mode
 ;  Register A is squished
+  pha
   dec LCD_RS_ENABLE        ;$00 - 1 = $FF (enabled)
   jsr lcd_instruction
   stz LCD_RS_ENABLE        ;$00 (disabled), saves up to three cycles over inc   
+  pla
   rts
 
 lcd_print_hex:
@@ -197,6 +201,35 @@ lcd_print_hex:
   pla
   plx
   rts
- 
-  hexmap:
+
+lcd_print_asciiz_ZP:
+;Description
+;  Prints the message to the LCD character by character from the ZP variable
+;Arguments
+;  A - string
+;Preconditions
+;  Expected to be called from reset
+;  symbol 'asciiz' exists as null terminated string
+;Side Effects
+;  * a character from asciiz, indexed w/ x
+;  * if we find the null at the end of asciiz jump to the nop loop
+;  * the character is printed to the lcd
+;Note
+  pha
+  phy
+  ldy #0
+lcd_print_asciiz_print_loop:
+  lda (LCD_PRINT_PTR),y
+  beq lcd_print_asciiz_print_escape
+  jsr lcd_print_char
+  iny
+  bne lcd_print_asciiz_print_loop
+  inc LCD_PRINT_PTR+1
+  bra lcd_print_asciiz_print_loop ; jmp
+lcd_print_asciiz_print_escape:
+  ply
+  pla
+  rts
+
+hexmap:
   .byte "0123456789ABCDEF"

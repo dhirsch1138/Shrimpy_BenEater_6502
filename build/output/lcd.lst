@@ -21,19 +21,16 @@ Current file: source/lcd.s
 000000r 1               ;subroutines
 000000r 1               .export lcd_instruction
 000000r 1               .export lcd_init
+000000r 1               .export lcd_print_asciiz_ZP
 000000r 1               .export lcd_print_char
 000000r 1               .export lcd_print_hex
 000000r 1               ;variables
-000000r 1               .export LCD_RS_ENABLE
+000000r 1               .export LCD_PRINT_PTR
 000000r 1               
 000000r 1               ;====================================================
 000000r 1               ;Reserve RAM addresses
 000000r 1               
 000000r 1               .segment "LCD_RAM"
-000000r 1               ;Nothing here
-000000r 1               
-000000r 1               .segment "LCD_PAGEZERO"
-000000r 1               
 000000r 1  00           LCD_RS_ENABLE:        .res 1, $00
 000001r 1               ;Description: (Boolean) Used to store if RS should be applied to the LCD instruction
 000001r 1               ;Values:
@@ -41,76 +38,81 @@ Current file: source/lcd.s
 000001r 1               ; * True - $FF for RS instructions (like printing characters)
 000001r 1               ;Note: should be flagged with DEC as needed, always remember that its default state should be $00.
 000001r 1               
-000001r 1               ;====================================================
-000001r 1               ;Includes
-000001r 1               
-000001r 1               .include "via.inc"
-000001r 2               ;PURPOSE - Imports needed symbols defined in via.s
-000001r 2               ;
-000001r 2               
-000001r 2                 .import VIA_DDRB
-000001r 2                 .import VIA_PORTB
-000001r 2                 .import VIA_DDRA
-000001r 2                 .import VIA_PORTA
-000001r 2                 .import VIA_T1CL
-000001r 2                 .import VIA_T1CH
-000001r 2                 .import VIA_T1LL
-000001r 2                 .import VIA_T1LH
-000001r 2                 .import VIA_T2CL
-000001r 2                 .import VIA_T2CH
-000001r 2                 .import VIA_SR
-000001r 2                 .import VIA_ACR
-000001r 2                 .import VIA_PCR
-000001r 2                 .import VIA_IFR
-000001r 2                 .import VIA_IER
-000001r 2                 .import VIA_PANH
-000001r 2               
-000001r 1               
-000001r 1               ;====================================================
-000001r 1               ;Macros
-000001r 1               
-000001r 1               .macro  lcd_wait_macro
-000001r 1               ;Description
-000001r 1               ;  Loops until the LCD no longer shows a busy status
-000001r 1               ;Arguments
-000001r 1               ;  None
-000001r 1               ;Preconditions
-000001r 1               ;  LCD is initialized and has its parameters set
-000001r 1               ;  LCD is in 4 bit mode
-000001r 1               ;Side Effects
-000001r 1               ;  None
-000001r 1                 .local lcd_wait_busy ;limit scope of this symbol to this macro
-000001r 1                 pha
-000001r 1                 lda #%11110000  ; LCD data is input
-000001r 1                 sta VIA_DDRB
-000001r 1               lcd_wait_busy:
-000001r 1                 lda #LCD_4BIT_RW
-000001r 1                 sta VIA_PORTB
-000001r 1                 lda #(LCD_4BIT_RW | LCD_4BIT_E)
-000001r 1                 sta VIA_PORTB
-000001r 1                 lda VIA_PORTB       ; Read high nibble
-000001r 1                 pha             ; and put on stack since it has the busy flag
-000001r 1                 lda #LCD_4BIT_RW
-000001r 1                 sta VIA_PORTB
-000001r 1                 lda #(LCD_4BIT_RW | LCD_4BIT_E)
-000001r 1                 sta VIA_PORTB
-000001r 1                 ;TODO is this lda doing anything? seems like it is superceded immediately by the pla.
-000001r 1                 ;unless reading from the via port triggers something on the lcd?
-000001r 1                 lda VIA_PORTB       ; Read low nibble
-000001r 1                 pla             ; Get high nibble off stack
-000001r 1                 and #%00001000
-000001r 1                 bne lcd_wait_busy
-000001r 1                 ; logical break, we aren't busy anymore
-000001r 1                 lda #LCD_4BIT_RW
-000001r 1                 sta VIA_PORTB
-000001r 1                 lda #%11111111  ; LCD data is output
-000001r 1                 sta VIA_DDRB
-000001r 1                 pla
-000001r 1               .endmacro
-000001r 1               
-000001r 1               ;====================================================
-000001r 1               ;Code
-000001r 1               .segment "LCD_CODE"
+000001r 1               .segment "LCD_PAGEZERO": zeropage
+000000r 1  00 00        LCD_PRINT_PTR:        .res 2, $0000
+000002r 1               
+000002r 1               
+000002r 1               
+000002r 1               
+000002r 1               ;====================================================
+000002r 1               ;Macros
+000002r 1               
+000002r 1               .macro  lcd_wait_macro
+000002r 1               ;Description
+000002r 1               ;  Loops until the LCD no longer shows a busy status
+000002r 1               ;Arguments
+000002r 1               ;  None
+000002r 1               ;Preconditions
+000002r 1               ;  LCD is initialized and has its parameters set
+000002r 1               ;  LCD is in 4 bit mode
+000002r 1               ;Side Effects
+000002r 1               ;  None
+000002r 1                 .local lcd_wait_busy ;limit scope of this symbol to this macro
+000002r 1                 pha
+000002r 1                 lda #%11110000  ; LCD data is input
+000002r 1                 sta VIA_DDRB
+000002r 1               lcd_wait_busy:
+000002r 1                 lda #LCD_4BIT_RW
+000002r 1                 sta VIA_PORTB
+000002r 1                 lda #(LCD_4BIT_RW | LCD_4BIT_E)
+000002r 1                 sta VIA_PORTB
+000002r 1                 lda VIA_PORTB       ; Read high nibble
+000002r 1                 pha             ; and put on stack since it has the busy flag
+000002r 1                 lda #LCD_4BIT_RW
+000002r 1                 sta VIA_PORTB
+000002r 1                 lda #(LCD_4BIT_RW | LCD_4BIT_E)
+000002r 1                 sta VIA_PORTB
+000002r 1                 ;TODO is this lda doing anything? seems like it is superceded immediately by the pla.
+000002r 1                 ;unless reading from the via port triggers something on the lcd?
+000002r 1                 lda VIA_PORTB       ; Read low nibble
+000002r 1                 pla             ; Get high nibble off stack
+000002r 1                 and #%00001000
+000002r 1                 bne lcd_wait_busy
+000002r 1                 ; logical break, we aren't busy anymore
+000002r 1                 lda #LCD_4BIT_RW
+000002r 1                 sta VIA_PORTB
+000002r 1                 lda #%11111111  ; LCD data is output
+000002r 1                 sta VIA_DDRB
+000002r 1                 pla
+000002r 1               .endmacro
+000002r 1               
+000002r 1               ;====================================================
+000002r 1               ;Code
+000002r 1               .segment "LCD_CODE"
+000000r 1               
+000000r 1               ;Includes
+000000r 1               
+000000r 1               .include "via.inc"
+000000r 2               ;PURPOSE - Imports needed symbols defined in via.s
+000000r 2               ;
+000000r 2               
+000000r 2                 .import VIA_DDRB
+000000r 2                 .import VIA_PORTB
+000000r 2                 .import VIA_DDRA
+000000r 2                 .import VIA_PORTA
+000000r 2                 .import VIA_T1CL
+000000r 2                 .import VIA_T1CH
+000000r 2                 .import VIA_T1LL
+000000r 2                 .import VIA_T1LH
+000000r 2                 .import VIA_T2CL
+000000r 2                 .import VIA_T2CH
+000000r 2                 .import VIA_SR
+000000r 2                 .import VIA_ACR
+000000r 2                 .import VIA_PCR
+000000r 2                 .import VIA_IFR
+000000r 2                 .import VIA_IER
+000000r 2                 .import VIA_PANH
+000000r 2               
 000000r 1               
 000000r 1               LCD_4BIT_E  = %01000000
 000000r 1               LCD_4BIT_RW = %00100000
@@ -191,41 +193,72 @@ Current file: source/lcd.s
 000075r 1               ;Side Effects
 000075r 1               ;  Instruction byte is sent to the LCD in 4-bit mode
 000075r 1               ;  Register A is squished
-000075r 1  CE rr rr       dec LCD_RS_ENABLE        ;$00 - 1 = $FF (enabled)
-000078r 1  20 rr rr       jsr lcd_instruction
-00007Br 1  9C rr rr       stz LCD_RS_ENABLE        ;$00 (disabled), saves up to three cycles over inc
-00007Er 1  60             rts
-00007Fr 1               
-00007Fr 1               lcd_print_hex:
-00007Fr 1               ;Description
-00007Fr 1               ;  Sends hex byte to the LCD
-00007Fr 1               ;Arguments
-00007Fr 1               ;  A - hex to print
-00007Fr 1               ;Preconditions
-00007Fr 1               ;  hex  is sent to lcd to get printed
-00007Fr 1               ;Side Effects
-00007Fr 1               ;  two hex characters are sent to the LCD
-00007Fr 1  DA             phx
-000080r 1  48             pha
-000081r 1  48             pha
-000082r 1  4A             lsr
-000083r 1  4A             lsr
+000075r 1  48             pha
+000076r 1  CE rr rr       dec LCD_RS_ENABLE        ;$00 - 1 = $FF (enabled)
+000079r 1  20 rr rr       jsr lcd_instruction
+00007Cr 1  9C rr rr       stz LCD_RS_ENABLE        ;$00 (disabled), saves up to three cycles over inc
+00007Fr 1  68             pla
+000080r 1  60             rts
+000081r 1               
+000081r 1               lcd_print_hex:
+000081r 1               ;Description
+000081r 1               ;  Sends hex byte to the LCD
+000081r 1               ;Arguments
+000081r 1               ;  A - hex to print
+000081r 1               ;Preconditions
+000081r 1               ;  hex  is sent to lcd to get printed
+000081r 1               ;Side Effects
+000081r 1               ;  two hex characters are sent to the LCD
+000081r 1  DA             phx
+000082r 1  48             pha
+000083r 1  48             pha
 000084r 1  4A             lsr
 000085r 1  4A             lsr
-000086r 1  AA             tax
-000087r 1  BD rr rr       lda hexmap, x
-00008Ar 1  20 rr rr       jsr lcd_print_char
-00008Dr 1  68             pla
-00008Er 1  29 0F          and #$0F
-000090r 1  AA             tax
-000091r 1  BD rr rr       lda hexmap, x
-000094r 1  20 rr rr       jsr lcd_print_char
-000097r 1  68             pla
-000098r 1  FA             plx
-000099r 1  60             rts
-00009Ar 1               
-00009Ar 1                 hexmap:
-00009Ar 1  30 31 32 33    .byte "0123456789ABCDEF"
-00009Er 1  34 35 36 37  
-0000A2r 1  38 39 41 42  
-0000AAr 1               
+000086r 1  4A             lsr
+000087r 1  4A             lsr
+000088r 1  AA             tax
+000089r 1  BD rr rr       lda hexmap, x
+00008Cr 1  20 rr rr       jsr lcd_print_char
+00008Fr 1  68             pla
+000090r 1  29 0F          and #$0F
+000092r 1  AA             tax
+000093r 1  BD rr rr       lda hexmap, x
+000096r 1  20 rr rr       jsr lcd_print_char
+000099r 1  68             pla
+00009Ar 1  FA             plx
+00009Br 1  60             rts
+00009Cr 1               
+00009Cr 1               lcd_print_asciiz_ZP:
+00009Cr 1               ;Description
+00009Cr 1               ;  Prints the message to the LCD character by character from the ZP variable
+00009Cr 1               ;Arguments
+00009Cr 1               ;  A - string
+00009Cr 1               ;Preconditions
+00009Cr 1               ;  Expected to be called from reset
+00009Cr 1               ;  symbol 'asciiz' exists as null terminated string
+00009Cr 1               ;Side Effects
+00009Cr 1               ;  * a character from asciiz, indexed w/ x
+00009Cr 1               ;  * if we find the null at the end of asciiz jump to the nop loop
+00009Cr 1               ;  * the character is printed to the lcd
+00009Cr 1               ;Note
+00009Cr 1  48             pha
+00009Dr 1  5A             phy
+00009Er 1  A0 00          ldy #0
+0000A0r 1               lcd_print_asciiz_print_loop:
+0000A0r 1  B1 rr          lda (LCD_PRINT_PTR),y
+0000A2r 1  F0 0A          beq lcd_print_asciiz_print_escape
+0000A4r 1  20 rr rr       jsr lcd_print_char
+0000A7r 1  C8             iny
+0000A8r 1  D0 F6          bne lcd_print_asciiz_print_loop
+0000AAr 1  E6 rr          inc LCD_PRINT_PTR+1
+0000ACr 1  80 F2          bra lcd_print_asciiz_print_loop ; jmp
+0000AEr 1               lcd_print_asciiz_print_escape:
+0000AEr 1  7A             ply
+0000AFr 1  68             pla
+0000B0r 1  60             rts
+0000B1r 1               
+0000B1r 1               hexmap:
+0000B1r 1  30 31 32 33    .byte "0123456789ABCDEF"
+0000B5r 1  34 35 36 37  
+0000B9r 1  38 39 41 42  
+0000C1r 1               
