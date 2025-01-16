@@ -4,10 +4,10 @@ This is my attempt at slowly building up a 6502 based microcomputer loosely stru
 ![Image of build](build_photo.png)
 
 # Current Status
-LCD is pretty well implemented, I got it behaving after reset.
+LCD is pretty well implemented, I got it behaving after reset. It is increments and displays a 1 byte hex counter ~ 1 once per second
 
 # Goals
-- [ ]  Implement UART DB9 serial adapter
+- [ ] Implement UART DB9 serial adapter
 - [ ] Implement wozmon
 - [ ] Implement basic
 - [ ] Implement cold start menu that lets user select from basic or wozmon
