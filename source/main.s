@@ -80,8 +80,8 @@ loop:
   jsr lcd_print_char
   load_addr_to_zp_macro alphabet, LCD_PRINT_PTR ;load the address of addr to LCD_PRINT_PTR ZP word
   jsr lcd_print_asciiz_ZP ;print the LCD_PRINT_PTR ZP word on the LCD
-  lda #$20 ;space
-  jsr lcd_print_char
+  lda #%11000000 ; set ddram address to start of 2nd line
+  jsr lcd_instruction
   load_addr_to_zp_macro numbers, LCD_PRINT_PTR ;load the address of addr to LCD_PRINT_PTR ZP word
   jsr lcd_print_asciiz_ZP ;print the LCD_PRINT_PTR ZP word on the LCD
   jsr half_second

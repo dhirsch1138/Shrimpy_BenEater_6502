@@ -265,8 +265,8 @@ Current file: source/main.s
 000031r 1  rr A9 rr 85  
 000035r 1  rr 68        
 000037r 1  20 rr rr       jsr lcd_print_asciiz_ZP ;print the LCD_PRINT_PTR ZP word on the LCD
-00003Ar 1  A9 20          lda #$20 ;space
-00003Cr 1  20 rr rr       jsr lcd_print_char
+00003Ar 1  A9 C0          lda #%11000000 ; set ddram address to start of 2nd line
+00003Cr 1  20 rr rr       jsr lcd_instruction
 00003Fr 1  48 A9 rr 85    load_addr_to_zp_macro numbers, LCD_PRINT_PTR ;load the address of addr to LCD_PRINT_PTR ZP word
 000043r 1  rr A9 rr 85  
 000047r 1  rr 68        
