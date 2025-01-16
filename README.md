@@ -1,6 +1,8 @@
 # Shrimpy
 This is my attempt at slowly building up a 6502 based microcomputer loosely structured around Ben Eater's lessons. I will wander off and chase squirrels, wrestle with interesting problems, and generally follow the "rule of cool" when deciding what to do next.
 
+![Image of build](build_photo.png)
+
 # Current Status
 LCD is pretty well implemented, I got it behaving after reset.
 
