@@ -8,6 +8,7 @@ LCD is pretty well implemented, I got it behaving after reset. It is increments 
 
 # Goals
 - [ ] Implement UART DB9 serial adapter
+- [ ] Get the schematic built in kicad and included in this repository
 - [ ] Implement wozmon
 - [ ] Implement basic
 - [ ] Implement cold start menu that lets user select from basic or wozmon
