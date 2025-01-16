@@ -5,13 +5,13 @@ This is my attempt at slowly building up a 6502 based microcomputer loosely stru
 LCD is pretty well implemented, I got it behaving after reset.
 
 # Goals
-[ ] Implement UART DB9 serial adapter
-[ ] Implement wozmon
-[ ] Implement basic
-[ ] Implement cold start menu that lets user select from basic or wozmon
-[ ] Implement keyboard support (ps2)
-[ ] Implement video using TMS9918
-[ ] Implement storage support either through SPI or I2C
+- [ ]  Implement UART DB9 serial adapter
+- [ ] Implement wozmon
+- [ ] Implement basic
+- [ ] Implement cold start menu that lets user select from basic or wozmon
+- [ ] Implement keyboard support (ps2)
+- [ ] Implement video using TMS9918
+- [ ] Implement storage support either through SPI or I2C
 
 # Current Features
 ## Hardware
