@@ -75,5 +75,5 @@ Current file: source/via.s
 000000r 1               
 000000r 1               ;====================================================
 000000r 1               ;Code
-000000r 1               .segment "VIA_SEGMENT"
+000000r 1               .segment "VIA_CODE"
 000000r 1               

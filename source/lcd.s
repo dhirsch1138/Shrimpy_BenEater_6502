@@ -109,13 +109,20 @@ lcd_init:
 ;  presuming that the code invoking the command will be smart enough to wait
 ;Todo
 ;  Should I be pushing A onto the stack such that this is transparent?
+  pha
+  ;per the HD44780U manual
+  ;1) reset
+  ;2) send 0010 for for bit
   lda #%00000010 ; Set 4-bit mode
   sta VIA_PORTB
   ora #LCD_4BIT_E
   sta VIA_PORTB
-  and #%00001111
-  sta VIA_PORTB
+  ;3) send 00101000 instruction for 4-bit, two line, 5x8
+  lda #%00101000
+  jsr lcd_instruction
+ ; sta VIA_PORTB
   stz LCD_RS_ENABLE  ;LCD_RS_ENABLE should be false
+  pla
   rts
 
 lcd_instruction:
@@ -206,14 +213,11 @@ lcd_print_asciiz_ZP:
 ;Description
 ;  Prints the message to the LCD character by character from the ZP variable
 ;Arguments
-;  A - string
+;  LCD_PRINT_PTR - references a nul terminated string in memory
 ;Preconditions
-;  Expected to be called from reset
-;  symbol 'asciiz' exists as null terminated string
+;  LCD_PRINT_PTR is pointed at a null terminated string
 ;Side Effects
-;  * a character from asciiz, indexed w/ x
-;  * if we find the null at the end of asciiz jump to the nop loop
-;  * the character is printed to the lcd
+;  * LCD_PRINT_PTR is iterated through and printed to the LCD
 ;Note
   pha
   phy

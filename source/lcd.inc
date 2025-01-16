@@ -1,6 +1,8 @@
 ;PURPOSE - Imports needed symbols defined in lcd.s
 ;
 
+.include "util_macros.inc"
+
 .import lcd_instruction
 .import lcd_init
 .import lcd_print_asciiz_ZP

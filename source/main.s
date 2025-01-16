@@ -16,26 +16,6 @@ MAIN_LOOP_COUNT:        .res 1, $00
 
 ;====================================================
 ;Macros
-.macro  load_addr_to_zp source_addr, zp_addr
-;Description
-;  loads the address into the specified zp
-;Arguments
-;  addr - static addr (like a symbol)
-;  zp - zero page address
-;Preconditions
-;  none
-;Side Effects
-;  addr -> zp
-;Note
-;  The macro is overengineering, but I am using this to play with macros. "I'm learnding!"
-  ;pha
-  lda #<source_addr ; The low byte of the 16 bit address pointer is loaded into A
-  sta zp_addr
-  lda #>source_addr ; the high byte of the pointer
-  sta zp_addr+1
-  ;pla
-.endmacro
-
 
 ;====================================================
 ;Code
@@ -46,6 +26,7 @@ MAIN_LOOP_COUNT:        .res 1, $00
 
   .include "via.inc"
   .include "lcd.inc"
+  .include "util_macros.inc"
 
 reset:
 ;Description
@@ -97,18 +78,12 @@ loop:
   jsr lcd_print_hex
   lda #$20 ;space
   jsr lcd_print_char
-  load_addr_to_zp hello, LCD_PRINT_PTR
-  jsr lcd_print_asciiz_ZP
-  jsr half_second
-  jsr half_second
-  lda #%00000001 ; Clear display
-  jsr lcd_instruction
-  lda MAIN_LOOP_COUNT
-  jsr lcd_print_hex
-  lda #$20
+  load_addr_to_zp_macro alphabet, LCD_PRINT_PTR ;load the address of addr to LCD_PRINT_PTR ZP word
+  jsr lcd_print_asciiz_ZP ;print the LCD_PRINT_PTR ZP word on the LCD
+  lda #$20 ;space
   jsr lcd_print_char
-  load_addr_to_zp world, LCD_PRINT_PTR
-  jsr lcd_print_asciiz_ZP
+  load_addr_to_zp_macro numbers, LCD_PRINT_PTR ;load the address of addr to LCD_PRINT_PTR ZP word
+  jsr lcd_print_asciiz_ZP ;print the LCD_PRINT_PTR ZP word on the LCD
   jsr half_second
   jsr half_second
   lda #%00000001 ; Clear display
@@ -116,8 +91,8 @@ loop:
   inc MAIN_LOOP_COUNT 
   bra loop ;jmp
 
-hello: .asciiz "Hello"
-world: .asciiz "World!"
+alphabet: .asciiz "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+numbers: .asciiz "0123456789"
 
 half_second:
 ;Description
@@ -133,13 +108,5 @@ half_second:
 ;    The delay is 9*(256*A+Y)+8 cycles
 ;     9*($100*$d9+$01)+8 = $7A111 = 499985 
 ;     499985 + JSR(6) + RTS(6) = 499997
-  lda #$d9
-  ldy #$01
-delay:
-  cpy #1
-  dey
-  sbc #0
-  bcs delay
+  delay_macro #$d9, #$01
   rts
-
-

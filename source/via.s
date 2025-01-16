@@ -71,4 +71,4 @@ VIA_PANH  = __VIA_START__ + VIA_REGISTER_PANH
 
 ;====================================================
 ;Code
-.segment "VIA_SEGMENT"
+.segment "VIA_CODE"

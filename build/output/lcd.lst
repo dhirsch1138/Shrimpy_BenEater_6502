@@ -133,132 +133,136 @@ Current file: source/lcd.s
 000000r 1               ;  presuming that the code invoking the command will be smart enough to wait
 000000r 1               ;Todo
 000000r 1               ;  Should I be pushing A onto the stack such that this is transparent?
-000000r 1  A9 02          lda #%00000010 ; Set 4-bit mode
-000002r 1  8D rr rr       sta VIA_PORTB
-000005r 1  09 40          ora #LCD_4BIT_E
-000007r 1  8D rr rr       sta VIA_PORTB
-00000Ar 1  29 0F          and #%00001111
-00000Cr 1  8D rr rr       sta VIA_PORTB
-00000Fr 1  9C rr rr       stz LCD_RS_ENABLE  ;LCD_RS_ENABLE should be false
-000012r 1  60             rts
-000013r 1               
-000013r 1               lcd_instruction:
-000013r 1               ;Description
-000013r 1               ;  Sends instruction byte to the LCD
-000013r 1               ;Arguments
-000013r 1               ;  A - LCD instruction byte
-000013r 1               ;Preconditions
-000013r 1               ;  LCD is initialized and has its parameters set
-000013r 1               ;  LCD is in 4 bit mode
-000013r 1               ;Side Effects
-000013r 1               ;  Instruction byte is sent to the LCD in 4-bit mode
-000013r 1               ;  Register A is squished
-000013r 1  48 A9 F0 8D    lcd_wait_macro ;wait until lcd is no longer showing BUSY
-000017r 1  rr rr A9 20  
-00001Br 1  8D rr rr A9  
-000044r 1  48             pha
-000045r 1  4A             lsr
-000046r 1  4A             lsr
+000000r 1  48             pha
+000001r 1                 ;per the HD44780U manual
+000001r 1                 ;1) reset
+000001r 1                 ;2) send 0010 for for bit
+000001r 1  A9 02          lda #%00000010 ; Set 4-bit mode
+000003r 1  8D rr rr       sta VIA_PORTB
+000006r 1  09 40          ora #LCD_4BIT_E
+000008r 1  8D rr rr       sta VIA_PORTB
+00000Br 1                 ;3) send 00101000 instruction for 4-bit, two line, 5x8
+00000Br 1  A9 28          lda #%00101000
+00000Dr 1  20 rr rr       jsr lcd_instruction
+000010r 1                ; sta VIA_PORTB
+000010r 1  9C rr rr       stz LCD_RS_ENABLE  ;LCD_RS_ENABLE should be false
+000013r 1  68             pla
+000014r 1  60             rts
+000015r 1               
+000015r 1               lcd_instruction:
+000015r 1               ;Description
+000015r 1               ;  Sends instruction byte to the LCD
+000015r 1               ;Arguments
+000015r 1               ;  A - LCD instruction byte
+000015r 1               ;Preconditions
+000015r 1               ;  LCD is initialized and has its parameters set
+000015r 1               ;  LCD is in 4 bit mode
+000015r 1               ;Side Effects
+000015r 1               ;  Instruction byte is sent to the LCD in 4-bit mode
+000015r 1               ;  Register A is squished
+000015r 1  48 A9 F0 8D    lcd_wait_macro ;wait until lcd is no longer showing BUSY
+000019r 1  rr rr A9 20  
+00001Dr 1  8D rr rr A9  
+000046r 1  48             pha
 000047r 1  4A             lsr
-000048r 1  4A             lsr            ; Send high 4 bits
-000049r 1  2C rr rr       bit LCD_RS_ENABLE ; enabled RS = $FF
-00004Cr 1  10 02          bpl lcd_instruction_sendhigh ; IF RS is NOT enabled THEN skip applying the RS mask
-00004Er 1  09 10          ora #LCD_4BIT_RS
-000050r 1               lcd_instruction_sendhigh:
-000050r 1  8D rr rr       sta VIA_PORTB
-000053r 1  09 40          ora #LCD_4BIT_E        ; Set E bit to send instruction
-000055r 1  8D rr rr       sta VIA_PORTB
-000058r 1  49 40          eor #LCD_4BIT_E         ; Clear E bit
-00005Ar 1  8D rr rr       sta VIA_PORTB
-00005Dr 1  68             pla
-00005Er 1  29 0F          and #%00001111 ; Send low 4 bits
-000060r 1  2C rr rr       bit LCD_RS_ENABLE ; enabled RS = $FF
-000063r 1  10 02          bpl lcd_instruction_sendlow ;IF RS is NOT enabled THEN skip applying the RS mask
-000065r 1  09 10          ora #LCD_4BIT_RS
-000067r 1               lcd_instruction_sendlow:
-000067r 1  8D rr rr       sta VIA_PORTB
-00006Ar 1  09 40          ora #LCD_4BIT_E         ; Set E bit to send instruction
-00006Cr 1  8D rr rr       sta VIA_PORTB
-00006Fr 1  49 40          eor #LCD_4BIT_E         ; Clear E bit
-000071r 1  8D rr rr       sta VIA_PORTB
-000074r 1  60             rts
-000075r 1               
-000075r 1               lcd_print_char:
-000075r 1               ;Description
-000075r 1               ;  Sends char to the LCD
-000075r 1               ;Arguments
-000075r 1               ;  A - char to print
-000075r 1               ;Preconditions
-000075r 1               ;  Char is sent to lcd to get printed
-000075r 1               ;Side Effects
-000075r 1               ;  Instruction byte is sent to the LCD in 4-bit mode
-000075r 1               ;  Register A is squished
-000075r 1  48             pha
-000076r 1  CE rr rr       dec LCD_RS_ENABLE        ;$00 - 1 = $FF (enabled)
-000079r 1  20 rr rr       jsr lcd_instruction
-00007Cr 1  9C rr rr       stz LCD_RS_ENABLE        ;$00 (disabled), saves up to three cycles over inc
-00007Fr 1  68             pla
-000080r 1  60             rts
-000081r 1               
-000081r 1               lcd_print_hex:
-000081r 1               ;Description
-000081r 1               ;  Sends hex byte to the LCD
-000081r 1               ;Arguments
-000081r 1               ;  A - hex to print
-000081r 1               ;Preconditions
-000081r 1               ;  hex  is sent to lcd to get printed
-000081r 1               ;Side Effects
-000081r 1               ;  two hex characters are sent to the LCD
-000081r 1  DA             phx
-000082r 1  48             pha
-000083r 1  48             pha
-000084r 1  4A             lsr
-000085r 1  4A             lsr
+000048r 1  4A             lsr
+000049r 1  4A             lsr
+00004Ar 1  4A             lsr            ; Send high 4 bits
+00004Br 1  2C rr rr       bit LCD_RS_ENABLE ; enabled RS = $FF
+00004Er 1  10 02          bpl lcd_instruction_sendhigh ; IF RS is NOT enabled THEN skip applying the RS mask
+000050r 1  09 10          ora #LCD_4BIT_RS
+000052r 1               lcd_instruction_sendhigh:
+000052r 1  8D rr rr       sta VIA_PORTB
+000055r 1  09 40          ora #LCD_4BIT_E        ; Set E bit to send instruction
+000057r 1  8D rr rr       sta VIA_PORTB
+00005Ar 1  49 40          eor #LCD_4BIT_E         ; Clear E bit
+00005Cr 1  8D rr rr       sta VIA_PORTB
+00005Fr 1  68             pla
+000060r 1  29 0F          and #%00001111 ; Send low 4 bits
+000062r 1  2C rr rr       bit LCD_RS_ENABLE ; enabled RS = $FF
+000065r 1  10 02          bpl lcd_instruction_sendlow ;IF RS is NOT enabled THEN skip applying the RS mask
+000067r 1  09 10          ora #LCD_4BIT_RS
+000069r 1               lcd_instruction_sendlow:
+000069r 1  8D rr rr       sta VIA_PORTB
+00006Cr 1  09 40          ora #LCD_4BIT_E         ; Set E bit to send instruction
+00006Er 1  8D rr rr       sta VIA_PORTB
+000071r 1  49 40          eor #LCD_4BIT_E         ; Clear E bit
+000073r 1  8D rr rr       sta VIA_PORTB
+000076r 1  60             rts
+000077r 1               
+000077r 1               lcd_print_char:
+000077r 1               ;Description
+000077r 1               ;  Sends char to the LCD
+000077r 1               ;Arguments
+000077r 1               ;  A - char to print
+000077r 1               ;Preconditions
+000077r 1               ;  Char is sent to lcd to get printed
+000077r 1               ;Side Effects
+000077r 1               ;  Instruction byte is sent to the LCD in 4-bit mode
+000077r 1               ;  Register A is squished
+000077r 1  48             pha
+000078r 1  CE rr rr       dec LCD_RS_ENABLE        ;$00 - 1 = $FF (enabled)
+00007Br 1  20 rr rr       jsr lcd_instruction
+00007Er 1  9C rr rr       stz LCD_RS_ENABLE        ;$00 (disabled), saves up to three cycles over inc
+000081r 1  68             pla
+000082r 1  60             rts
+000083r 1               
+000083r 1               lcd_print_hex:
+000083r 1               ;Description
+000083r 1               ;  Sends hex byte to the LCD
+000083r 1               ;Arguments
+000083r 1               ;  A - hex to print
+000083r 1               ;Preconditions
+000083r 1               ;  hex  is sent to lcd to get printed
+000083r 1               ;Side Effects
+000083r 1               ;  two hex characters are sent to the LCD
+000083r 1  DA             phx
+000084r 1  48             pha
+000085r 1  48             pha
 000086r 1  4A             lsr
 000087r 1  4A             lsr
-000088r 1  AA             tax
-000089r 1  BD rr rr       lda hexmap, x
-00008Cr 1  20 rr rr       jsr lcd_print_char
-00008Fr 1  68             pla
-000090r 1  29 0F          and #$0F
-000092r 1  AA             tax
-000093r 1  BD rr rr       lda hexmap, x
-000096r 1  20 rr rr       jsr lcd_print_char
-000099r 1  68             pla
-00009Ar 1  FA             plx
-00009Br 1  60             rts
-00009Cr 1               
-00009Cr 1               lcd_print_asciiz_ZP:
-00009Cr 1               ;Description
-00009Cr 1               ;  Prints the message to the LCD character by character from the ZP variable
-00009Cr 1               ;Arguments
-00009Cr 1               ;  A - string
-00009Cr 1               ;Preconditions
-00009Cr 1               ;  Expected to be called from reset
-00009Cr 1               ;  symbol 'asciiz' exists as null terminated string
-00009Cr 1               ;Side Effects
-00009Cr 1               ;  * a character from asciiz, indexed w/ x
-00009Cr 1               ;  * if we find the null at the end of asciiz jump to the nop loop
-00009Cr 1               ;  * the character is printed to the lcd
-00009Cr 1               ;Note
-00009Cr 1  48             pha
-00009Dr 1  5A             phy
-00009Er 1  A0 00          ldy #0
-0000A0r 1               lcd_print_asciiz_print_loop:
-0000A0r 1  B1 rr          lda (LCD_PRINT_PTR),y
-0000A2r 1  F0 0A          beq lcd_print_asciiz_print_escape
-0000A4r 1  20 rr rr       jsr lcd_print_char
-0000A7r 1  C8             iny
-0000A8r 1  D0 F6          bne lcd_print_asciiz_print_loop
-0000AAr 1  E6 rr          inc LCD_PRINT_PTR+1
-0000ACr 1  80 F2          bra lcd_print_asciiz_print_loop ; jmp
-0000AEr 1               lcd_print_asciiz_print_escape:
-0000AEr 1  7A             ply
-0000AFr 1  68             pla
-0000B0r 1  60             rts
-0000B1r 1               
-0000B1r 1               hexmap:
-0000B1r 1  30 31 32 33    .byte "0123456789ABCDEF"
-0000B5r 1  34 35 36 37  
-0000B9r 1  38 39 41 42  
-0000C1r 1               
+000088r 1  4A             lsr
+000089r 1  4A             lsr
+00008Ar 1  AA             tax
+00008Br 1  BD rr rr       lda hexmap, x
+00008Er 1  20 rr rr       jsr lcd_print_char
+000091r 1  68             pla
+000092r 1  29 0F          and #$0F
+000094r 1  AA             tax
+000095r 1  BD rr rr       lda hexmap, x
+000098r 1  20 rr rr       jsr lcd_print_char
+00009Br 1  68             pla
+00009Cr 1  FA             plx
+00009Dr 1  60             rts
+00009Er 1               
+00009Er 1               lcd_print_asciiz_ZP:
+00009Er 1               ;Description
+00009Er 1               ;  Prints the message to the LCD character by character from the ZP variable
+00009Er 1               ;Arguments
+00009Er 1               ;  LCD_PRINT_PTR - references a nul terminated string in memory
+00009Er 1               ;Preconditions
+00009Er 1               ;  LCD_PRINT_PTR is pointed at a null terminated string
+00009Er 1               ;Side Effects
+00009Er 1               ;  * LCD_PRINT_PTR is iterated through and printed to the LCD
+00009Er 1               ;Note
+00009Er 1  48             pha
+00009Fr 1  5A             phy
+0000A0r 1  A0 00          ldy #0
+0000A2r 1               lcd_print_asciiz_print_loop:
+0000A2r 1  B1 rr          lda (LCD_PRINT_PTR),y
+0000A4r 1  F0 0A          beq lcd_print_asciiz_print_escape
+0000A6r 1  20 rr rr       jsr lcd_print_char
+0000A9r 1  C8             iny
+0000AAr 1  D0 F6          bne lcd_print_asciiz_print_loop
+0000ACr 1  E6 rr          inc LCD_PRINT_PTR+1
+0000AEr 1  80 F2          bra lcd_print_asciiz_print_loop ; jmp
+0000B0r 1               lcd_print_asciiz_print_escape:
+0000B0r 1  7A             ply
+0000B1r 1  68             pla
+0000B2r 1  60             rts
+0000B3r 1               
+0000B3r 1               hexmap:
+0000B3r 1  30 31 32 33    .byte "0123456789ABCDEF"
+0000B7r 1  34 35 36 37  
+0000BBr 1  38 39 41 42  
+0000C3r 1               
