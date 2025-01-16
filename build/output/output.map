@@ -3,7 +3,7 @@ Modules list:
 lcd.o:
     LCD_RAM           Offs=000000  Size=000001  Align=00001  Fill=0000
     LCD_PAGEZERO      Offs=000000  Size=000002  Align=00001  Fill=0000
-    LCD_CODE          Offs=000000  Size=0000C3  Align=00001  Fill=0000
+    LCD_CODE          Offs=000000  Size=0000C0  Align=00001  Fill=0000
 main.o:
     CODE              Offs=000000  Size=000092  Align=00001  Fill=0000
     MAIN_RAM          Offs=000000  Size=000001  Align=00001  Fill=0000
@@ -20,7 +20,7 @@ LCD_PAGEZERO          000000  000001  000002  00001
 LCD_RAM               000200  000200  000001  00001
 MAIN_RAM              000201  000201  000001  00001
 CODE                  008000  008091  000092  00001
-LCD_CODE              008092  008154  0000C3  00001
+LCD_CODE              008092  008151  0000C0  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 

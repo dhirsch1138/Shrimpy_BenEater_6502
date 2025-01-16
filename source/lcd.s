@@ -220,18 +220,15 @@ lcd_print_asciiz_ZP:
 ;  * LCD_PRINT_PTR is iterated through and printed to the LCD
 ;Note
   pha
-  phy
-  ldy #0
 lcd_print_asciiz_print_loop:
-  lda (LCD_PRINT_PTR),y
+  lda (LCD_PRINT_PTR)
   beq lcd_print_asciiz_print_escape
   jsr lcd_print_char
-  iny
+  inc LCD_PRINT_PTR
   bne lcd_print_asciiz_print_loop
   inc LCD_PRINT_PTR+1
   bra lcd_print_asciiz_print_loop ; jmp
 lcd_print_asciiz_print_escape:
-  ply
   pla
   rts
 

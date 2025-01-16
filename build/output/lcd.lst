@@ -246,23 +246,20 @@ Current file: source/lcd.s
 00009Er 1               ;  * LCD_PRINT_PTR is iterated through and printed to the LCD
 00009Er 1               ;Note
 00009Er 1  48             pha
-00009Fr 1  5A             phy
-0000A0r 1  A0 00          ldy #0
-0000A2r 1               lcd_print_asciiz_print_loop:
-0000A2r 1  B1 rr          lda (LCD_PRINT_PTR),y
-0000A4r 1  F0 0A          beq lcd_print_asciiz_print_escape
-0000A6r 1  20 rr rr       jsr lcd_print_char
-0000A9r 1  C8             iny
-0000AAr 1  D0 F6          bne lcd_print_asciiz_print_loop
-0000ACr 1  E6 rr          inc LCD_PRINT_PTR+1
-0000AEr 1  80 F2          bra lcd_print_asciiz_print_loop ; jmp
-0000B0r 1               lcd_print_asciiz_print_escape:
-0000B0r 1  7A             ply
-0000B1r 1  68             pla
-0000B2r 1  60             rts
-0000B3r 1               
-0000B3r 1               hexmap:
-0000B3r 1  30 31 32 33    .byte "0123456789ABCDEF"
-0000B7r 1  34 35 36 37  
-0000BBr 1  38 39 41 42  
-0000C3r 1               
+00009Fr 1               lcd_print_asciiz_print_loop:
+00009Fr 1  B2 rr          lda (LCD_PRINT_PTR)
+0000A1r 1  F0 0B          beq lcd_print_asciiz_print_escape
+0000A3r 1  20 rr rr       jsr lcd_print_char
+0000A6r 1  E6 rr          inc LCD_PRINT_PTR
+0000A8r 1  D0 F5          bne lcd_print_asciiz_print_loop
+0000AAr 1  E6 rr          inc LCD_PRINT_PTR+1
+0000ACr 1  80 F1          bra lcd_print_asciiz_print_loop ; jmp
+0000AEr 1               lcd_print_asciiz_print_escape:
+0000AEr 1  68             pla
+0000AFr 1  60             rts
+0000B0r 1               
+0000B0r 1               hexmap:
+0000B0r 1  30 31 32 33    .byte "0123456789ABCDEF"
+0000B4r 1  34 35 36 37  
+0000B8r 1  38 39 41 42  
+0000C0r 1               
