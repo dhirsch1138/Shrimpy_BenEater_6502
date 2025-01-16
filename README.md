@@ -22,6 +22,8 @@ LCD is pretty well implemented, I got it behaving after reset. It is increments 
 * Wire wrap connections for pretty much everything except for power for durablity and ease of maintenance. Seriously, wire wrapping goes SO GOOD with breadboard prototyping.
 * Enhanced durability by removing fragile potentiometers and replacing them with resistors
   * I just dialed in the desired resistence on a potentiometer, measured it using my trusty multimeter, and swapped it out with a resistor. Like the wire wrapped connections, durability is the name of the game.
+  * LCD potentiometer was replaced by 3.9K resistor
+  * Clock module potentiometer was replaced by a 120k resistor (is that right? I should double check)
 * 28 pin ZIF socket for the EEPROM. [https://www.pcbway.com/project/shareproject/Breadboard_to_28p_wide_ZIF_adapter_fc6528ee.html]
 * Replaced the 74LS00 address decoder with a 74HC00, it can be quicker and it uses much less power.
 
