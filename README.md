@@ -10,6 +10,7 @@ This is my attempt at slowly building up a 6502 based microcomputer loosely stru
 LCD is pretty well implemented, I got it behaving after reset. It is increments and displays a 1 byte hex counter ~ 1 once per second
 
 # Goals
+See [Shopping List](shopping_list.md) for parts that I would need to get for these.
 - [ ] Implement UART DB9 serial adapter
 - [x] Get the schematic built in kicad and included in this repository
 - [ ] Implement wozmon
