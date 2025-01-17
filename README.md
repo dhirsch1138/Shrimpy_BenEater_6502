@@ -11,6 +11,8 @@ LCD is pretty well implemented, I got it behaving after reset. It is increments 
 
 # Goals
 See [Shopping List](shopping_list.md) for parts that I would need to get for these.
+- [ ] Implement custom characters for the LCD, it NEEDS DINOSAURS
+  - [ ] Bonus points: make the dinosaur march across the LCD
 - [ ] Implement UART DB9 serial adapter
 - [x] Get the schematic built in kicad and included in this repository
 - [ ] Implement wozmon
