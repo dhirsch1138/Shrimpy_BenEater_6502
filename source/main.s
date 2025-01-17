@@ -26,6 +26,7 @@ MAIN_LOOP_COUNT:        .res 1, $00
 
   .include "via.inc"
   .include "lcd.inc"
+  .include "lcd_statics.inc"
   .include "util_macros.inc"
 
 reset:
@@ -54,13 +55,13 @@ reset:
   lda #%11111111 ; Set all pins on port B to output
   sta VIA_DDRB
   jsr lcd_init
-  lda #%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
+  lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE);#%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
   jsr lcd_instruction
-  lda #%00001110 ; Display on; cursor on; blink off
+  lda #(LCD_INST_DISPLAY | LCD_DISPLAY_DSON | LCD_DISPLAY_CUON);#%00001110 ; Display on; cursor on; blink off
   jsr lcd_instruction
-  lda #%00000110 ; Increment and shift cursor; don't shift display
+  lda #(LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR);#%00000110 ; Increment and shift cursor; don't shift display
   jsr lcd_instruction
-  lda #%00000001 ; Clear display
+  lda #LCD_INST_CLRDISP ; Clear display
   jsr lcd_instruction
   stz MAIN_LOOP_COUNT
   ; presumes we will continue executing into 'loop'
@@ -84,12 +85,13 @@ loop:
   jsr lcd_instruction
   load_addr_to_zp_macro numbers, LCD_PRINT_PTR ;load the address of addr to LCD_PRINT_PTR ZP word
   jsr lcd_print_asciiz_ZP ;print the LCD_PRINT_PTR ZP word on the LCD
-  lda $01
+  lda $02 ; delay for ~1 second
 loop_delay_half_second:
   delay_macro #$d9, #$01 ;delay for 499999 cycles, which is 500ms @ 1mhz
   dec 1
+  ;TODO fix this bug, it should be a bne
   beq loop_delay_half_second 
-  lda #%00000001 ; Clear display
+  lda #LCD_INST_CLRDISP ;lda #%00000001 ; Clear display
   jsr lcd_instruction
   inc MAIN_LOOP_COUNT 
   bra loop ;jmp
