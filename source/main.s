@@ -84,8 +84,11 @@ loop:
   jsr lcd_instruction
   load_addr_to_zp_macro numbers, LCD_PRINT_PTR ;load the address of addr to LCD_PRINT_PTR ZP word
   jsr lcd_print_asciiz_ZP ;print the LCD_PRINT_PTR ZP word on the LCD
-  jsr half_second
-  jsr half_second
+  lda $01
+loop_delay_half_second:
+  delay_macro #$d9, #$01 ;delay for 499999 cycles, which is 500ms @ 1mhz
+  dec 1
+  beq loop_delay_half_second 
   lda #%00000001 ; Clear display
   jsr lcd_instruction
   inc MAIN_LOOP_COUNT 
@@ -93,20 +96,3 @@ loop:
 
 alphabet: .asciiz "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 numbers: .asciiz "0123456789"
-
-half_second:
-;Description
-;  delays for approx 500k cycles (half second @ 1mhz)
-;Arguments
-;  None
-;Preconditions
-;  non
-;Side Effects
-;  nop
-;Note
-;  formula
-;    The delay is 9*(256*A+Y)+8 cycles
-;     9*($100*$d9+$01)+8 = $7A111 = 499985 
-;     499985 + JSR(6) + RTS(6) = 499997
-  delay_macro #$d9, #$01
-  rts

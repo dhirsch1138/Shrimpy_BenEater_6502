@@ -50,8 +50,11 @@
 ;          acount - #$d9
 ;          ycount - #$01
 ;     9*($100*$d9+$01)+8 = $7A111 = 499985 
-;     499985 + JSR(6) + RTS(6) = 499997
-;TODO: pha phy pla ply
+;     499985 + 14 = 499999
+;       pha - 3
+;       phy - 3
+;       pla - 4
+;       ply - 4
   .local delay
   pha
   phy
@@ -68,4 +71,18 @@ delay:
 .endif
 
 
+.if    .definedmacro(swn_macro)
+.else
+.macro swn_macro
+;SWN (SWap Nybble) instruction
+;Credit David Galloway
+;http://6502.org/source/general/SWN.html & http://wilsonminesco.com/6502primer/PgmTips.html
+  ASL  A
+  ADC  #$80
+  ROL  A
+  ASL  A
+  ADC  #$80
+  ROL  A
+.endmacro
+.endif
 

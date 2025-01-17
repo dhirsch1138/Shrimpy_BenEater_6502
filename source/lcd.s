@@ -58,15 +58,15 @@ LCD_PRINT_PTR:        .res 2, $0000
   lda #%11110000  ; LCD data is input
   sta VIA_DDRB
 lcd_wait_busy:
-  lda #LCD_4BIT_RW
+  lda #LCD_PIN_RW
   sta VIA_PORTB
-  lda #(LCD_4BIT_RW | LCD_4BIT_E)
+  lda #(LCD_PIN_RW | LCD_PIN_E)
   sta VIA_PORTB
   lda VIA_PORTB       ; Read high nibble
   pha             ; and put on stack since it has the busy flag
-  lda #LCD_4BIT_RW
+  lda #LCD_PIN_RW
   sta VIA_PORTB
-  lda #(LCD_4BIT_RW | LCD_4BIT_E)
+  lda #(LCD_PIN_RW | LCD_PIN_E)
   sta VIA_PORTB
   ;TODO is this lda doing anything? seems like it is superceded immediately by the pla. 
   ;unless reading from the via port triggers something on the lcd?
@@ -75,7 +75,7 @@ lcd_wait_busy:
   and #%00001000
   bne lcd_wait_busy
   ; logical break, we aren't busy anymore
-  lda #LCD_4BIT_RW
+  lda #LCD_PIN_RW
   sta VIA_PORTB
   lda #%11111111  ; LCD data is output
   sta VIA_DDRB
@@ -89,10 +89,49 @@ lcd_wait_busy:
 ;Includes
 
 .include "via.inc"
+.include "util_macros.inc"
 
-LCD_4BIT_E  = %01000000
-LCD_4BIT_RW = %00100000
-LCD_4BIT_RS = %00010000 
+;control symbols
+;==================
+LCD_PIN_E  = %01000000
+LCD_PIN_RW = %00100000
+LCD_PIN_RS = %00010000 
+
+;instruction masks
+;==================
+LCD_INST_FUNCSET = %00100000
+LCD_INST_CURSHFT = %00010000
+LCD_INST_DISPLAY = %00001000
+LCD_INST_ENTRYMO = %00000100
+LCD_INST_RTNHOME = %00000010
+LCD_INST_CLRDISP = %00000001
+
+;function masks (use w/ LCD_INST_FUNCSET)
+;==================
+;000XXX00
+LCD_FUNCSET_DATA = %00010000 ;8-bit mode (default 4-bit mode)
+LCD_FUNCSET_LINE = %00001000 ;two line mode (default one line mode)
+LCD_FUNCSET_SIZE = %00000100 ;5x10 characters (default 5x8)
+
+;cursor shift masks (use w/ LCD_INST_CURSHFT)
+;==================
+;0000XX00
+LCD_CURSHFT_MOVE = %00001000 ; display shifts (default cursor shifts)
+LCD_CURSHFT_SDIR = %00000100 ; shift right (default shift left)
+
+;display masks (use w/ LCD_INST_DISPLAY)
+;==================
+;00000XXX
+LCD_DISPLAY_DSON = %00000100 ; display on (default display off)
+LCD_DISPLAY_CUON = %00000010 ; cursor on (default cursor off)
+LCD_DISPLAY_BLON = %00000001 ; blink on (default blink off)
+
+;entry mode masks (use w/ LCD_INST_ENTRYMO)
+;==================
+;000000XX
+LCD_ENTRYMO_INCR = %00000010 ; increment cursor (default decrement cursor)
+LCD_ENTRYMO_ADSH = %00000001 ; accompanies display shift (default no)
+
 
 lcd_init:
 ;Description
@@ -112,13 +151,14 @@ lcd_init:
   pha
   ;per the HD44780U manual
   ;1) reset
-  ;2) send 0010 for for bit
-  lda #%00000010 ; Set 4-bit mode
+  ;2) send the 4 bit instruction (swapped) 0010 for 4 bit operation
+  lda #LCD_INST_FUNCSET
+  swn_macro ;#%00000010 ; Set 4-bit mode
   sta VIA_PORTB
-  ora #LCD_4BIT_E
+  ora #LCD_PIN_E
   sta VIA_PORTB
   ;3) send 00101000 instruction for 4-bit, two line, 5x8
-  lda #%00101000
+  lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE)
   jsr lcd_instruction
  ; sta VIA_PORTB
   stz LCD_RS_ENABLE  ;LCD_RS_ENABLE should be false
@@ -144,23 +184,23 @@ lcd_instruction:
   lsr            ; Send high 4 bits
   bit LCD_RS_ENABLE ; enabled RS = $FF
   bpl lcd_instruction_sendhigh ; IF RS is NOT enabled THEN skip applying the RS mask
-  ora #LCD_4BIT_RS
+  ora #LCD_PIN_RS
 lcd_instruction_sendhigh:
   sta VIA_PORTB
-  ora #LCD_4BIT_E        ; Set E bit to send instruction
+  ora #LCD_PIN_E        ; Set E bit to send instruction
   sta VIA_PORTB
-  eor #LCD_4BIT_E         ; Clear E bit
+  eor #LCD_PIN_E         ; Clear E bit
   sta VIA_PORTB
   pla
   and #%00001111 ; Send low 4 bits
   bit LCD_RS_ENABLE ; enabled RS = $FF
   bpl lcd_instruction_sendlow ;IF RS is NOT enabled THEN skip applying the RS mask
-  ora #LCD_4BIT_RS
+  ora #LCD_PIN_RS
 lcd_instruction_sendlow: 
   sta VIA_PORTB
-  ora #LCD_4BIT_E         ; Set E bit to send instruction
+  ora #LCD_PIN_E         ; Set E bit to send instruction
   sta VIA_PORTB
-  eor #LCD_4BIT_E         ; Clear E bit
+  eor #LCD_PIN_E         ; Clear E bit
   sta VIA_PORTB
   rts
 
