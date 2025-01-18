@@ -50,11 +50,13 @@
 ;          acount - #$d9
 ;          ycount - #$01
 ;     9*($100*$d9+$01)+8 = $7A111 = 499985 
-;     499985 + 14 = 499999
+;     499985 + 18 = 500003
 ;       pha - 3
 ;       phy - 3
 ;       pla - 4
 ;       ply - 4
+;       lda (immediate) - 2
+;       ldy (immediate) - 2
   .local delay
   pha
   phy

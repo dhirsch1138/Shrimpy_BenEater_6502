@@ -7,6 +7,8 @@
 .import lcd_print_char
 .import lcd_print_hex
 
+.import dinoinit
+
 .importzp  LCD_PRINT_PTR
 
 ;Macros

@@ -20,17 +20,8 @@
 .export lcd_print_asciiz_ZP
 .export lcd_print_char
 .export lcd_print_hex
-;TODO remove these, no need to export them as they are in statics header
-;statics
-.export LCD_INST_FUNCSET
-.export LCD_INST_DISPLAY
-.export LCD_INST_ENTRYMO
-.export LCD_INST_CLRDISP
-.export LCD_FUNCSET_LINE
-.export LCD_DISPLAY_DSON
-.export LCD_DISPLAY_CUON
-.export LCD_DISPLAY_BLON 
-.export LCD_ENTRYMO_INCR
+
+.export dinoinit
 
 ;variables
 .export LCD_PRINT_PTR
@@ -242,6 +233,27 @@ lcd_print_asciiz_print_loop:
 lcd_print_asciiz_print_escape:
   pla
   rts
+
+dinoinit:
+lda #(LCD_INST_CRAMADR | %00000000) 
+jsr lcd_instruction ;set addr
+lda #%00001111
+jsr lcd_print_char
+lda #%00001010
+jsr lcd_print_char
+lda #%00001111
+jsr lcd_print_char
+lda #%00001100
+jsr lcd_print_char
+lda #%00001110
+jsr lcd_print_char
+lda #%00011100
+jsr lcd_print_char
+lda #%00001010
+jsr lcd_print_char
+lda #%00000000
+jsr lcd_print_char
+rts
 
 hexmap:
   .byte "0123456789ABCDEF"

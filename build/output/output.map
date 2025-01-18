@@ -3,9 +3,9 @@ Modules list:
 lcd.o:
     LCD_RAM           Offs=000000  Size=000001  Align=00001  Fill=0000
     LCD_PAGEZERO      Offs=000000  Size=000002  Align=00001  Fill=0000
-    LCD_CODE          Offs=000000  Size=0000C8  Align=00001  Fill=0000
+    LCD_CODE          Offs=000000  Size=0000F6  Align=00001  Fill=0000
 main.o:
-    CODE              Offs=000000  Size=000091  Align=00001  Fill=0000
+    CODE              Offs=000000  Size=0000A1  Align=00001  Fill=0000
     MAIN_RAM          Offs=000000  Size=000001  Align=00001  Fill=0000
 reset_interrupt.o:
     VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
@@ -19,8 +19,8 @@ Name                   Start     End    Size  Align
 LCD_PAGEZERO          000000  000001  000002  00001
 LCD_RAM               000200  000200  000001  00001
 MAIN_RAM              000201  000201  000001  00001
-CODE                  008000  008090  000091  00001
-LCD_CODE              008091  008158  0000C8  00001
+CODE                  008000  0080A0  0000A1  00001
+LCD_CODE              0080A1  008196  0000F6  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
@@ -28,26 +28,26 @@ Exports list by name:
 ---------------------
 LCD_PRINT_PTR             000000 RLZ    VIA_DDRB                  006002 REA    
 VIA_PORTB                 006000 REA    __CODE_LOAD__             008000 RLA    
-__VIA_START__             006000 RLA    lcd_init                  008091 RLA    
-lcd_instruction           0080AE RLA    lcd_print_asciiz_ZP       008137 RLA    
-lcd_print_char            008110 RLA    lcd_print_hex             00811C RLA    
-
+__VIA_START__             006000 RLA    dinoinit                  008159 RLA    
+lcd_init                  0080A1 RLA    lcd_instruction           0080BE RLA    
+lcd_print_asciiz_ZP       008147 RLA    lcd_print_char            008120 RLA    
+lcd_print_hex             00812C RLA    
 
 
 Exports list by value:
 ----------------------
 LCD_PRINT_PTR             000000 RLZ    VIA_PORTB                 006000 REA    
 __VIA_START__             006000 RLA    VIA_DDRB                  006002 REA    
-__CODE_LOAD__             008000 RLA    lcd_init                  008091 RLA    
-lcd_instruction           0080AE RLA    lcd_print_char            008110 RLA    
-lcd_print_hex             00811C RLA    lcd_print_asciiz_ZP       008137 RLA    
-
+__CODE_LOAD__             008000 RLA    lcd_init                  0080A1 RLA    
+lcd_instruction           0080BE RLA    lcd_print_char            008120 RLA    
+lcd_print_hex             00812C RLA    lcd_print_asciiz_ZP       008147 RLA    
+dinoinit                  008159 RLA    
 
 
 Imports list:
 -------------
 LCD_PRINT_PTR (lcd.o):
-    main.o                    source/lcd.inc(10)
+    main.o                    source/lcd.inc(12)
 VIA_DDRB (via.o):
     main.o                    source/via.inc(4)
     lcd.o                     source/via.inc(4)
@@ -57,6 +57,8 @@ __CODE_LOAD__ ([linker generated]):
     reset_interrupt.o         source/reset_interrupt.s(6)
 __VIA_START__ ([linker generated]):
     via.o                     source/via.s(7)
+dinoinit (lcd.o):
+    main.o                    source/lcd.inc(10)
 lcd_init (lcd.o):
     main.o                    source/lcd.inc(5)
 lcd_instruction (lcd.o):

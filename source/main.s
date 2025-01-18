@@ -61,6 +61,9 @@ reset:
   jsr lcd_instruction
   lda #(LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR);#%00000110 ; Increment and shift cursor; don't shift display
   jsr lcd_instruction
+  jsr dinoinit ; LOAD DINOSAUR
+  lda #LCD_INST_RTNHOME
+  jsr lcd_instruction
   lda #LCD_INST_CLRDISP ; Clear display
   jsr lcd_instruction
   stz MAIN_LOOP_COUNT
@@ -83,18 +86,22 @@ loop:
   jsr lcd_print_asciiz_ZP ;print the LCD_PRINT_PTR ZP word on the LCD
   lda #%11000000 ; set ddram address to start of 2nd line
   jsr lcd_instruction
+  lda #%00000000 ;dino
+  jsr lcd_print_char 
+  lda #$20 ;space
+  jsr lcd_print_char
   load_addr_to_zp_macro numbers, LCD_PRINT_PTR ;load the address of addr to LCD_PRINT_PTR ZP word
   jsr lcd_print_asciiz_ZP ;print the LCD_PRINT_PTR ZP word on the LCD
   lda $02 ; delay for ~1 second
 loop_delay_half_second:
-  delay_macro #$d9, #$01 ;delay for 499999 cycles, which is 500ms @ 1mhz
+  delay_macro #$d9, #$01 ;delay for 500003 cycles, which is ~500ms @ 1mhz
   dec 1
-  ;TODO fix this bug, it should be a bne
-  beq loop_delay_half_second 
+  ;bne loop_delay_half_second 
   lda #LCD_INST_CLRDISP ;lda #%00000001 ; Clear display
   jsr lcd_instruction
   inc MAIN_LOOP_COUNT 
   bra loop ;jmp
+
 
 alphabet: .asciiz "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 numbers: .asciiz "0123456789"
