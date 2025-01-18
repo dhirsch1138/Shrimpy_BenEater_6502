@@ -5638,6 +5638,16 @@
 		)
 		(uuid f2f4c965-c8b3-4a84-a4cc-9c7161881708)
 	)
+	(text "A"
+		(exclude_from_sim no)
+		(at 239.522 132.08 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "0edf8ff8-64c0-44ea-973e-e785209462df")
+	)
 	(text ""
 		(exclude_from_sim no)
 		(at 266.954 138.938 0)
@@ -5727,6 +5737,16 @@
 			)
 		)
 		(uuid "e68d05a1-1a1f-4e13-ab90-0fd46cc45227")
+	)
+	(text "K"
+		(exclude_from_sim no)
+		(at 239.522 134.874 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "f1b6c42f-64b0-42d3-8cf6-378624179b8b")
 	)
 	(label "Reset"
 		(at 26.67 72.39 0)
@@ -8356,39 +8376,6 @@
 			)
 		)
 	)
-	(hierarchical_label "VCC"
-		(shape input)
-		(at 40.64 30.48 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "67f328a5-7e66-4244-9f34-3e2133180fb3")
-	)
-	(hierarchical_label "VCC"
-		(shape input)
-		(at 40.64 50.8 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "75649fd8-ed29-4658-b0aa-65ba107a82d0")
-	)
-	(hierarchical_label "VCC"
-		(shape input)
-		(at 40.64 35.56 180)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "82a3b401-cb30-406d-9191-496f49379e75")
-	)
 	(symbol
 		(lib_id "power:GND")
 		(at 44.45 171.45 0)
@@ -9054,7 +9041,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "WC1602A"
+		(property "Value" "16x2 LCD"
 			(at 242.2241 119.38 0)
 			(effects
 				(font
@@ -9167,7 +9154,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "HM62256BLP"
+		(property "Value" "62256"
 			(at 92.3641 121.92 0)
 			(effects
 				(font
@@ -9617,6 +9604,73 @@
 		)
 	)
 	(symbol
+		(lib_id "power:+5V")
+		(at 40.64 50.8 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "6b8a4dff-10cd-4b8b-8308-cd35625e7ebf")
+		(property "Reference" "#PWR021"
+			(at 44.45 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+5V"
+			(at 36.83 50.7999 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 40.64 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 40.64 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+5V\""
+			(at 40.64 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "116f11c8-22e1-4860-b0f3-386db771b9f9")
+		)
+		(instances
+			(project "BenEater_1"
+				(path "/62800d61-69d3-49b6-812a-0798483234f1"
+					(reference "#PWR021")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "74xx:74HC00")
 		(at 48.26 33.02 0)
 		(unit 1)
@@ -9781,6 +9835,140 @@
 			(project "BenEater_1"
 				(path "/62800d61-69d3-49b6-812a-0798483234f1"
 					(reference "#PWR06")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+5V")
+		(at 40.64 30.48 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "7885bbe7-497d-4721-a522-339501a4e6dc")
+		(property "Reference" "#PWR019"
+			(at 44.45 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+5V"
+			(at 36.83 30.4799 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 40.64 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 40.64 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+5V\""
+			(at 40.64 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "f1793d0c-5d51-4197-83e2-30f9fcd33483")
+		)
+		(instances
+			(project ""
+				(path "/62800d61-69d3-49b6-812a-0798483234f1"
+					(reference "#PWR019")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+5V")
+		(at 40.64 35.56 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "7b2f9134-5a49-411d-842f-3ec260102a4a")
+		(property "Reference" "#PWR020"
+			(at 44.45 35.56 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+5V"
+			(at 36.83 35.5599 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 40.64 35.56 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 40.64 35.56 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+5V\""
+			(at 40.64 35.56 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "70977216-0edb-4a15-90bc-5b40fed3876a")
+		)
+		(instances
+			(project "BenEater_1"
+				(path "/62800d61-69d3-49b6-812a-0798483234f1"
+					(reference "#PWR020")
 					(unit 1)
 				)
 			)
