@@ -7,7 +7,7 @@ This is my attempt at slowly building up a 6502 based microcomputer loosely stru
 
 
 # Current Status
-LCD is pretty well implemented, I got it behaving after reset. It is increments and displays a 1 byte hex counter ~ 1 once per second
+LCD is pretty well implemented, I got it behaving after reset. I have a customer character loading into the LCD (dino!) and it marches across the second line of the LCD
 
 # Goals
 See [Shopping List](shopping_list.md) for parts that I would need to get for these.
