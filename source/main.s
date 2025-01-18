@@ -12,6 +12,7 @@
 ;Reserve RAM addresses
 .segment "MAIN_RAM"
 MAIN_LOOP_COUNT:        .res 1, $00
+DINO_LOCATION:        .res 1, $00
 ;Description: (HEX) Used to store count of main loop iterations
 
 ;====================================================
@@ -59,6 +60,8 @@ reset:
   jsr lcd_instruction
   lda #(LCD_INST_DISPLAY | LCD_DISPLAY_DSON | LCD_DISPLAY_CUON);#%00001110 ; Display on; cursor on; blink off
   jsr lcd_instruction
+  lda #(LCD_INST_DISPLAY | LCD_DISPLAY_DSON);#%00001100 ; Display on; cursor off; blink off
+  jsr lcd_instruction
   lda #(LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR);#%00000110 ; Increment and shift cursor; don't shift display
   jsr lcd_instruction
   jsr dinoinit ; LOAD DINOSAUR
@@ -67,9 +70,9 @@ reset:
   lda #LCD_INST_CLRDISP ; Clear display
   jsr lcd_instruction
   stz MAIN_LOOP_COUNT
-  ; presumes we will continue executing into 'loop'
+  ; presumes we will continue executing into 'main_loop'
 
-loop:
+main_loop:
 ;Description
 ;  Loops forever updating lcd 
 ;Arguments
@@ -78,30 +81,35 @@ loop:
 ;  lcd is intialized and setup for display
 ;Side Effects
 ;  Updates LCD with the possible asciiz
+  lda #%11000000
+  sta DINO_LOCATION ;dino starts at the beginning of the second line of the display
+loop:
   lda MAIN_LOOP_COUNT
   jsr lcd_print_hex
   lda #$20 ;space
   jsr lcd_print_char
-  load_addr_to_zp_macro alphabet, LCD_PRINT_PTR ;load the address of addr to LCD_PRINT_PTR ZP word
+  load_addr_to_zp_macro dinosaur_says, LCD_PRINT_PTR ;load the address of addr to LCD_PRINT_PTR ZP word
   jsr lcd_print_asciiz_ZP ;print the LCD_PRINT_PTR ZP word on the LCD
-  lda #%11000000 ; set ddram address to start of 2nd line
+  lda DINO_LOCATION ; set dinosaur location
   jsr lcd_instruction
   lda #%00000000 ;dino
-  jsr lcd_print_char 
-  lda #$20 ;space
   jsr lcd_print_char
-  load_addr_to_zp_macro numbers, LCD_PRINT_PTR ;load the address of addr to LCD_PRINT_PTR ZP word
-  jsr lcd_print_asciiz_ZP ;print the LCD_PRINT_PTR ZP word on the LCD
-  lda $02 ; delay for ~1 second
+  inc DINO_LOCATION
+  lda DINO_LOCATION
+  cmp #%11010000 ;if dino gets to end of lcd reset it
+  bmi loop_delay
+  lda #%11000000
+  sta DINO_LOCATION ;reset dino to beginning of the second line of the display
+loop_delay:
+  lda $01 ; delay for ~1 second
 loop_delay_half_second:
   delay_macro #$d9, #$01 ;delay for 500003 cycles, which is ~500ms @ 1mhz
-  dec 1
-  ;bne loop_delay_half_second 
+  dec
+  beq loop_delay_half_second 
   lda #LCD_INST_CLRDISP ;lda #%00000001 ; Clear display
   jsr lcd_instruction
   inc MAIN_LOOP_COUNT 
   bra loop ;jmp
 
 
-alphabet: .asciiz "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-numbers: .asciiz "0123456789"
+dinosaur_says: .asciiz "Rwaaaar!"

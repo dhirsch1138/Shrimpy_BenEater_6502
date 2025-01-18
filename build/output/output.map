@@ -5,8 +5,8 @@ lcd.o:
     LCD_PAGEZERO      Offs=000000  Size=000002  Align=00001  Fill=0000
     LCD_CODE          Offs=000000  Size=0000F6  Align=00001  Fill=0000
 main.o:
-    CODE              Offs=000000  Size=0000A1  Align=00001  Fill=0000
-    MAIN_RAM          Offs=000000  Size=000001  Align=00001  Fill=0000
+    CODE              Offs=000000  Size=00008D  Align=00001  Fill=0000
+    MAIN_RAM          Offs=000000  Size=000002  Align=00001  Fill=0000
 reset_interrupt.o:
     VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
 via.o:
@@ -18,9 +18,9 @@ Name                   Start     End    Size  Align
 ----------------------------------------------------
 LCD_PAGEZERO          000000  000001  000002  00001
 LCD_RAM               000200  000200  000001  00001
-MAIN_RAM              000201  000201  000001  00001
-CODE                  008000  0080A0  0000A1  00001
-LCD_CODE              0080A1  008196  0000F6  00001
+MAIN_RAM              000201  000202  000002  00001
+CODE                  008000  00808C  00008D  00001
+LCD_CODE              00808D  008182  0000F6  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
@@ -28,20 +28,20 @@ Exports list by name:
 ---------------------
 LCD_PRINT_PTR             000000 RLZ    VIA_DDRB                  006002 REA    
 VIA_PORTB                 006000 REA    __CODE_LOAD__             008000 RLA    
-__VIA_START__             006000 RLA    dinoinit                  008159 RLA    
-lcd_init                  0080A1 RLA    lcd_instruction           0080BE RLA    
-lcd_print_asciiz_ZP       008147 RLA    lcd_print_char            008120 RLA    
-lcd_print_hex             00812C RLA    
+__VIA_START__             006000 RLA    dinoinit                  008145 RLA    
+lcd_init                  00808D RLA    lcd_instruction           0080AA RLA    
+lcd_print_asciiz_ZP       008133 RLA    lcd_print_char            00810C RLA    
+lcd_print_hex             008118 RLA    
 
 
 Exports list by value:
 ----------------------
 LCD_PRINT_PTR             000000 RLZ    VIA_PORTB                 006000 REA    
 __VIA_START__             006000 RLA    VIA_DDRB                  006002 REA    
-__CODE_LOAD__             008000 RLA    lcd_init                  0080A1 RLA    
-lcd_instruction           0080BE RLA    lcd_print_char            008120 RLA    
-lcd_print_hex             00812C RLA    lcd_print_asciiz_ZP       008147 RLA    
-dinoinit                  008159 RLA    
+__CODE_LOAD__             008000 RLA    lcd_init                  00808D RLA    
+lcd_instruction           0080AA RLA    lcd_print_char            00810C RLA    
+lcd_print_hex             008118 RLA    lcd_print_asciiz_ZP       008133 RLA    
+dinoinit                  008145 RLA    
 
 
 Imports list:
