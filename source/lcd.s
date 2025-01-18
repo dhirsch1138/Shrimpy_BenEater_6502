@@ -235,6 +235,15 @@ lcd_print_asciiz_print_escape:
   rts
 
 dinoinit:
+;Description
+;  Adds the dinosaur character to %00000000 in CGRAM
+;Arguments
+;  None
+;Preconditions
+;  LCD should be fully initialized, it seems to get cranky if you try to poke CGRAM too early
+;Side Effects
+;  Dinosaur is added to %00000000 in CGRAM, can be written at DDRAM $00 (effectively ascii $00)
+;Note
 lda #(LCD_INST_CRAMADR | %00000000) 
 jsr lcd_instruction ;set addr
 lda #%00001111

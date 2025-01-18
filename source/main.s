@@ -12,8 +12,9 @@
 ;Reserve RAM addresses
 .segment "MAIN_RAM"
 MAIN_LOOP_COUNT:        .res 1, $00
-DINO_LOCATION:        .res 1, $00
 ;Description: (HEX) Used to store count of main loop iterations
+DINO_LOCATION:        .res 1, $00
+;Description: used to store the location of the dinosaur in the LCD's DDRAM
 
 ;====================================================
 ;Macros
@@ -81,7 +82,7 @@ main_loop:
 ;  lcd is intialized and setup for display
 ;Side Effects
 ;  Updates LCD with the possible asciiz
-  lda #%11000000
+  lda #%11000000 ; DDRAM location for the beginning of the second line
   sta DINO_LOCATION ;dino starts at the beginning of the second line of the display
 loop:
   lda MAIN_LOOP_COUNT
@@ -96,9 +97,9 @@ loop:
   jsr lcd_print_char
   inc DINO_LOCATION
   lda DINO_LOCATION
-  cmp #%11010000 ;if dino gets to end of lcd reset it
+  cmp #%11010000 ;if dino gets to end of line (16 characters) reset it
   bmi loop_delay
-  lda #%11000000
+  lda #%11000000 ; DDRAM location for the beginning of the second line
   sta DINO_LOCATION ;reset dino to beginning of the second line of the display
 loop_delay:
   lda $01 ; delay for ~1 second
