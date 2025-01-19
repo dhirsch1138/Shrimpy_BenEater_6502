@@ -65,7 +65,8 @@ reset:
   jsr lcd_instruction
   lda #(LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR);#%00000110 ; Increment and shift cursor; don't shift display
   jsr lcd_instruction
-  jsr dinoinit ; LOAD DINOSAUR
+  load_addr_to_zp_macro dinochar, LCD_PRINT_PTR ;set dinochar as the next LCD pointer
+  jsr lcd_load_custom_character ;load dinochar as a custom character 
   lda #LCD_INST_RTNHOME
   jsr lcd_instruction
   lda #LCD_INST_CLRDISP ; Clear display
@@ -93,7 +94,7 @@ loop:
   jsr lcd_print_asciiz_ZP ;print the LCD_PRINT_PTR ZP word on the LCD
   lda DINO_LOCATION ; set dinosaur location
   jsr lcd_instruction
-  lda #%00000000 ;dino
+  lda dinochar ;#%00000000 ;dino
   jsr lcd_print_char
   inc DINO_LOCATION
   lda DINO_LOCATION
@@ -102,11 +103,11 @@ loop:
   lda #%11000000 ; DDRAM location for the beginning of the second line
   sta DINO_LOCATION ;reset dino to beginning of the second line of the display
 loop_delay:
-  lda $01 ; delay for ~1 second
+  lda #$02 ; delay for ~1 second
 loop_delay_half_second:
   delay_macro #$d9, #$01 ;delay for 500003 cycles, which is ~500ms @ 1mhz
-  dec
-  beq loop_delay_half_second 
+  dea
+  bne loop_delay_half_second 
   lda #LCD_INST_CLRDISP ;lda #%00000001 ; Clear display
   jsr lcd_instruction
   inc MAIN_LOOP_COUNT 
@@ -114,3 +115,6 @@ loop_delay_half_second:
 
 
 dinosaur_says: .asciiz "Rwaaaar!"
+dinochar: .byte %00000000, %00001111, %00001010, %00001111, %00001100, %00001110, %00011100, %00001010, %00000000
+;Offset 0    - CGRAM address
+;Offset 1-8  - values to write to CGRAM

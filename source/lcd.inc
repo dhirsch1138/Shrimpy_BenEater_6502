@@ -3,11 +3,10 @@
 
 .import lcd_instruction
 .import lcd_init
+.import lcd_load_custom_character
 .import lcd_print_asciiz_ZP
 .import lcd_print_char
 .import lcd_print_hex
-
-.import dinoinit
 
 .importzp  LCD_PRINT_PTR
 

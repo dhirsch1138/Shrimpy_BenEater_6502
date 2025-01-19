@@ -17,11 +17,10 @@
 ;subroutines
 .export lcd_instruction
 .export lcd_init
+.export lcd_load_custom_character
 .export lcd_print_asciiz_ZP
 .export lcd_print_char
 .export lcd_print_hex
-
-.export dinoinit
 
 ;variables
 .export LCD_PRINT_PTR
@@ -234,35 +233,40 @@ lcd_print_asciiz_print_escape:
   pla
   rts
 
-dinoinit:
+lcd_load_custom_character:
 ;Description
-;  Adds the dinosaur character to %00000000 in CGRAM
+;  Loads the character definition to CGRAM
 ;Arguments
-;  None
+;  LCD_PRINT_PTR - address of character set
+;      Offset 0    - CGRAM address
+;      Offset 1-8  - values to write to CGRAM
 ;Preconditions
 ;  LCD should be fully initialized, it seems to get cranky if you try to poke CGRAM too early
 ;Side Effects
-;  Dinosaur is added to %00000000 in CGRAM, can be written at DDRAM $00 (effectively ascii $00)
+;  Character definition is loaded into CGRAM
 ;Note
-lda #(LCD_INST_CRAMADR | %00000000) 
-jsr lcd_instruction ;set addr
-lda #%00001111
-jsr lcd_print_char
-lda #%00001010
-jsr lcd_print_char
-lda #%00001111
-jsr lcd_print_char
-lda #%00001100
-jsr lcd_print_char
-lda #%00001110
-jsr lcd_print_char
-lda #%00011100
-jsr lcd_print_char
-lda #%00001010
-jsr lcd_print_char
-lda #%00000000
-jsr lcd_print_char
-rts
+;  Expected character definition format:
+;    Offset 0    - CGRAM address
+;    Offset 1-8  - values to write to CGRAM
+  pha
+  phx
+  ldx $0a
+  lda (LCD_PRINT_PTR)
+  ora #LCD_INST_CRAMADR
+  jsr lcd_instruction ;set addr
+lcd_load_character_loop:
+  inc LCD_PRINT_PTR
+  bne lcd_load_character_skiphigh
+  inc LCD_PRINT_PTR+1
+lcd_load_character_skiphigh:
+  lda (LCD_PRINT_PTR)
+  jsr lcd_print_char
+  dex
+  bne lcd_load_character_loop ; jmp
+lcd_load_character_done:
+  plx
+  pla
+  rts
 
 hexmap:
   .byte "0123456789ABCDEF"
