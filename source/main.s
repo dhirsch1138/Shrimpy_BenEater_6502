@@ -57,15 +57,15 @@ reset:
   lda #%11111111 ; Set all pins on port B to output
   sta VIA_DDRB
   jsr lcd_init
-  lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE);#%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
+  lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE); Set 4-bit mode; 2-line display; 5x8 font
   jsr lcd_instruction
-  lda #(LCD_INST_DISPLAY | LCD_DISPLAY_DSON | LCD_DISPLAY_CUON);#%00001110 ; Display on; cursor on; blink off
+  lda #(LCD_INST_DISPLAY | LCD_DISPLAY_DSON | LCD_DISPLAY_CUON); Display on; cursor on; blink off
   jsr lcd_instruction
-  lda #(LCD_INST_DISPLAY | LCD_DISPLAY_DSON);#%00001100 ; Display on; cursor off; blink off
+  lda #(LCD_INST_DISPLAY | LCD_DISPLAY_DSON); Display on; cursor off; blink off
   jsr lcd_instruction
-  lda #(LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR);#%00000110 ; Increment and shift cursor; don't shift display
+  lda #(LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR); Increment and shift cursor; don't shift display
   jsr lcd_instruction
-  load_addr_to_zp_macro dinochar, LCD_PRINT_PTR ;set dinochar as the next LCD pointer
+  load_addr_to_zp_macro dinochar, LCD_ADDR_ZP ;set dinochar as the next LCD_ADDR_ZP
   jsr lcd_load_custom_character ;load dinochar as a custom character 
   lda #LCD_INST_RTNHOME
   jsr lcd_instruction
@@ -80,27 +80,27 @@ main_loop:
 ;Arguments
 ;  None
 ;Preconditions
-;  lcd is intialized and setup for display
+;  lcd is intialized and setup for display, custom characters are loaded
 ;Side Effects
-;  Updates LCD with the possible asciiz
-  lda #%11000000 ; DDRAM location for the beginning of the second line
+;  Updates LCD
+  lda #LCD_SETDDRAMADDR ; DDRAM location for the beginning of the second line
   sta DINO_LOCATION ;dino starts at the beginning of the second line of the display
 loop:
   lda MAIN_LOOP_COUNT
   jsr lcd_print_hex
   lda #$20 ;space
-  jsr lcd_print_char
-  load_addr_to_zp_macro dinosaur_says, LCD_PRINT_PTR ;load the address of addr to LCD_PRINT_PTR ZP word
-  jsr lcd_print_asciiz_ZP ;print the LCD_PRINT_PTR ZP word on the LCD
+  jsr lcd_send_byte
+  load_addr_to_zp_macro dinosaur_says, LCD_ADDR_ZP ;load the address of addr to LCD_ADDR_ZP ZP word
+  jsr lcd_print_asciiz_ZP ;print the LCD_ADDR_ZP ZP word on the LCD
   lda DINO_LOCATION ; set dinosaur location
   jsr lcd_instruction
-  lda dinochar ;#%00000000 ;dino
-  jsr lcd_print_char
+  lda dinochar ;dino char set (offset 0 is the address!)
+  jsr lcd_send_byte
   inc DINO_LOCATION
   lda DINO_LOCATION
-  cmp #%11010000 ;if dino gets to end of line (16 characters) reset it
+  cmp #(LCD_SETDDRAMADDR | %00010000) ;if dino gets to end of line (16 characters) reset it
   bmi loop_delay
-  lda #%11000000 ; DDRAM location for the beginning of the second line
+  lda #LCD_SETDDRAMADDR; DDRAM location for the beginning of the second line
   sta DINO_LOCATION ;reset dino to beginning of the second line of the display
 loop_delay:
   lda #$02 ; delay for ~1 second
@@ -108,7 +108,7 @@ loop_delay_half_second:
   delay_macro #$d9, #$01 ;delay for 500003 cycles, which is ~500ms @ 1mhz
   dea
   bne loop_delay_half_second 
-  lda #LCD_INST_CLRDISP ;lda #%00000001 ; Clear display
+  lda #LCD_INST_CLRDISP; Clear display
   jsr lcd_instruction
   inc MAIN_LOOP_COUNT 
   bra loop ;jmp

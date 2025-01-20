@@ -19,11 +19,11 @@
 .export lcd_init
 .export lcd_load_custom_character
 .export lcd_print_asciiz_ZP
-.export lcd_print_char
+.export lcd_send_byte
 .export lcd_print_hex
 
 ;variables
-.export LCD_PRINT_PTR
+.export LCD_ADDR_ZP
 
 ;====================================================
 ;Reserve RAM addresses
@@ -37,7 +37,7 @@ LCD_RS_ENABLE:        .res 1, $00
 ;Note: should be flagged with DEC as needed, always remember that its default state should be $00.
 
 .segment "LCD_PAGEZERO": zeropage
-LCD_PRINT_PTR:        .res 2, $0000
+LCD_ADDR_ZP:        .res 2, $0000
 
 
 
@@ -103,7 +103,6 @@ lcd_init:
 ;  VIA DDRB must have the LCD's bits set to output
 ;Side Effects
 ;  LCD is set to accept 4-bit mode
-;  Register A is squished
 ;Notes
 ;  Does not include a wait for the LCD to be ready for the next command,
 ;  presuming that the code invoking the command will be smart enough to wait
@@ -114,11 +113,11 @@ lcd_init:
   ;1) reset
   ;2) send the 4 bit instruction (swapped) 0010 for 4 bit operation
   lda #LCD_INST_FUNCSET
-  swn_macro ;#%00000010 ; Set 4-bit mode
+  swn_macro ;#%00000010 ; Set 4-bit mode by sending just the upper nibble
   sta VIA_PORTB
   ora #LCD_PIN_E
   sta VIA_PORTB
-  ;3) send 00101000 instruction for 4-bit, two line, 5x8
+  ;3) send instruction for 4-bit, two line, 5x8
   lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE)
   jsr lcd_instruction
  ; sta VIA_PORTB
@@ -133,9 +132,7 @@ lcd_instruction:
 ;  A - LCD instruction byte
 ;Preconditions
 ;  LCD is initialized and has its parameters set
-;  LCD is in 4 bit mode
 ;Side Effects
-;  Instruction byte is sent to the LCD in 4-bit mode
 ;  Register A is squished
   lcd_wait_macro ;wait until lcd is no longer showing BUSY
   pha
@@ -165,16 +162,16 @@ lcd_instruction_sendlow:
   sta VIA_PORTB
   rts
 
-lcd_print_char:
+lcd_send_byte:
 ;Description
-;  Sends char to the LCD
+;  Sends byte to the LCD
 ;Arguments
-;  A - char to print
+;  A - byte to send
 ;Preconditions
-;  Char is sent to lcd to get printed
+;  LCD is ready to accept instruction bytes in RS (basically is it initialized and/or in a mode expecting writes)
 ;Side Effects
-;  Instruction byte is sent to the LCD in 4-bit mode
-;  Register A is squished
+;  Instruction byte is sent to the LCD
+;  Unless another mode is in effect (like writing CGRAM) this will write to the LCD DDRAM and increment the pointer if so configured
   pha
   dec LCD_RS_ENABLE        ;$00 - 1 = $FF (enabled)
   jsr lcd_instruction
@@ -200,12 +197,12 @@ lcd_print_hex:
   lsr
   tax
   lda hexmap, x
-  jsr lcd_print_char
+  jsr lcd_send_byte
   pla
   and #$0F
   tax
   lda hexmap, x
-  jsr lcd_print_char
+  jsr lcd_send_byte
   pla
   plx
   rts
@@ -214,20 +211,20 @@ lcd_print_asciiz_ZP:
 ;Description
 ;  Prints the message to the LCD character by character from the ZP variable
 ;Arguments
-;  LCD_PRINT_PTR - references a nul terminated string in memory
+;  LCD_ADDR_ZP - references a nul terminated string in memory
 ;Preconditions
-;  LCD_PRINT_PTR is pointed at a null terminated string
+;  LCD_ADDR_ZP is pointed at a null terminated string
 ;Side Effects
-;  * LCD_PRINT_PTR is iterated through and printed to the LCD
+;  * LCD_ADDR_ZP is iterated through and printed to the LCD
 ;Note
   pha
 lcd_print_asciiz_print_loop:
-  lda (LCD_PRINT_PTR)
+  lda (LCD_ADDR_ZP)
   beq lcd_print_asciiz_print_escape
-  jsr lcd_print_char
-  inc LCD_PRINT_PTR
+  jsr lcd_send_byte
+  inc LCD_ADDR_ZP
   bne lcd_print_asciiz_print_loop
-  inc LCD_PRINT_PTR+1
+  inc LCD_ADDR_ZP+1
   bra lcd_print_asciiz_print_loop ; jmp
 lcd_print_asciiz_print_escape:
   pla
@@ -237,7 +234,7 @@ lcd_load_custom_character:
 ;Description
 ;  Loads the character definition to CGRAM
 ;Arguments
-;  LCD_PRINT_PTR - address of character set
+;  LCD_ADDR_ZP - address of character set
 ;      Offset 0    - CGRAM address
 ;      Offset 1-8  - values to write to CGRAM
 ;Preconditions
@@ -251,16 +248,16 @@ lcd_load_custom_character:
   pha
   phx
   ldx $0a
-  lda (LCD_PRINT_PTR)
+  lda (LCD_ADDR_ZP)
   ora #LCD_INST_CRAMADR
   jsr lcd_instruction ;set addr
 lcd_load_character_loop:
-  inc LCD_PRINT_PTR
+  inc LCD_ADDR_ZP
   bne lcd_load_character_skiphigh
-  inc LCD_PRINT_PTR+1
+  inc LCD_ADDR_ZP+1
 lcd_load_character_skiphigh:
-  lda (LCD_PRINT_PTR)
-  jsr lcd_print_char
+  lda (LCD_ADDR_ZP)
+  jsr lcd_send_byte ;as the lcd is in 'write' mode from the CGRAM address, we can send eight sequential bytes to it
   dex
   bne lcd_load_character_loop ; jmp
 lcd_load_character_done:

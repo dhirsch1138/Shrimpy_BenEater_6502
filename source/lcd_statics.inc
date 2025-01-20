@@ -39,3 +39,7 @@ LCD_DISPLAY_BLON = %00000001 ; blink on (default blink off)
 ;000000XX
 LCD_ENTRYMO_INCR = %00000010 ; increment cursor (default decrement cursor)
 LCD_ENTRYMO_ADSH = %00000001 ; accompanies display shift (default no)
+
+;DDRAM shortcuts
+;==================
+LCD_SETDDRAMADDR = %11000000 ; set the DDRRAM address
