@@ -42,4 +42,4 @@ LCD_ENTRYMO_ADSH = %00000001 ; accompanies display shift (default no)
 
 ;DDRAM shortcuts
 ;==================
-LCD_SETDDRAMADDR = %11000000 ; set the DDRRAM address
+LCD_DDRAM2LN48CR = %11000000 ; set the DDRRAM address to the start of the 2nd line (if 2line mode, 4x8 characters)

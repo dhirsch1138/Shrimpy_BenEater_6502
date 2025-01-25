@@ -83,7 +83,7 @@ main_loop:
 ;  lcd is intialized and setup for display, custom characters are loaded
 ;Side Effects
 ;  Updates LCD
-  lda #LCD_SETDDRAMADDR ; DDRAM location for the beginning of the second line
+  lda #LCD_DDRAM2LN48CR ; DDRAM location for the beginning of the second line
   sta DINO_LOCATION ;dino starts at the beginning of the second line of the display
 loop:
   lda MAIN_LOOP_COUNT
@@ -98,9 +98,9 @@ loop:
   jsr lcd_send_byte
   inc DINO_LOCATION
   lda DINO_LOCATION
-  cmp #(LCD_SETDDRAMADDR | %00010000) ;if dino gets to end of line (16 characters) reset it
+  cmp #(LCD_DDRAM2LN48CR | %00010000) ;if dino gets to end of line (16 characters) reset it
   bmi loop_delay
-  lda #LCD_SETDDRAMADDR; DDRAM location for the beginning of the second line
+  lda #LCD_DDRAM2LN48CR; DDRAM location for the beginning of the second line
   sta DINO_LOCATION ;reset dino to beginning of the second line of the display
 loop_delay:
   lda #$02 ; delay for ~1 second
