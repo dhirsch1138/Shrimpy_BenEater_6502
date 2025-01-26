@@ -58,29 +58,29 @@ LCD_ADDR_ZP:        .res 2, $0000
   .local lcd_wait_busy ;limit scope of this symbol to this macro
   pha
   lda #%11110000  ; LCD data is input
-  sta VIA_DDRB
+  sta VIA1_DDRB
 lcd_wait_busy:
   lda #LCD_PIN_RW
-  sta VIA_PORTB
+  sta VIA1_PORTB
   lda #(LCD_PIN_RW | LCD_PIN_E)
-  sta VIA_PORTB
-  lda VIA_PORTB       ; Read high nibble
+  sta VIA1_PORTB
+  lda VIA1_PORTB       ; Read high nibble
   pha             ; and put on stack since it has the busy flag
   lda #LCD_PIN_RW
-  sta VIA_PORTB
+  sta VIA1_PORTB
   lda #(LCD_PIN_RW | LCD_PIN_E)
-  sta VIA_PORTB
+  sta VIA1_PORTB
   ;TODO is this lda doing anything? seems like it is superceded immediately by the pla. 
   ;unless reading from the via port triggers something on the lcd?
-  lda VIA_PORTB       ; Read low nibble
+  lda VIA1_PORTB       ; Read low nibble
   pla             ; Get high nibble off stack
   and #%00001000
   bne lcd_wait_busy
   ; logical break, we aren't busy anymore
   lda #LCD_PIN_RW
-  sta VIA_PORTB
+  sta VIA1_PORTB
   lda #%11111111  ; LCD data is output
-  sta VIA_DDRB
+  sta VIA1_DDRB
   pla
 .endmacro
 
@@ -114,13 +114,13 @@ lcd_init:
   ;2) send the 4 bit instruction (swapped) 0010 for 4 bit operation
   lda #LCD_INST_FUNCSET
   swn_macro ;#%00000010 ; Set 4-bit mode by sending just the upper nibble
-  sta VIA_PORTB
+  sta VIA1_PORTB
   ora #LCD_PIN_E
-  sta VIA_PORTB
+  sta VIA1_PORTB
   ;3) send instruction for 4-bit, two line, 5x8
   lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE)
   jsr lcd_instruction
- ; sta VIA_PORTB
+ ; sta VIA1_PORTB
   stz LCD_RS_ENABLE  ;LCD_RS_ENABLE should be false
   pla
   rts
@@ -144,22 +144,22 @@ lcd_instruction:
   bpl lcd_instruction_sendhigh ; IF RS is NOT enabled THEN skip applying the RS mask
   ora #LCD_PIN_RS
 lcd_instruction_sendhigh:
-  sta VIA_PORTB
+  sta VIA1_PORTB
   ora #LCD_PIN_E        ; Set E bit to send instruction
-  sta VIA_PORTB
+  sta VIA1_PORTB
   eor #LCD_PIN_E         ; Clear E bit
-  sta VIA_PORTB
+  sta VIA1_PORTB
   pla
   and #%00001111 ; Send low 4 bits
   bit LCD_RS_ENABLE ; enabled RS = $FF
   bpl lcd_instruction_sendlow ;IF RS is NOT enabled THEN skip applying the RS mask
   ora #LCD_PIN_RS
 lcd_instruction_sendlow: 
-  sta VIA_PORTB
+  sta VIA1_PORTB
   ora #LCD_PIN_E         ; Set E bit to send instruction
-  sta VIA_PORTB
+  sta VIA1_PORTB
   eor #LCD_PIN_E         ; Clear E bit
-  sta VIA_PORTB
+  sta VIA1_PORTB
   rts
 
 lcd_send_byte:

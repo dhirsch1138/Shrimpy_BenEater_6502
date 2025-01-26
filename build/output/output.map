@@ -10,6 +10,8 @@ main.o:
     MAIN_RAM          Offs=000000  Size=000002  Align=00001  Fill=0000
 reset_interrupt.o:
     VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
+spi.o:
+    SPI_CODE          Offs=000000  Size=00003E  Align=00001  Fill=0000
 via.o:
 wozmon.o:
     WOZ_PAGEZERO      Offs=000000  Size=000008  Align=00001  Fill=0000
@@ -28,7 +30,8 @@ MAIN_RAM              000201  000202  000002  00001
 WOZ_RAM               000203  000281  00007F  00001
 CODE                  008000  0080A0  0000A1  00001
 LCD_CODE              0080A1  008184  0000E4  00001
-WOZ_CODE              008185  00827E  0000FA  00001
+SPI_CODE              008185  0081C2  00003E  00001
+WOZ_CODE              0081C3  0082BC  0000FA  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
@@ -36,13 +39,13 @@ Exports list by name:
 ---------------------
 ACIA_CMD                  004402 REA    ACIA_CTRL                 004403 REA    
 ACIA_DATA                 004400 REA    ACIA_STATUS               004401 REA    
-LCD_ADDR_ZP               000000 RLZ    VIA_DDRB                  006002 REA    
-VIA_PORTB                 006000 REA    __ACIA1_START__           004400 RLA    
-__CODE_LOAD__             008000 RLA    __VIA1_START__            006000 RLA    
-lcd_init                  0080A1 RLA    lcd_instruction           0080BE RLA    
-lcd_load_custom_character 008159 RLA    lcd_print_asciiz_ZP       008147 RLA    
-lcd_print_hex             00812C RLA    lcd_send_byte             008120 RLA    
-
+LCD_ADDR_ZP               000000 RLZ    VIA1_DDRB                 006002 REA    
+VIA1_PORTA                006001 REA    VIA1_PORTB                006000 REA    
+__ACIA1_START__           004400 RLA    __CODE_LOAD__             008000 RLA    
+__VIA1_START__            006000 RLA    lcd_init                  0080A1 RLA    
+lcd_instruction           0080BE RLA    lcd_load_custom_character 008159 RLA    
+lcd_print_asciiz_ZP       008147 RLA    lcd_print_hex             00812C RLA    
+lcd_send_byte             008120 RLA    
 
 
 Exports list by value:
@@ -50,12 +53,12 @@ Exports list by value:
 LCD_ADDR_ZP               000000 RLZ    ACIA_DATA                 004400 REA    
 __ACIA1_START__           004400 RLA    ACIA_STATUS               004401 REA    
 ACIA_CMD                  004402 REA    ACIA_CTRL                 004403 REA    
-VIA_PORTB                 006000 REA    __VIA1_START__            006000 RLA    
-VIA_DDRB                  006002 REA    __CODE_LOAD__             008000 RLA    
-lcd_init                  0080A1 RLA    lcd_instruction           0080BE RLA    
-lcd_send_byte             008120 RLA    lcd_print_hex             00812C RLA    
-lcd_print_asciiz_ZP       008147 RLA    lcd_load_custom_character 008159 RLA    
-
+VIA1_PORTB                006000 REA    __VIA1_START__            006000 RLA    
+VIA1_PORTA                006001 REA    VIA1_DDRB                 006002 REA    
+__CODE_LOAD__             008000 RLA    lcd_init                  0080A1 RLA    
+lcd_instruction           0080BE RLA    lcd_send_byte             008120 RLA    
+lcd_print_hex             00812C RLA    lcd_print_asciiz_ZP       008147 RLA    
+lcd_load_custom_character 008159 RLA    
 
 
 Imports list:
@@ -70,10 +73,13 @@ ACIA_STATUS (acia.o):
     wozmon.o                  source/acia.inc(2)
 LCD_ADDR_ZP (lcd.o):
     main.o                    source/lcd.inc(11)
-VIA_DDRB (via.o):
+VIA1_DDRB (via.o):
+    spi.o                     source/via.inc(4)
     main.o                    source/via.inc(4)
     lcd.o                     source/via.inc(4)
-VIA_PORTB (via.o):
+VIA1_PORTA (via.o):
+    spi.o                     source/via.inc(7)
+VIA1_PORTB (via.o):
     lcd.o                     source/via.inc(5)
 __ACIA1_START__ ([linker generated]):
     acia.o                    source/acia.s(1)

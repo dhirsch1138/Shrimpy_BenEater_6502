@@ -55,7 +55,7 @@ reset:
   ldx #$ff
   txs
   lda #%11111111 ; Set all pins on port B to output
-  sta VIA_DDRB
+  sta VIA1_DDRB
   jsr lcd_init
   lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE); Set 4-bit mode; 2-line display; 5x8 font
   jsr lcd_instruction
