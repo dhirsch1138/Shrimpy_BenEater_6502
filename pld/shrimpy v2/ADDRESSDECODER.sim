@@ -1,0 +1,85 @@
+%SIGNAL
+PIN  15 =  A4 
+PIN  14 =  A5 
+PIN  13 =  A6 
+PIN  11 =  A7 
+PIN  10 =  A8 
+PIN   9 =  A9 
+PIN   8 =  A10 
+PIN   7 =  A11 
+PIN   6 =  A12 
+PIN   5 =  A13 
+PIN   4 =  A14 
+PIN   3 =  A15 
+PIN  19 =  CS1 
+PIN  18 =  CS2 
+PIN  17 =  CS3 
+PIN  16 =  CS4 
+PIN  23 =  OE 
+PIN   1 =  PHI2 
+PIN  21 =  RAM 
+PIN  20 =  ROM 
+PIN   2 =  RW 
+PIN  22 =  WE 
+%END
+
+%FIELD
+%END
+
+%EQUATION
+CS1 =>
+    !A4 & !A5 & !A6 & !A7 & !A8 & A9 & !A10 & !A11 & !A12 & !A13 & !A14 & !A15
+
+CS2 =>
+    A4 & !A5 & !A6 & !A7 & !A8 & A9 & !A10 & !A11 & !A12 & !A13 & !A14 & !A15
+
+CS3 =>
+    !A4 & A5 & !A6 & !A7 & !A8 & A9 & !A10 & !A11 & !A12 & !A13 & !A14 & !A15
+
+CS4 =>
+    A4 & A5 & !A6 & !A7 & !A8 & A9 & !A10 & !A11 & !A12 & !A13 & !A14 & !A15
+
+OE =>
+    PHI2 & RW
+
+RAM =>
+    A15
+  # !A8 & A9 & !A10 & !A11 & !A12 & !A13 & !A14
+
+ROM =>
+    !A15
+
+WE =>
+    PHI2 & !RW
+
+A4.oe  =>
+    0 
+
+A5.oe  =>
+    0 
+
+CS1.oe  =>
+    1 
+
+CS2.oe  =>
+    1 
+
+CS3.oe  =>
+    1 
+
+CS4.oe  =>
+    1 
+
+OE.oe  =>
+    1 
+
+RAM.oe  =>
+    1 
+
+ROM.oe  =>
+    1 
+
+WE.oe  =>
+    1 
+
+%END

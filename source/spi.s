@@ -31,16 +31,19 @@
 
 SPI_CLK  =     %00000001 ;1
 SPI_MOSI =     %00000010 ;2
-SPI_CS =       %00000100 ;8
+SPI_CS =       %00000100 ;4
+;8 (nc)
+;16 (nc)
 SPI_RESET =    %00100000 ;32
 SPI_MISO =     %10000000 ;128
 
 SPI_PORT = VIA1_PORTA
 
 SPI_INIT:
-  ;;; set up data direction for SPI_PORT -- bits 0, 1, 2, 3, 5, and 6 are
-  ;;; outputs and bits 4, and 7 are inputs.
-  lda #%01101111
+  ;;; set up data direction for SPI_PORT -- bits 0, 1, 2, and 5 are
+  ;;; outputs and bits 3(nc), 4, 6 (nc), and 7 are inputs.
+;TODO:Review the DDRB
+  lda #%01100111
   sta VIA1_DDRB
   lda #SPI_MOSI|SPI_RESET|SPI_CS
   sta SPI_PORT
@@ -72,6 +75,7 @@ SPI_BYTEOUT:
   SEC             ;SEC / ROL A is for counting
   ROL A
 OUTPUTLOOP:
+  ;command pulse would go here, IF A = 128 (%100000000) THEN all this is the last bit & the command pulse should fire
   BCS MOSI_1
   STX SPI_PORT ;STZ SPI_PORT ;ck=0, mosi=0  STX updates both Ck & mosi
   INC SPI_PORT ;ck=1
