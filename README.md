@@ -1,18 +1,21 @@
 # Shrimpy
 This is my attempt at slowly building up a 6502 based microcomputer loosely structured around Ben Eater's lessons. I will wander off and chase squirrels, wrestle with interesting problems, and generally follow the "rule of cool" when deciding what to do next.
 
+*2/9/2025 NOTE: photo and schematic are obsolete, computer has been completely built. We are now using a PLD for address decoding*
+
 ![Image of build](build_photo.png)
 
 ![schematic](schematics/shrimpy.png)
 
 
 # Current Status
-LCD is pretty well implemented, I got it behaving after reset. I have a customer character loading into the LCD (dino!) and it marches across the second line of the LCD
+2/9/2025 - Computer completely rebuilt. Now using a PLD for address decoding, which provides almost 32KB of RAM (minus a bit for I/O).
 
 # Goals
 See [Shopping List](shopping_list.md) for parts that I would need to get for these.
 - [x] Implement custom characters for the LCD, it NEEDS DINOSAURS
   - [x] Bonus points: make the dinosaur march across the LCD
+- [X] Implement PLD memory address decoder to effectively double RAM. (ATF22V10C-7PX)
 - [ ] Implement UART DB9 serial adapter
 - [x] Get the schematic built in kicad and included in this repository
 - [ ] Implement wozmon
@@ -31,8 +34,7 @@ See [Shopping List](shopping_list.md) for parts that I would need to get for the
   * LCD potentiometer was replaced by 3.9K resistor
   * Clock module potentiometer was replaced by a 120k resistor (is that right? I should double check)
 * 28 pin ZIF socket for the EEPROM. [https://www.pcbway.com/project/shareproject/Breadboard_to_28p_wide_ZIF_adapter_fc6528ee.html]
-* Replaced the 74LS00 address decoder with a 74HC00, it can be quicker and it uses much less power.
-
+* Replaced the 74LS00 address decoder PLD (ATF22V10C-7PX)
 ## Software
 Project was initially based on Ben Eater's keyboard.s [https://eater.net/downloads/keyboard.s]
 * Modularized development (no monolithic code, I tried to break the project into distinct files that could be re-used in future efforts)
@@ -43,3 +45,4 @@ Project was initially based on Ben Eater's keyboard.s [https://eater.net/downloa
   * Exploring & utilizing macros
 * Working on heavily restricting the need for and usage of magic number/symbols.
 * Got the LCD consistenly initializing on cold start and reset, writing to two lines in both scenarios.
+* Custom characters for the LCD
