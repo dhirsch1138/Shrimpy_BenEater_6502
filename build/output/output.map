@@ -2,12 +2,10 @@ Modules list:
 -------------
 acia.o:
 lcd.o:
-    LCD_RAM           Offs=000000  Size=000001  Align=00001  Fill=0000
     LCD_PAGEZERO      Offs=000000  Size=000002  Align=00001  Fill=0000
-    LCD_CODE          Offs=000000  Size=0000E4  Align=00001  Fill=0000
+    LCD_CODE          Offs=000000  Size=0000DE  Align=00001  Fill=0000
 main.o:
-    CODE              Offs=000000  Size=0000A1  Align=00001  Fill=0000
-    MAIN_RAM          Offs=000000  Size=000002  Align=00001  Fill=0000
+    CODE              Offs=000000  Size=000095  Align=00001  Fill=0000
 reset_interrupt.o:
     VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
 spi.o:
@@ -25,13 +23,11 @@ Name                   Start     End    Size  Align
 ----------------------------------------------------
 LCD_PAGEZERO          000000  000001  000002  00001
 WOZ_PAGEZERO          000002  000009  000008  00001
-LCD_RAM               000400  000400  000001  00001
-MAIN_RAM              000401  000402  000002  00001
-WOZ_RAM               000403  000481  00007F  00001
-CODE                  008000  0080A0  0000A1  00001
-LCD_CODE              0080A1  008184  0000E4  00001
-SPI_CODE              008185  0081C2  00003E  00001
-WOZ_CODE              0081C3  0082BC  0000FA  00001
+WOZ_RAM               000400  00047E  00007F  00001
+CODE                  008000  008094  000095  00001
+LCD_CODE              008095  008172  0000DE  00001
+SPI_CODE              008173  0081B0  00003E  00001
+WOZ_CODE              0081B1  0082AA  0000FA  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
@@ -42,10 +38,10 @@ ACIA_DATA                 000210 REA    ACIA_STATUS               000211 REA
 LCD_ADDR_ZP               000000 RLZ    VIA1_DDRB                 000202 REA    
 VIA1_PORTA                000201 REA    VIA1_PORTB                000200 REA    
 __ACIA1_START__           000210 RLA    __CODE_LOAD__             008000 RLA    
-__VIA1_START__            000200 RLA    lcd_init                  0080A1 RLA    
-lcd_instruction           0080BE RLA    lcd_load_custom_character 008159 RLA    
-lcd_print_asciiz_ZP       008147 RLA    lcd_print_hex             00812C RLA    
-lcd_send_byte             008120 RLA    
+__VIA1_START__            000200 RLA    lcd_init                  008095 RLA    
+lcd_instruction           0080AF RLA    lcd_load_custom_character 008147 RLA    
+lcd_print_asciiz_ZP       008135 RLA    lcd_print_hex             00811A RLA    
+lcd_send_byte             008115 RLA    
 
 
 Exports list by value:
@@ -55,10 +51,10 @@ __VIA1_START__            000200 RLA    VIA1_PORTA                000201 REA
 VIA1_DDRB                 000202 REA    ACIA_DATA                 000210 REA    
 __ACIA1_START__           000210 RLA    ACIA_STATUS               000211 REA    
 ACIA_CMD                  000212 REA    ACIA_CTRL                 000213 REA    
-__CODE_LOAD__             008000 RLA    lcd_init                  0080A1 RLA    
-lcd_instruction           0080BE RLA    lcd_send_byte             008120 RLA    
-lcd_print_hex             00812C RLA    lcd_print_asciiz_ZP       008147 RLA    
-lcd_load_custom_character 008159 RLA    
+__CODE_LOAD__             008000 RLA    lcd_init                  008095 RLA    
+lcd_instruction           0080AF RLA    lcd_send_byte             008115 RLA    
+lcd_print_hex             00811A RLA    lcd_print_asciiz_ZP       008135 RLA    
+lcd_load_custom_character 008147 RLA    
 
 
 Imports list:

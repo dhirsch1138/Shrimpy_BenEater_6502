@@ -11,10 +11,6 @@
 ;====================================================
 ;Reserve RAM addresses
 .segment "MAIN_RAM"
-MAIN_LOOP_COUNT:        .res 1, $00
-;Description: (HEX) Used to store count of main loop iterations
-DINO_LOCATION:        .res 1, $00
-;Description: used to store the location of the dinosaur in the LCD's DDRAM
 
 ;====================================================
 ;Macros
@@ -71,7 +67,6 @@ reset:
   jsr lcd_instruction
   lda #LCD_INST_CLRDISP ; Clear display
   jsr lcd_instruction
-  stz MAIN_LOOP_COUNT
   ; presumes we will continue executing into 'main_loop'
 
 main_loop:
@@ -79,29 +74,33 @@ main_loop:
 ;  Loops forever updating lcd 
 ;Arguments
 ;  None
+;Uses
+;  Y is the dinosaur location address
+;  X is the loop counter
 ;Preconditions
 ;  lcd is intialized and setup for display, custom characters are loaded
 ;Side Effects
 ;  Updates LCD
-  lda #LCD_DDRAM2LN48CR ; DDRAM location for the beginning of the second line
-  sta DINO_LOCATION ;dino starts at the beginning of the second line of the display
+  pha
+  phy
+  phx
+  ldx #$00
+  ldy #LCD_DDRAM2LN48CR ;dino starts at the beginning of the second line of the display
 loop:
-  lda MAIN_LOOP_COUNT
+  txa ; get the loop count
   jsr lcd_print_hex
   lda #$20 ;space
   jsr lcd_send_byte
   load_addr_to_zp_macro dinosaur_says, LCD_ADDR_ZP ;load the address of addr to LCD_ADDR_ZP ZP word
   jsr lcd_print_asciiz_ZP ;print the LCD_ADDR_ZP ZP word on the LCD
-  lda DINO_LOCATION ; set dinosaur location
+  tya ; set dinosaur location
   jsr lcd_instruction
   lda dinochar ;dino char set (offset 0 is the address!)
   jsr lcd_send_byte
-  inc DINO_LOCATION
-  lda DINO_LOCATION
-  cmp #(LCD_DDRAM2LN48CR | %00010000) ;if dino gets to end of line (16 characters) reset it
+  iny ; increase dinosaur location
+  cpy #(LCD_DDRAM2LN48CR | %00010000) ;if dino gets to end of line (16 characters) reset it
   bmi loop_delay
-  lda #LCD_DDRAM2LN48CR; DDRAM location for the beginning of the second line
-  sta DINO_LOCATION ;reset dino to beginning of the second line of the display
+  ldy #LCD_DDRAM2LN48CR ;reset dino to beginning of the second line of the display
 loop_delay:
   lda #$02 ; delay for ~1 second
 loop_delay_half_second:
@@ -110,8 +109,11 @@ loop_delay_half_second:
   bne loop_delay_half_second 
   lda #LCD_INST_CLRDISP; Clear display
   jsr lcd_instruction
-  inc MAIN_LOOP_COUNT 
+  inx
   bra loop ;jmp
+  plx ;never gonna hit this, but habits are good.
+  ply
+  pla
 
 
 dinosaur_says: .asciiz "Rwaaaar!"

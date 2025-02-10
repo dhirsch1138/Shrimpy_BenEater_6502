@@ -29,12 +29,6 @@
 ;Reserve RAM addresses
 
 .segment "LCD_RAM"
-LCD_RS_ENABLE:        .res 1, $00
-;Description: (Boolean) Used to store if RS should be applied to the LCD instruction
-;Values:
-; * False - $00 for non-RS instructions (default)
-; * True - $FF for RS instructions (like printing characters)
-;Note: should be flagged with DEC as needed, always remember that its default state should be $00.
 
 .segment "LCD_PAGEZERO": zeropage
 LCD_ADDR_ZP:        .res 2, $0000
@@ -121,7 +115,6 @@ lcd_init:
   lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE)
   jsr lcd_instruction
  ; sta VIA1_PORTB
-  stz LCD_RS_ENABLE  ;LCD_RS_ENABLE should be false
   pla
   rts
 
@@ -133,15 +126,19 @@ lcd_instruction:
 ;Preconditions
 ;  LCD is initialized and has its parameters set
 ;Side Effects
-;  Register A is squished
+;  None
+  phy
+  ldy #$00 ; THEN this is being called as a command (as in it is invoked as lcd_instruction) THEN store 0 to Y to flag this as not a RS operation
+lcd_instruction_y_set: ; if jumping here Y should already be pushed onto the stack, and Y should 1
+  pha
   lcd_wait_macro ;wait until lcd is no longer showing BUSY
   pha
   lsr
   lsr
   lsr
   lsr            ; Send high 4 bits
-  bit LCD_RS_ENABLE ; enabled RS = $FF
-  bpl lcd_instruction_sendhigh ; IF RS is NOT enabled THEN skip applying the RS mask
+  cpy #$01 ; are we setting RS ?
+  bne lcd_instruction_sendhigh ; IF RS is NOT enabled THEN skip applying the RS mask
   ora #LCD_PIN_RS
 lcd_instruction_sendhigh:
   sta VIA1_PORTB
@@ -151,8 +148,8 @@ lcd_instruction_sendhigh:
   sta VIA1_PORTB
   pla
   and #%00001111 ; Send low 4 bits
-  bit LCD_RS_ENABLE ; enabled RS = $FF
-  bpl lcd_instruction_sendlow ;IF RS is NOT enabled THEN skip applying the RS mask
+  cpy #$01 ; are we setting RS ?
+  bne lcd_instruction_sendlow ;IF RS is NOT enabled THEN skip applying the RS mask
   ora #LCD_PIN_RS
 lcd_instruction_sendlow: 
   sta VIA1_PORTB
@@ -160,6 +157,8 @@ lcd_instruction_sendlow:
   sta VIA1_PORTB
   eor #LCD_PIN_E         ; Clear E bit
   sta VIA1_PORTB
+  pla
+  ply
   rts
 
 lcd_send_byte:
@@ -172,12 +171,9 @@ lcd_send_byte:
 ;Side Effects
 ;  Instruction byte is sent to the LCD
 ;  Unless another mode is in effect (like writing CGRAM) this will write to the LCD DDRAM and increment the pointer if so configured
-  pha
-  dec LCD_RS_ENABLE        ;$00 - 1 = $FF (enabled)
-  jsr lcd_instruction
-  stz LCD_RS_ENABLE        ;$00 (disabled), saves up to three cycles over inc   
-  pla
-  rts
+  phy ; y will be pulled from stack in lcd_instruction
+  ldy #$01 ; set Y to 1 to flag that the register select flag should be sent as this is data / vs command
+  bra lcd_instruction_y_set ;jmp
 
 lcd_print_hex:
 ;Description
