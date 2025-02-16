@@ -33,8 +33,8 @@
 .segment "LCD_PAGEZERO": zeropage
 LCD_ADDR_ZP:        .res 2, $0000
 
-
-
+LCD_DDR = VIA1_DDRB
+LCD_VIAPORT = VIA1_PORTB
 
 ;====================================================
 ;Macros
@@ -52,29 +52,29 @@ LCD_ADDR_ZP:        .res 2, $0000
   .local lcd_wait_busy ;limit scope of this symbol to this macro
   pha
   lda #%11110000  ; LCD data is input
-  sta VIA1_DDRB
+  sta LCD_DDR
 lcd_wait_busy:
   lda #LCD_PIN_RW
-  sta VIA1_PORTB
+  sta LCD_VIAPORT
   lda #(LCD_PIN_RW | LCD_PIN_E)
-  sta VIA1_PORTB
-  lda VIA1_PORTB       ; Read high nibble
+  sta LCD_VIAPORT
+  lda LCD_VIAPORT       ; Read high nibble
   pha             ; and put on stack since it has the busy flag
   lda #LCD_PIN_RW
-  sta VIA1_PORTB
+  sta LCD_VIAPORT
   lda #(LCD_PIN_RW | LCD_PIN_E)
-  sta VIA1_PORTB
+  sta LCD_VIAPORT
   ;TODO is this lda doing anything? seems like it is superceded immediately by the pla. 
   ;unless reading from the via port triggers something on the lcd?
-  lda VIA1_PORTB       ; Read low nibble
+  lda LCD_VIAPORT       ; Read low nibble
   pla             ; Get high nibble off stack
   and #%00001000
   bne lcd_wait_busy
   ; logical break, we aren't busy anymore
   lda #LCD_PIN_RW
-  sta VIA1_PORTB
+  sta LCD_VIAPORT
   lda #%11111111  ; LCD data is output
-  sta VIA1_DDRB
+  sta LCD_DDR
   pla
 .endmacro
 
@@ -97,26 +97,25 @@ lcd_init:
 ;  VIA DDRB must have the LCD's bits set to output
 ;Side Effects
 ;  LCD is set to accept 4-bit mode
+;  A is squished
 ;Notes
 ;  Does not include a wait for the LCD to be ready for the next command,
 ;  presuming that the code invoking the command will be smart enough to wait
-;Todo
-;  Should I be pushing A onto the stack such that this is transparent?
-  pha
+;
+  lda #%11111111 ; Set all pins on port B to output
+  sta LCD_DDR
   ;per the HD44780U manual
   ;1) reset
   ;2) send the 4 bit instruction (swapped) 0010 for 4 bit operation
   lda #LCD_INST_FUNCSET
   swn_macro ;#%00000010 ; Set 4-bit mode by sending just the upper nibble
-  sta VIA1_PORTB
+  sta LCD_VIAPORT
   ora #LCD_PIN_E
-  sta VIA1_PORTB
+  sta LCD_VIAPORT
   ;3) send instruction for 4-bit, two line, 5x8
   lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE)
-  jsr lcd_instruction
- ; sta VIA1_PORTB
-  pla
-  rts
+  ;bra lcd_instruction ; jmp
+  ;keep executing into the lcd_instruction
 
 lcd_instruction:
 ;Description
@@ -141,22 +140,22 @@ lcd_instruction_y_set: ; if jumping here Y should already be pushed onto the sta
   bne lcd_instruction_sendhigh ; IF RS is NOT enabled THEN skip applying the RS mask
   ora #LCD_PIN_RS
 lcd_instruction_sendhigh:
-  sta VIA1_PORTB
+  sta LCD_VIAPORT
   ora #LCD_PIN_E        ; Set E bit to send instruction
-  sta VIA1_PORTB
+  sta LCD_VIAPORT
   eor #LCD_PIN_E         ; Clear E bit
-  sta VIA1_PORTB
+  sta LCD_VIAPORT
   pla
   and #%00001111 ; Send low 4 bits
   cpy #$01 ; are we setting RS ?
   bne lcd_instruction_sendlow ;IF RS is NOT enabled THEN skip applying the RS mask
   ora #LCD_PIN_RS
 lcd_instruction_sendlow: 
-  sta VIA1_PORTB
+  sta LCD_VIAPORT
   ora #LCD_PIN_E         ; Set E bit to send instruction
-  sta VIA1_PORTB
+  sta LCD_VIAPORT
   eor #LCD_PIN_E         ; Clear E bit
-  sta VIA1_PORTB
+  sta LCD_VIAPORT
   pla
   ply
   rts
