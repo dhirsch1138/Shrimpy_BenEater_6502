@@ -102,6 +102,7 @@ lcd_init:
 ;  Does not include a wait for the LCD to be ready for the next command,
 ;  presuming that the code invoking the command will be smart enough to wait
 ;
+  delay_macro #$0A, #$01 ; remove if 1mhz
   lda #%11111111 ; Set all pins on port B to output
   sta LCD_DDR
   ;per the HD44780U manual
@@ -112,6 +113,7 @@ lcd_init:
   sta LCD_VIAPORT
   ora #LCD_PIN_E
   sta LCD_VIAPORT
+  delay_macro #$0A, #$01 ; remove if 1 mhz
   ;3) send instruction for 4-bit, two line, 5x8
   lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE)
   ;bra lcd_instruction ; jmp
