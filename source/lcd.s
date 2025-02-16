@@ -102,28 +102,36 @@ lcd_init:
 ;  Does not include a wait for the LCD to be ready for the next command,
 ;  presuming that the code invoking the command will be smart enough to wait
 ;
-  delay_macro #$0A, #$01 ; remove if 1mhz
   lda #%11111111 ; Set all pins on port B to output
   sta LCD_DDR
   ;per the HD44780U manual
   ;1) reset
+  delay_macro #$0A, #$01 ; datasheet says it needs a small delay between function inits
   ;2) send the 4 bit instruction (swapped) 0010 for 4 bit operation
   lda #LCD_INST_FUNCSET
   swn_macro ;#%00000010 ; Set 4-bit mode by sending just the upper nibble
   sta LCD_VIAPORT
   ora #LCD_PIN_E
   sta LCD_VIAPORT
-  delay_macro #$0A, #$01 ; remove if 1 mhz
+  and #%00001111
+  sta LCD_VIAPORT
+  delay_macro #$0A, #$01 ; datasheet says it needs a small delay between function inits
+  sta LCD_VIAPORT
+  ora #LCD_PIN_E
+  sta LCD_VIAPORT
+  and #%00001111
+  sta LCD_VIAPORT
+  delay_macro #$0A, #$01 ; datasheet says it needs a small delay between function inits
   ;3) send instruction for 4-bit, two line, 5x8
   lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE)
-  ;bra lcd_instruction ; jmp
-  ;keep executing into the lcd_instruction
+  ;continue into lcd_instruction
 
 lcd_instruction:
 ;Description
 ;  Sends instruction byte to the LCD
 ;Arguments
 ;  A - LCD instruction byte
+;  Y - if Y = 1 THEN we are setting the RS pin with this instruction
 ;Preconditions
 ;  LCD is initialized and has its parameters set
 ;Side Effects
