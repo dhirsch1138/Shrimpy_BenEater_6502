@@ -51,13 +51,9 @@ reset:
   ldx #$ff
   txs
   delay_macro #$FF, #$FF ; give chips time to wake up
-  jsr lcd_init
   delay_macro #$FF, #$FF ; give chips time to wake up
   jsr lcd_init
-  delay_macro #$FF, #$FF ; display cleared 
-  lda #(LCD_INST_DISPLAY | LCD_DISPLAY_DSON); Display on; cursor off; blink off
-  jsr lcd_instruction
-  delay_macro #$FF, #$FF ; display cleared 
+  delay_macro #$FF, #$FF 
   load_addr_to_zp_macro dinochar, LCD_ADDR_ZP ;set dinochar as the next LCD_ADDR_ZP
   jsr lcd_load_custom_character ;load dinochar as a custom character 
   lda #LCD_INST_RTNHOME

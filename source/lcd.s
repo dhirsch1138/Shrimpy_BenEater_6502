@@ -108,15 +108,13 @@ lcd_init:
   sta LCD_DDR
   ;per the HD44780U manual (init by instruction)
   ;1) reset
- ; delay_macro #$FF, #$FF ; datasheet says it needs a small delay between function inits, this gives the LCD time to power up
   delay_macro #$FF, #$FF ; datasheet says it needs a small delay between function inits, this gives the LCD time to power up
   ;2) send the 8-bit function instruction as just the upper nibble * 3
-  delay_macro #$FF, #$FF ; datasheet says it needs a small delay between function inits, this gives the LCD time to power up
   lda #(LCD_INST_FUNCSET | LCD_FUNCSET_DATA)
   swn_macro ;#%00000011 ; Set 8-bit mode by sending just the upper nibble
   ldx $03
 lcd_init_8bit: 
-  delay_macro #$FF, #$FF ; datasheet says it needs a small delay between function inits, this gives the LCD time to power up
+  delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits, this gives the LCD time to power up
   sta LCD_VIAPORT
   ora #LCD_PIN_E
   sta LCD_VIAPORT
@@ -125,34 +123,38 @@ lcd_init_8bit:
   dex
   bne lcd_init_8bit
   ;3) send the 4-bit function instruction as just the upper nibble
-  delay_macro #$FF, #$FF ; datasheet says it needs a small delay between function inits, this gives the LCD time to power up
+  delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits, this gives the LCD time to power up
   lda #LCD_INST_FUNCSET
   swn_macro ;#%00000010 ; Set 4-bit mode by sending just the upper nibble
   sta LCD_VIAPORT
   ora #LCD_PIN_E
   sta LCD_VIAPORT
   eor #LCD_PIN_E
-  sta LCD_VIAPORT
+  sta LCD_VIAPORT 
   ;4) function set
-  delay_macro #$FF, #$FF ; datasheet says it needs a small delay between function inits
+  delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits
   lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE); Set 4-bit mode; 2-line display; 5x8 font
   jsr lcd_instruction
   ;5) display set
-  delay_macro #$FF, #$FF ; datasheet says it needs a small delay between function inits
+  delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits
   lda #LCD_INST_DISPLAY ; display off
   jsr lcd_instruction
-  delay_macro #$FF, #$FF ; datasheet says it needs a small delay between function inits
+  delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits
   lda #LCD_INST_CLRDISP ; Clear display
   jsr lcd_instruction
   ;6) entry mode set
-  delay_macro #$FF, #$FF ; datasheet says it needs a small delay between function inits
+  delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits
   lda #(LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR); Increment and shift cursor; don't shift display
   jsr lcd_instruction
-  ;this should be the formal init by instruction, forced delays shouldn't be needed anymore
-  delay_macro #$FF, #$FF ; datasheet says it needs a small delay between function inits
-;  delay_macro #$FF, #$FF ; datasheet says it needs a small delay between function inits
-;  lda #LCD_INST_CLRDISP ; Clear display
-;  jsr lcd_instruction
+  ;after formal init
+  delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits
+  lda #(LCD_INST_DISPLAY | LCD_DISPLAY_DSON); Display on; cursor off; blink off
+  jsr lcd_instruction
+  lda #LCD_INST_CLRDISP ; Clear display
+  jsr lcd_instruction
+  lda #LCD_INST_RTNHOME ; return cursor home
+  jsr lcd_instruction
+  delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits
   rts
 
 lcd_instruction:
