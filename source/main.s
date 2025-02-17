@@ -50,21 +50,17 @@ reset:
 ;    * do NOT shift display on update
   ldx #$ff
   txs
+  delay_macro #$FF, #$FF ; give chips time to wake up
   jsr lcd_init
-  jsr lcd_init ; trying it twice, 1.843 mhz is being tricky
-  lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE); Set 4-bit mode; 2-line display; 5x8 font
+  delay_macro #$FF, #$FF ; give chips time to wake up
+  jsr lcd_init
+  delay_macro #$FF, #$FF ; display cleared 
+  lda #(LCD_INST_DISPLAY | LCD_DISPLAY_DSON); Display on; cursor off; blink off
   jsr lcd_instruction
-  ;lda #(LCD_INST_DISPLAY | LCD_DISPLAY_DSON | LCD_DISPLAY_CUON); Display on; cursor on; blink off
-  ;jsr lcd_instruction
-  lda #(LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR); Increment and shift cursor; don't shift display
-  jsr lcd_instruction
+  delay_macro #$FF, #$FF ; display cleared 
   load_addr_to_zp_macro dinochar, LCD_ADDR_ZP ;set dinochar as the next LCD_ADDR_ZP
   jsr lcd_load_custom_character ;load dinochar as a custom character 
   lda #LCD_INST_RTNHOME
-  jsr lcd_instruction
-  lda #LCD_INST_CLRDISP ; Clear display
-  jsr lcd_instruction
-  lda #(LCD_INST_DISPLAY | LCD_DISPLAY_DSON); Display on; cursor off; blink off
   jsr lcd_instruction
   ; presumes we will continue executing into 'main_loop'
 
