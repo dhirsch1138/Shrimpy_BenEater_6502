@@ -50,10 +50,12 @@ reset:
 ;    * do NOT shift display on update
   ldx #$ff
   txs
+  ldx #$06
+reset_delay:
   delay_macro #$FF, #$FF ; give chips time to wake up
-  delay_macro #$FF, #$FF ; give chips time to wake up
+  dex
+  bne reset_delay
   jsr lcd_init
-  delay_macro #$FF, #$FF 
   load_addr_to_zp_macro dinochar, LCD_ADDR_ZP ;set dinochar as the next LCD_ADDR_ZP
   jsr lcd_load_custom_character ;load dinochar as a custom character 
   lda #LCD_INST_RTNHOME

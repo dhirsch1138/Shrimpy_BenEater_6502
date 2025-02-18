@@ -88,7 +88,7 @@ lcd_wait_busy:
 .include "util_macros.inc"
 .include "lcd_statics.inc"
 
-lcd_init:
+lcd_init_full_init:
 ;Description
 ;  Inializes the lcd, sets 4 bit mode
 ;Arguments
@@ -156,6 +156,50 @@ lcd_init_8bit:
   jsr lcd_instruction
   delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits
   rts
+
+lcd_init:
+;Description
+;  Inializes the lcd, sets 4 bit mode
+;Arguments
+;  None
+;Preconditions
+;  VIA DDRB must have the LCD's bits set to output
+;Side Effects
+;  LCD is set to accept 4-bit mode
+;  A is squished
+;  X is squished
+;Notes
+;  Does not include a wait for the LCD to be ready for the next command,
+;  presuming that the code invoking the command will be smart enough to wait
+  pha
+  phx
+  lda #%11111111 ; Set all pins on port B to output
+  sta LCD_DDR
+  delay_macro #$A0, #$FF
+  lda #%00000010 ; Set 4-bit mode
+  sta LCD_VIAPORT
+  ora #LCD_PIN_E
+  sta LCD_VIAPORT
+  and #%00001111
+  sta LCD_VIAPORT
+  ldx #$03
+  delay_macro #$FF, #$FF
+lcd_init_loop:
+  delay_macro #$D0, #$FF
+  lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE); #%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
+  jsr lcd_instruction
+  lda #(LCD_INST_DISPLAY | LCD_DISPLAY_DSON); #%00001100 ; Display on; cursor off; blink off
+  jsr lcd_instruction
+  lda #(LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR); #%00000110 ; Increment and shift cursor; don't shift display
+  jsr lcd_instruction
+  dex
+  bne lcd_init_loop
+  lda #LCD_INST_CLRDISP ; #%00000001 ; Clear display
+  jsr lcd_instruction
+  plx
+  pla
+  rts
+
 
 lcd_instruction:
 ;Description
