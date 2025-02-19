@@ -39,45 +39,6 @@ LCD_VIAPORT = VIA1_PORTB
 ;====================================================
 ;Macros
 
-.macro  lcd_wait_macro
-;Description
-;  Loops until the LCD no longer shows a busy status
-;Arguments
-;  None
-;Preconditions
-;  LCD is initialized and has its parameters set
-;  LCD is in 4 bit mode
-;Side Effects
-;  None
-  .local lcd_wait_busy ;limit scope of this symbol to this macro
-  pha
-  lda #%11110000  ; LCD data is input
-  sta LCD_DDR
-lcd_wait_busy:
-  lda #LCD_PIN_RW
-  sta LCD_VIAPORT
-  lda #(LCD_PIN_RW | LCD_PIN_E)
-  sta LCD_VIAPORT
-  lda LCD_VIAPORT       ; Read high nibble
-  pha             ; and put on stack since it has the busy flag
-  lda #LCD_PIN_RW
-  sta LCD_VIAPORT
-  lda #(LCD_PIN_RW | LCD_PIN_E)
-  sta LCD_VIAPORT
-  ;TODO is this lda doing anything? seems like it is superceded immediately by the pla. 
-  ;unless reading from the via port triggers something on the lcd?
-  lda LCD_VIAPORT       ; Read low nibble
-  pla             ; Get high nibble off stack
-  and #%00001000
-  bne lcd_wait_busy
-  ; logical break, we aren't busy anymore
-  lda #LCD_PIN_RW
-  sta LCD_VIAPORT
-  lda #%11111111  ; LCD data is output
-  sta LCD_DDR
-  pla
-.endmacro
-
 ;====================================================
 ;Code
 .segment "LCD_CODE"
@@ -87,6 +48,7 @@ lcd_wait_busy:
 .include "via.inc"
 .include "util_macros.inc"
 .include "lcd_statics.inc"
+.include "util.inc"
 
 lcd_init_full_init:
 ;Description
@@ -166,8 +128,6 @@ lcd_init:
 ;  VIA DDRB must have the LCD's bits set to output
 ;Side Effects
 ;  LCD is set to accept 4-bit mode
-;  A is squished
-;  X is squished
 ;Notes
 ;  Does not include a wait for the LCD to be ready for the next command,
 ;  presuming that the code invoking the command will be smart enough to wait
@@ -175,31 +135,91 @@ lcd_init:
   phx
   lda #%11111111 ; Set all pins on port B to output
   sta LCD_DDR
-  delay_macro #$A0, #$FF
-  lda #%00000010 ; Set 4-bit mode
-  sta LCD_VIAPORT
-  ora #LCD_PIN_E
-  sta LCD_VIAPORT
-  and #%00001111
-  sta LCD_VIAPORT
-  ldx #$03
-  delay_macro #$FF, #$FF
-lcd_init_loop:
-  delay_macro #$D0, #$FF
+  jsr delay_ms_100
+  lda #(LCD_INST_FUNCSET | LCD_FUNCSET_DATA); #%00110000 ; designate 8-bit mode
+  swn_macro ;#%00000011 ; Set 8-bit mode by sending just the upper nibble
+  jsr lcd_send_raw ; send it three times to force initializtion
+  jsr delay_ms_100    
+  jsr lcd_send_raw ; send it three times to force initializtion
+  jsr delay_ms_100
+  jsr lcd_send_raw ; send it three times to force initializtion
+  jsr delay_ms_100  
+  lda #LCD_INST_FUNCSET ; #%00100000 ; designate 4-bit mode
+  swn_macro ;#%00000010 ; Set 4-bit mode by sending just the upper nibble
+  jsr lcd_send_raw
+  jsr delay_ms_100
+  lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE); #%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
+  jsr lcd_send_raw_4bit
+  jsr delay_ms_50
+  lda #LCD_INST_DISPLAY ; #%00001000 ; Display off
+  jsr lcd_send_raw_4bit
+  jsr delay_ms_50
+  lda #LCD_INST_CLRDISP ; %00000001 ; Clear display
+  jsr lcd_send_raw_4bit   
+  jsr delay_ms_50
+  lda #(LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR); #%00000110 ; Increment and shift cursor; don't shift display
+  jsr lcd_send_raw_4bit
+  jsr delay_ms_50
+  ;we 'should' be initialized at this point
+  ;redefine setup as we've allegedly initialized at this point 
   lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE); #%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
   jsr lcd_instruction
+  jsr delay_ms_50
   lda #(LCD_INST_DISPLAY | LCD_DISPLAY_DSON); #%00001100 ; Display on; cursor off; blink off
   jsr lcd_instruction
+  jsr delay_ms_50
   lda #(LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR); #%00000110 ; Increment and shift cursor; don't shift display
   jsr lcd_instruction
-  dex
-  bne lcd_init_loop
-  lda #LCD_INST_CLRDISP ; #%00000001 ; Clear display
+  jsr delay_ms_50
+  lda #LCD_INST_CLRDISP; Clear display
   jsr lcd_instruction
+  jsr delay_ms_50
+  lda #LCD_INST_RTNHOME; return cursor home
+  jsr lcd_instruction    
   plx
   pla
   rts
 
+
+lcd_send_raw_4bit:
+;Description
+;  Sends the byte to the LCD in 4 bit mode. No wait. No RS bit
+;Arguments
+;  A - LCD byte
+;Precondition
+;  first half of 4-bit init instructions done
+;Side Effects
+;  None
+  pha
+  pha
+  lsr
+  lsr
+  lsr
+  lsr            
+  jsr lcd_send_raw; Send high 4 bits
+  pla
+  and #%00001111 ; Send low 4 bits
+  jsr lcd_send_raw; Send high 4 bits
+  pla
+  rts
+
+lcd_send_raw:
+;Description
+;  Sends the byte to the LCD, toggling the E flag. No wait
+;Arguments
+;  A - LCD byte
+;Precondition
+;  LCD has powered up
+;Side Effects
+;  None
+  pha
+  sta LCD_VIAPORT
+  ora #LCD_PIN_E
+  sta LCD_VIAPORT
+  eor #LCD_PIN_E
+  sta VIA1_PORTB
+  pla
+  rts
 
 lcd_instruction:
 ;Description
@@ -215,7 +235,7 @@ lcd_instruction:
   ldy #$00 ; THEN this is being called as a command (as in it is invoked as lcd_instruction) THEN store 0 to Y to flag this as not a RS operation
 lcd_instruction_y_set: ; if jumping here Y should already be pushed onto the stack, and Y should 1
   pha
-  lcd_wait_macro ;wait until lcd is no longer showing BUSY
+  jsr lcd_wait ;wait until lcd is no longer showing BUSY
   pha
   lsr
   lsr
@@ -342,6 +362,44 @@ lcd_load_character_skiphigh:
   bne lcd_load_character_loop ; jmp
 lcd_load_character_done:
   plx
+  pla
+  rts
+
+lcd_wait:
+;Description
+;  Loops until the LCD no longer shows a busy status
+;Arguments
+;  None
+;Preconditions
+;  LCD is initialized and has its parameters set
+;  LCD is in 4 bit mode
+;Side Effects
+;  None
+  pha
+  lda #%11110000  ; LCD data is input
+  sta LCD_DDR
+lcd_wait_busy:
+  lda #LCD_PIN_RW
+  sta LCD_VIAPORT
+  lda #(LCD_PIN_RW | LCD_PIN_E)
+  sta LCD_VIAPORT
+  lda LCD_VIAPORT       ; Read high nibble
+  pha             ; and put on stack since it has the busy flag
+  lda #LCD_PIN_RW
+  sta LCD_VIAPORT
+  lda #(LCD_PIN_RW | LCD_PIN_E)
+  sta LCD_VIAPORT
+  ;TODO is this lda doing anything? seems like it is superceded immediately by the pla. 
+  ;unless reading from the via port triggers something on the lcd?
+  lda LCD_VIAPORT       ; Read low nibble
+  pla             ; Get high nibble off stack
+  and #%00001000
+  bne lcd_wait_busy
+  ; logical break, we aren't busy anymore
+  lda #LCD_PIN_RW
+  sta LCD_VIAPORT
+  lda #%11111111  ; LCD data is output
+  sta LCD_DDR
   pla
   rts
 

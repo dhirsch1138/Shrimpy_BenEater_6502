@@ -3,13 +3,15 @@ Modules list:
 acia.o:
 lcd.o:
     LCD_PAGEZERO      Offs=000000  Size=000002  Align=00001  Fill=0000
-    LCD_CODE          Offs=000000  Size=000202  Align=00001  Fill=0000
+    LCD_CODE          Offs=000000  Size=00024A  Align=00001  Fill=0000
 main.o:
-    CODE              Offs=000000  Size=00009A  Align=00001  Fill=0000
+    CODE              Offs=000000  Size=00007C  Align=00001  Fill=0000
 reset_interrupt.o:
     VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
 spi.o:
     SPI_CODE          Offs=000000  Size=00003E  Align=00001  Fill=0000
+util.o:
+    UTIL_CODE         Offs=000000  Size=00002D  Align=00001  Fill=0000
 via.o:
 wozmon.o:
     WOZ_PAGEZERO      Offs=000000  Size=000008  Align=00001  Fill=0000
@@ -24,10 +26,11 @@ Name                   Start     End    Size  Align
 LCD_PAGEZERO          000000  000001  000002  00001
 WOZ_PAGEZERO          000002  000009  000008  00001
 WOZ_RAM               000300  00037E  00007F  00001
-CODE                  008000  008099  00009A  00001
-LCD_CODE              00809A  00829B  000202  00001
-SPI_CODE              00829C  0082D9  00003E  00001
-WOZ_CODE              0082DA  0083D3  0000FA  00001
+CODE                  008000  00807B  00007C  00001
+LCD_CODE              00807C  0082C5  00024A  00001
+SPI_CODE              0082C6  008303  00003E  00001
+WOZ_CODE              008304  0083FD  0000FA  00001
+UTIL_CODE             0083FE  00842A  00002D  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
@@ -38,10 +41,12 @@ ACIA_DATA                 000210 REA    ACIA_STATUS               000211 REA
 LCD_ADDR_ZP               000000 RLZ    VIA1_DDRB                 000202 REA    
 VIA1_PORTA                000201 REA    VIA1_PORTB                000200 REA    
 __ACIA1_START__           000210 RLA    __CODE_LOAD__             008000 RLA    
-__VIA1_START__            000200 RLA    lcd_init                  00817D RLA    
-lcd_instruction           0081D8 RLA    lcd_load_custom_character 008270 RLA    
-lcd_print_asciiz_ZP       00825E RLA    lcd_print_hex             008243 RLA    
-lcd_send_byte             00823E RLA    
+__VIA1_START__            000200 RLA    delay_ms_100              00840E RLA    
+delay_ms_50               0083FE RLA    delay_ms_500              008415 RLA    
+lcd_init                  00815F RLA    lcd_instruction           0081FE RLA    
+lcd_load_custom_character 008268 RLA    lcd_print_asciiz_ZP       008256 RLA    
+lcd_print_hex             00823B RLA    lcd_send_byte             008236 RLA    
+
 
 
 Exports list by value:
@@ -51,10 +56,12 @@ __VIA1_START__            000200 RLA    VIA1_PORTA                000201 REA
 VIA1_DDRB                 000202 REA    ACIA_DATA                 000210 REA    
 __ACIA1_START__           000210 RLA    ACIA_STATUS               000211 REA    
 ACIA_CMD                  000212 REA    ACIA_CTRL                 000213 REA    
-__CODE_LOAD__             008000 RLA    lcd_init                  00817D RLA    
-lcd_instruction           0081D8 RLA    lcd_send_byte             00823E RLA    
-lcd_print_hex             008243 RLA    lcd_print_asciiz_ZP       00825E RLA    
-lcd_load_custom_character 008270 RLA    
+__CODE_LOAD__             008000 RLA    lcd_init                  00815F RLA    
+lcd_instruction           0081FE RLA    lcd_send_byte             008236 RLA    
+lcd_print_hex             00823B RLA    lcd_print_asciiz_ZP       008256 RLA    
+lcd_load_custom_character 008268 RLA    delay_ms_50               0083FE RLA    
+delay_ms_100              00840E RLA    delay_ms_500              008415 RLA    
+
 
 
 Imports list:
@@ -82,6 +89,12 @@ __CODE_LOAD__ ([linker generated]):
     reset_interrupt.o         source/reset_interrupt.s(6)
 __VIA1_START__ ([linker generated]):
     via.o                     source/via.s(7)
+delay_ms_100 (util.o):
+    lcd.o                     source/util.inc(3)
+delay_ms_50 (util.o):
+    lcd.o                     source/util.inc(4)
+delay_ms_500 (util.o):
+    main.o                    source/util.inc(2)
 lcd_init (lcd.o):
     main.o                    source/lcd.inc(5)
 lcd_instruction (lcd.o):

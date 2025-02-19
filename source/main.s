@@ -26,6 +26,7 @@
   .include "lcd.inc"
   .include "lcd_statics.inc"
   .include "util_macros.inc"
+  .include "util.inc"  
 
 reset:
 ;Description
@@ -50,16 +51,11 @@ reset:
 ;    * do NOT shift display on update
   ldx #$ff
   txs
-  ldx #$06
-reset_delay:
-  delay_macro #$FF, #$FF ; give chips time to wake up
-  dex
-  bne reset_delay
+  jsr delay_ms_500
   jsr lcd_init
+  jsr delay_ms_500
   load_addr_to_zp_macro dinochar, LCD_ADDR_ZP ;set dinochar as the next LCD_ADDR_ZP
   jsr lcd_load_custom_character ;load dinochar as a custom character 
-  lda #LCD_INST_RTNHOME
-  jsr lcd_instruction
   ; presumes we will continue executing into 'main_loop'
 
 main_loop:
@@ -102,6 +98,10 @@ loop_delay_half_second:
   bne loop_delay_half_second 
   lda #LCD_INST_CLRDISP; Clear display
   jsr lcd_instruction
+  nop
+  nop
+  nop
+  nop
   inx
   bra loop ;jmp
   plx ;never gonna hit this, but habits are good.
