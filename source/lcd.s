@@ -82,39 +82,39 @@ lcd_init_4bit:
   ; First we need to force the LCD into 4 bit mode. We do this by only sending the high
   ; bytes of a coordinated sequence of 'bitness' instructions
   ldx #$00 ; initialize index to walk through sequence
-lcd_init_4bit_reset_rawbytes_loop:
+lcd_init_4bit_reset_bitness_loop:
   jsr delay_ms_100 ; this is likely far too much, I may refine this later.
   jsr delay_ms_100 
   ; Read next byte of force reset sequence data
-  lda lcd_force_reset_rawbytes,x
+  lda lcd_force_reset_bitnesssequence,x
   ; Exit loop if $00 read
-  beq lcd_init_4bit_reset_rawbytes_end
+  beq lcd_init_4bit_reset_bitness_end
   swn_macro ; as we are just sending the high 4 bits, swap nibbles
   jsr lcd_send_raw 
   inx 
-  bra lcd_init_4bit_reset_rawbytes_loop
-lcd_init_4bit_reset_rawbytes_end:
+  bra lcd_init_4bit_reset_bitness_loop
+lcd_init_4bit_reset_bitness_end:
   jsr delay_ms_100
   ;
   ; The LCD is now in 4 bit mode, but is the busy flag cannot yet be used.
   ; We need to walk through a 4 bit instruction sequence to set the starting state
   ; of the LCD based on the datasheet's instructions.
   ldx #$00 ; initialize index to walk through sequence
-lcd_init_4bit_reset_4bitraw_loop:
+lcd_init_4bit_reset_instruction_loop:
   jsr delay_ms_100 ; this is likely far too much, I may refine this later.
-  lda lcd_force_reset_4bitraw,x ; Read next byte of force reset sequence data
-  beq lcd_init_4bit_reset_4bitraw_end ; Exit loop if $00 read
-  jsr lcd_send_raw_4bit
+  lda lcd_force_reset_instructionsequence,x ; Read next byte of force reset sequence data
+  beq lcd_init_4bit_reset_instruction_end ; Exit loop if $00 read
+  jsr lcd_instruct_nobusycheck ; send an instruction w/o checking the busy
   inx 
-  bra lcd_init_4bit_reset_4bitraw_loop
-lcd_init_4bit_reset_4bitraw_end:
+  bra lcd_init_4bit_reset_instruction_loop
+lcd_init_4bit_reset_instruction_end:
   plx    
   pla
   rts
 
 ;These instruction sequences are taken from the lcd controller datasheet
 
-lcd_force_reset_rawbytes:
+lcd_force_reset_bitnesssequence:
 ; got this idea from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
         .byte LCD_INST_FUNCSET | LCD_FUNCSET_DATA ; #%00110000 ; designate 8-bit mode
         .byte LCD_INST_FUNCSET | LCD_FUNCSET_DATA ; #%00110000 ; designate 8-bit mode
@@ -122,36 +122,13 @@ lcd_force_reset_rawbytes:
         .byte LCD_INST_FUNCSET ; #%00100000 ; designate 4-bit mode
         .byte $00
 
-lcd_force_reset_4bitraw:
+lcd_force_reset_instructionsequence:
 ; got this idea from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
         .byte LCD_INST_FUNCSET | LCD_FUNCSET_LINE ; #%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
         .byte LCD_INST_DISPLAY ; #%00001100 ; Display on; cursor off; blink off
         .byte LCD_INST_CLRDISP ; %00000001 ; Clear display
         .byte LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR ; #%00000110 ; Increment and shift cursor; don't shift display
         .byte $00
-
-lcd_send_raw_4bit:
-;Description
-;  Sends the byte to the LCD in 4 bit mode. No wait. No RS flag
-;Arguments
-;  A - LCD byte
-;Precondition
-;  first half of 4-bit init instructions done
-;Side Effects
-;  A is squished
-;
-;  pha - todo remove
-  pha
-  lsr
-  lsr
-  lsr
-  lsr            
-  jsr lcd_send_raw; Send high 4 bits
-  pla
-  and #%00001111 ; Send low 4 bits
-  jsr lcd_send_raw; Send high 4 bits
-; pla - todo remove
-  rts
 
 lcd_send_raw:
 ;Description
@@ -182,11 +159,12 @@ lcd_instruction:
 ;  LCD is initialized and has its parameters set
 ;Side Effects
 ;  None
+  jsr lcd_wait ;wait until lcd is no longer showing BUSY
+lcd_instruct_nobusycheck: ; send an instruction w/o checking the busy flag, should only really be used by instruction init sequence
   phy
   ldy #$00 ; THEN this is being called as a command (as in it is invoked as lcd_instruction) THEN store 0 to Y to flag this as not a RS operation
 lcd_instruction_y_set: ; if jumping here Y should already be pushed onto the stack, and Y should 1
   pha
-  jsr lcd_wait ;wait until lcd is no longer showing BUSY
   pha
   lsr
   lsr
