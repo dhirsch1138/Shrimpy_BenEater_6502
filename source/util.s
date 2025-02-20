@@ -20,8 +20,14 @@
 .export delay_ms_500
 .export delay_ms_100
 .export delay_ms_50
+.export delay_ms_10
 
 .include "util_macros.inc"
+
+
+delay_ms_10:
+  delay_macro #$07, #$FD ;delay for 18430 cycles, which is 10ms @ 1.843mhz
+  rts
 
 ;$39 $FC = 50ms @ 1.843 mhz
 

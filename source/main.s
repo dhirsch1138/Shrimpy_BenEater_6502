@@ -108,10 +108,7 @@ loop_delay:
   jsr delay_ms_1000 ; dino moves once a second
   lda #LCD_INST_CLRDISP; Clear display
   jsr lcd_instruction
-  nop
-  nop
-  nop
-  nop
+  jsr delay_ms_10
   inx
   bra loop ;jmp
 

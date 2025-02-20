@@ -294,6 +294,7 @@ lcd_load_custom_character:
   lda (LCD_ADDR_ZP)
   ora #LCD_INST_CRAMADR
   jsr lcd_instruction ;set addr
+  jsr delay_ms_10 ; setting character memory seems odd > 1 mhz, add a bit of time
 lcd_load_character_loop:
   inc LCD_ADDR_ZP
   bne lcd_load_character_skiphigh
@@ -302,6 +303,7 @@ lcd_load_character_skiphigh:
   lda (LCD_ADDR_ZP)
   jsr lcd_send_byte ;as the lcd is in 'write' mode from the CGRAM address, we can send eight sequential bytes to it
   dex
+  jsr delay_ms_10 ; setting character memory seems odd > 1 mhz, add a bit of time
   bne lcd_load_character_loop ; jmp
 lcd_load_character_done:
   plx
