@@ -1,7 +1,7 @@
 # Shrimpy
 This is my attempt at slowly building up a 6502 based microcomputer loosely structured around Ben Eater's lessons. I will wander off and chase squirrels, wrestle with interesting problems, and generally follow the "rule of cool" when deciding what to do next.
 
-*2/9/2025 NOTE: photo and schematic are obsolete, computer has been completely built. We are now using a PLD for address decoding*
+*2/9/2025 NOTE: photo and schematic are obsolete, computer has been completely rebuilt. We are now using a PLD for address decoding, a 'supervisor' component for resets, and an IC for collating interrupts*
 
 ![Image of build](build_photo.png)
 
