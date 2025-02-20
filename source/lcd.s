@@ -33,6 +33,14 @@
 .segment "LCD_PAGEZERO": zeropage
 LCD_ADDR_ZP:        .res 2, $0000
 
+
+;====================================================
+;Macros
+
+;====================================================
+;Defines
+;Adjust these to fit implementation with your VIA(s)
+
 LCD_VIA_DDR = VIA1_DDRB
 LCD_VIA_PORT = VIA1_PORTB
 
@@ -42,9 +50,7 @@ LCD_VIA_OUTPUTMASK = %01111111
 LCD_VIA_INPUTMASK = %01110000
 
 ;====================================================
-;Macros
 
-;====================================================
 ;Code
 .segment "LCD_CODE"
 
@@ -84,7 +90,6 @@ lcd_init_4bit:
   ldx #$00 ; initialize index to walk through sequence
 lcd_init_4bit_reset_bitness_loop:
   jsr delay_ms_100 ; this is likely far too much, I may refine this later.
-  jsr delay_ms_100 
   ; Read next byte of force reset sequence data
   lda lcd_force_reset_bitnesssequence,x
   ; Exit loop if $00 read
@@ -94,14 +99,14 @@ lcd_init_4bit_reset_bitness_loop:
   inx 
   bra lcd_init_4bit_reset_bitness_loop
 lcd_init_4bit_reset_bitness_end:
-  jsr delay_ms_100
+  jsr delay_ms_50
   ;
   ; The LCD is now in 4 bit mode, but is the busy flag cannot yet be used.
   ; We need to walk through a 4 bit instruction sequence to set the starting state
   ; of the LCD based on the datasheet's instructions.
   ldx #$00 ; initialize index to walk through sequence
 lcd_init_4bit_reset_instruction_loop:
-  jsr delay_ms_100 ; this is likely far too much, I may refine this later.
+  jsr delay_ms_10 ; this is likely far too much, I may refine this later.
   lda lcd_force_reset_instructionsequence,x ; Read next byte of force reset sequence data
   beq lcd_init_4bit_reset_instruction_end ; Exit loop if $00 read
   jsr lcd_instruct_nobusycheck ; send an instruction w/o checking the busy

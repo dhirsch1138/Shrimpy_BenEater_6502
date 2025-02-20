@@ -1,7 +1,7 @@
 # Shrimpy
 This is my attempt at slowly building up a 6502 based microcomputer loosely structured around Ben Eater's lessons. I will wander off and chase squirrels, wrestle with interesting problems, and generally follow the "rule of cool" when deciding what to do next.
 
-*2/20/2025 NOTE: photo and schematic are obsolete, computer has been completely rebuilt. We are now using a PLD for address decoding, a faster clock (currently 1.843 mhz) and an IC for collating interrupts. A reset component DS1813 will be implemented shortly.*
+*2/20/2025 NOTE: photo and schematic are obsolete, computer has been completely rebuilt. We are now using a PLD for address decoding, a faster clock (currently 1.843 mhz) and an IC for collating interrupts. Using DS1813 for reset circuit now.*
 
 ![Image of build](build_photo.png)
 
@@ -9,7 +9,7 @@ This is my attempt at slowly building up a 6502 based microcomputer loosely stru
 
 
 # Current Status
-2/20/2025 - Reset @ 1.843 stabilized by changing the capacitor from .1uf to 1uf (reference Garth Wilson on the 6502 forum), I am replacing it with a DS1813 (again, credit to Garth) for a proper solution. Implemented the full initialization sequence for the LCD (in 4 bit) to help ensure it consistently gets off the ground. The full initalization + the larger reset capacitor = a seemingly consistent & happy LCD at poweron & reset.
+2/20/2025 - Reset @ 1.843 stabilized by changing the capacitor from .1uf to 1uf (reference Garth Wilson on the 6502 forum), I am replacing it with a DS1813 (again, credit to Garth) for a proper solution. Implemented the full initialization sequence for the LCD (in 4 bit) to help ensure it consistently gets off the ground. I discovered that character ram is a touchy beast, and needed a small delay to play nice at >1 mhz. The full initalization + DS1813 + character ram delay = a seemingly consistent & happy LCD at poweron & reset.
 
 # Goals
 See [Shopping List](shopping_list.md) for parts that I would need to get for these.
@@ -34,7 +34,9 @@ See [Shopping List](shopping_list.md) for parts that I would need to get for the
   * LCD potentiometer was replaced by 3.9K resistor
   * Clock module potentiometer was replaced by a 120k resistor (is that right? I should double check)
 * 28 pin ZIF socket for the EEPROM. [https://www.pcbway.com/project/shareproject/Breadboard_to_28p_wide_ZIF_adapter_fc6528ee.html]
-* Replaced the 74LS00 address decoder PLD (ATF22V10C-7PX)
+* Replaced the 74LS00 address decoder PLD (ATF22V10C)
+* Replaced BE's capacitor/resistor reset circuit with a DS1813 (thank you Garth Wilson @ http://wilsonminesco.com/6502primer/RSTreqs.html)
+* Using logic AND IC to combine interrupts
 ## Software
 Project was initially based on Ben Eater's keyboard.s [https://eater.net/downloads/keyboard.s]
 * Modularized development (no monolithic code, I tried to break the project into distinct files that could be re-used in future efforts)
@@ -45,4 +47,6 @@ Project was initially based on Ben Eater's keyboard.s [https://eater.net/downloa
   * Exploring & utilizing macros
 * Working on heavily restricting the need for and usage of magic number/symbols.
 * Got the LCD consistenly initializing on cold start and reset, writing to two lines in both scenarios.
-* Custom characters for the LCD
+  * Did it by implementing the full initialization by instruction sequence for 4-bit operation
+* Custom characters for the LCD (yay dinosaurs)
+  * *note to all who follow, getting customer character ram to play nice was a pain. It seems exceptionally touchy about timing and sequence. Be warned*
