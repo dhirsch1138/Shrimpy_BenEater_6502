@@ -42,7 +42,7 @@ SPI_PORT = VIA1_PORTA
 SPI_INIT:
   ;;; set up data direction for SPI_PORT -- bits 0, 1, 2, and 5 are
   ;;; outputs and bits 3(nc), 4, 6 (nc), and 7 are inputs.
-;TODO:Review the DDRB
+;TODO:Review the DDR & define mask, currenly conflicting w/ LCD
   lda #%01100111
   sta VIA1_DDRB
   lda #SPI_MOSI|SPI_RESET|SPI_CS

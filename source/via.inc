@@ -17,3 +17,5 @@
   .import VIA1_IFR
   .import VIA1_IER
   .import VIA1_PANH
+
+  .import via_init

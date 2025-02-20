@@ -1,5 +1,17 @@
 ;PURPOSE - provide general utilities
 
+;====================================================
+;Exports
+;nothing here
+
+;====================================================
+;Reserve RAM addresses
+
+;====================================================
+;Macros
+
+;====================================================
+
 ;Code
 .segment "UTIL_CODE"
 
@@ -11,9 +23,10 @@
 
 .include "util_macros.inc"
 
+;$39 $FC = 50ms @ 1.843 mhz
 
 delay_ms_50:
-  delay_macro #$6C, #$01 ;delay for 100001 cycles, which is ~50ms @ 1.843mhz
+  delay_macro #$39, #$FC ;delay for 92150 cycles, which is ~50ms @ 1.843mhz
   rts
 
 delay_ms_100:
@@ -33,7 +46,7 @@ delay_ms_500_loop:
 
 delay_ms_1000:
   phx
-  ldx #$A0
+  ldx #$0A
 delay_ms_1000_loop:
   jsr delay_ms_100
   dex

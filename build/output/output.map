@@ -3,9 +3,9 @@ Modules list:
 acia.o:
 lcd.o:
     LCD_PAGEZERO      Offs=000000  Size=000002  Align=00001  Fill=0000
-    LCD_CODE          Offs=000000  Size=00024A  Align=00001  Fill=0000
+    LCD_CODE          Offs=000000  Size=00011D  Align=00001  Fill=0000
 main.o:
-    CODE              Offs=000000  Size=00007C  Align=00001  Fill=0000
+    CODE              Offs=000000  Size=000086  Align=00001  Fill=0000
 reset_interrupt.o:
     VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
 spi.o:
@@ -13,6 +13,7 @@ spi.o:
 util.o:
     UTIL_CODE         Offs=000000  Size=00002D  Align=00001  Fill=0000
 via.o:
+    VIA_CODE          Offs=000000  Size=00000A  Align=00001  Fill=0000
 wozmon.o:
     WOZ_PAGEZERO      Offs=000000  Size=000008  Align=00001  Fill=0000
     WOZ_RAM           Offs=000000  Size=00007F  Align=00001  Fill=0000
@@ -26,11 +27,12 @@ Name                   Start     End    Size  Align
 LCD_PAGEZERO          000000  000001  000002  00001
 WOZ_PAGEZERO          000002  000009  000008  00001
 WOZ_RAM               000300  00037E  00007F  00001
-CODE                  008000  00807B  00007C  00001
-LCD_CODE              00807C  0082C5  00024A  00001
-SPI_CODE              0082C6  008303  00003E  00001
-WOZ_CODE              008304  0083FD  0000FA  00001
-UTIL_CODE             0083FE  00842A  00002D  00001
+CODE                  008000  008085  000086  00001
+VIA_CODE              008086  00808F  00000A  00001
+LCD_CODE              008090  0081AC  00011D  00001
+SPI_CODE              0081AD  0081EA  00003E  00001
+WOZ_CODE              0081EB  0082E4  0000FA  00001
+UTIL_CODE             0082E5  008311  00002D  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
@@ -41,11 +43,11 @@ ACIA_DATA                 000210 REA    ACIA_STATUS               000211 REA
 LCD_ADDR_ZP               000000 RLZ    VIA1_DDRB                 000202 REA    
 VIA1_PORTA                000201 REA    VIA1_PORTB                000200 REA    
 __ACIA1_START__           000210 RLA    __CODE_LOAD__             008000 RLA    
-__VIA1_START__            000200 RLA    delay_ms_100              00840E RLA    
-delay_ms_50               0083FE RLA    delay_ms_500              008415 RLA    
-lcd_init                  00815F RLA    lcd_instruction           0081FE RLA    
-lcd_load_custom_character 008268 RLA    lcd_print_asciiz_ZP       008256 RLA    
-lcd_print_hex             00823B RLA    lcd_send_byte             008236 RLA    
+__VIA1_START__            000200 RLA    delay_ms_100              0082F5 RLA    
+delay_ms_1000             008307 RLA    lcd_init_4bit             008090 RLA    
+lcd_instruction           0080F2 RLA    lcd_load_custom_character 008148 RLA    
+lcd_print_asciiz_ZP       008136 RLA    lcd_print_hex             00811B RLA    
+lcd_send_byte             008116 RLA    via_init                  008086 RLA    
 
 
 
@@ -56,11 +58,11 @@ __VIA1_START__            000200 RLA    VIA1_PORTA                000201 REA
 VIA1_DDRB                 000202 REA    ACIA_DATA                 000210 REA    
 __ACIA1_START__           000210 RLA    ACIA_STATUS               000211 REA    
 ACIA_CMD                  000212 REA    ACIA_CTRL                 000213 REA    
-__CODE_LOAD__             008000 RLA    lcd_init                  00815F RLA    
-lcd_instruction           0081FE RLA    lcd_send_byte             008236 RLA    
-lcd_print_hex             00823B RLA    lcd_print_asciiz_ZP       008256 RLA    
-lcd_load_custom_character 008268 RLA    delay_ms_50               0083FE RLA    
-delay_ms_100              00840E RLA    delay_ms_500              008415 RLA    
+__CODE_LOAD__             008000 RLA    via_init                  008086 RLA    
+lcd_init_4bit             008090 RLA    lcd_instruction           0080F2 RLA    
+lcd_send_byte             008116 RLA    lcd_print_hex             00811B RLA    
+lcd_print_asciiz_ZP       008136 RLA    lcd_load_custom_character 008148 RLA    
+delay_ms_100              0082F5 RLA    delay_ms_1000             008307 RLA    
 
 
 
@@ -90,12 +92,11 @@ __CODE_LOAD__ ([linker generated]):
 __VIA1_START__ ([linker generated]):
     via.o                     source/via.s(7)
 delay_ms_100 (util.o):
+    main.o                    source/util.inc(3)
     lcd.o                     source/util.inc(3)
-delay_ms_50 (util.o):
-    lcd.o                     source/util.inc(4)
-delay_ms_500 (util.o):
-    main.o                    source/util.inc(2)
-lcd_init (lcd.o):
+delay_ms_1000 (util.o):
+    main.o                    source/util.inc(1)
+lcd_init_4bit (lcd.o):
     main.o                    source/lcd.inc(5)
 lcd_instruction (lcd.o):
     main.o                    source/lcd.inc(4)
@@ -107,4 +108,6 @@ lcd_print_hex (lcd.o):
     main.o                    source/lcd.inc(9)
 lcd_send_byte (lcd.o):
     main.o                    source/lcd.inc(8)
+via_init (via.o):
+    main.o                    source/via.inc(21)
 

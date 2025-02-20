@@ -23,6 +23,8 @@
   .export VIA1_IER
   .export VIA1_PANH
 
+  .export via_init
+
 VIA_REGISTER_PORTB = $00
 VIA_REGISTER_PORTA = $01
 VIA_REGISTER_DDRB  = $02
@@ -72,3 +74,19 @@ VIA1_PANH  = __VIA1_START__ + VIA_REGISTER_PANH
 ;====================================================
 ;Code
 .segment "VIA_CODE"
+
+via_init:
+;Description
+;  sets all the known via to safe input states
+;Arguments
+;  None
+;Preconditions
+;  None, but via should be awake
+;Side Effects
+;  * all known via ports are set to input
+pha
+lda #%00000000
+sta VIA1_DDRA
+sta VIA1_DDRB
+pla
+; 

@@ -16,7 +16,7 @@
 
 ;subroutines
 .export lcd_instruction
-.export lcd_init
+.export lcd_init_4bit
 .export lcd_load_custom_character
 .export lcd_print_asciiz_ZP
 .export lcd_send_byte
@@ -33,8 +33,13 @@
 .segment "LCD_PAGEZERO": zeropage
 LCD_ADDR_ZP:        .res 2, $0000
 
-LCD_DDR = VIA1_DDRB
-LCD_VIAPORT = VIA1_PORTB
+LCD_VIA_DDR = VIA1_DDRB
+LCD_VIA_PORT = VIA1_PORTB
+
+;the lcd is using ports D0 - D6
+;NOTE THE LCD DDR SHOULD INITIALLY BE ALL INPUT $00 from via_init
+LCD_VIA_OUTPUTMASK = %01111111
+LCD_VIA_INPUTMASK = %01110000
 
 ;====================================================
 ;Macros
@@ -50,76 +55,7 @@ LCD_VIAPORT = VIA1_PORTB
 .include "lcd_statics.inc"
 .include "util.inc"
 
-lcd_init_full_init:
-;Description
-;  Inializes the lcd, sets 4 bit mode
-;Arguments
-;  None
-;Preconditions
-;  VIA DDRB must have the LCD's bits set to output
-;Side Effects
-;  LCD is set to accept 4-bit mode
-;  A is squished
-;  X is squished
-;  Y is squished
-;Notes
-;  Does not include a wait for the LCD to be ready for the next command,
-;  presuming that the code invoking the command will be smart enough to wait
-;
-  lda #%11111111 ; Set all pins on port B to output
-  sta LCD_DDR
-  ;per the HD44780U manual (init by instruction)
-  ;1) reset
-  delay_macro #$FF, #$FF ; datasheet says it needs a small delay between function inits, this gives the LCD time to power up
-  ;2) send the 8-bit function instruction as just the upper nibble * 3
-  lda #(LCD_INST_FUNCSET | LCD_FUNCSET_DATA)
-  swn_macro ;#%00000011 ; Set 8-bit mode by sending just the upper nibble
-  ldx $03
-lcd_init_8bit: 
-  delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits, this gives the LCD time to power up
-  sta LCD_VIAPORT
-  ora #LCD_PIN_E
-  sta LCD_VIAPORT
-  eor #LCD_PIN_E
-  sta LCD_VIAPORT
-  dex
-  bne lcd_init_8bit
-  ;3) send the 4-bit function instruction as just the upper nibble
-  delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits, this gives the LCD time to power up
-  lda #LCD_INST_FUNCSET
-  swn_macro ;#%00000010 ; Set 4-bit mode by sending just the upper nibble
-  sta LCD_VIAPORT
-  ora #LCD_PIN_E
-  sta LCD_VIAPORT
-  eor #LCD_PIN_E
-  sta LCD_VIAPORT 
-  ;4) function set
-  delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits
-  lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE); Set 4-bit mode; 2-line display; 5x8 font
-  jsr lcd_instruction
-  ;5) display set
-  delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits
-  lda #LCD_INST_DISPLAY ; display off
-  jsr lcd_instruction
-  delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits
-  lda #LCD_INST_CLRDISP ; Clear display
-  jsr lcd_instruction
-  ;6) entry mode set
-  delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits
-  lda #(LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR); Increment and shift cursor; don't shift display
-  jsr lcd_instruction
-  ;after formal init
-  delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits
-  lda #(LCD_INST_DISPLAY | LCD_DISPLAY_DSON); Display on; cursor off; blink off
-  jsr lcd_instruction
-  lda #LCD_INST_CLRDISP ; Clear display
-  jsr lcd_instruction
-  lda #LCD_INST_RTNHOME ; return cursor home
-  jsr lcd_instruction
-  delay_macro #$A0, #$FF ; datasheet says it needs a small delay between function inits
-  rts
-
-lcd_init:
+lcd_init_4bit:
 ;Description
 ;  Inializes the lcd, sets 4 bit mode
 ;Arguments
@@ -133,64 +69,78 @@ lcd_init:
 ;  presuming that the code invoking the command will be smart enough to wait
   pha
   phx
-  lda #%11111111 ; Set all pins on port B to output
-  sta LCD_DDR
+  lda LCD_VIA_DDR ; Set LCD output mask
+  ora #(LCD_VIA_OUTPUTMASK)
+  sta LCD_VIA_DDR  
+  ; got this idea from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
+  ;
+  ; The initialize from instruction sequence is specified in the datasheet, and is very specific. It requires
+  ; sending 'raw' commands to the LCD that do not otherwise conform the to expected 4bit high/low nibble protocol
+  ; used for other LCD 4 bit communication. Thus this will utilize 'raw' lcd send commands that should not be used
+  ; outside of this context
+  ;
+  ; First we need to force the LCD into 4 bit mode. We do this by only sending the high
+  ; bytes of a coordinated sequence of 'bitness' instructions
+  ldx #$00 ; initialize index to walk through sequence
+lcd_init_4bit_reset_rawbytes_loop:
+  jsr delay_ms_100 ; this is likely far too much, I may refine this later.
+  jsr delay_ms_100 
+  ; Read next byte of force reset sequence data
+  lda lcd_force_reset_rawbytes,x
+  ; Exit loop if $00 read
+  beq lcd_init_4bit_reset_rawbytes_end
+  swn_macro ; as we are just sending the high 4 bits, swap nibbles
+  jsr lcd_send_raw 
+  inx 
+  bra lcd_init_4bit_reset_rawbytes_loop
+lcd_init_4bit_reset_rawbytes_end:
   jsr delay_ms_100
-  lda #(LCD_INST_FUNCSET | LCD_FUNCSET_DATA); #%00110000 ; designate 8-bit mode
-  swn_macro ;#%00000011 ; Set 8-bit mode by sending just the upper nibble
-  jsr lcd_send_raw ; send it three times to force initializtion
-  jsr delay_ms_100    
-  jsr lcd_send_raw ; send it three times to force initializtion
-  jsr delay_ms_100
-  jsr lcd_send_raw ; send it three times to force initializtion
-  jsr delay_ms_100  
-  lda #LCD_INST_FUNCSET ; #%00100000 ; designate 4-bit mode
-  swn_macro ;#%00000010 ; Set 4-bit mode by sending just the upper nibble
-  jsr lcd_send_raw
-  jsr delay_ms_100
-  lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE); #%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
+  ;
+  ; The LCD is now in 4 bit mode, but is the busy flag cannot yet be used.
+  ; We need to walk through a 4 bit instruction sequence to set the starting state
+  ; of the LCD based on the datasheet's instructions.
+  ldx #$00 ; initialize index to walk through sequence
+lcd_init_4bit_reset_4bitraw_loop:
+  jsr delay_ms_100 ; this is likely far too much, I may refine this later.
+  lda lcd_force_reset_4bitraw,x ; Read next byte of force reset sequence data
+  beq lcd_init_4bit_reset_4bitraw_end ; Exit loop if $00 read
   jsr lcd_send_raw_4bit
-  jsr delay_ms_50
-  lda #LCD_INST_DISPLAY ; #%00001000 ; Display off
-  jsr lcd_send_raw_4bit
-  jsr delay_ms_50
-  lda #LCD_INST_CLRDISP ; %00000001 ; Clear display
-  jsr lcd_send_raw_4bit   
-  jsr delay_ms_50
-  lda #(LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR); #%00000110 ; Increment and shift cursor; don't shift display
-  jsr lcd_send_raw_4bit
-  jsr delay_ms_50
-  ;we 'should' be initialized at this point
-  ;redefine setup as we've allegedly initialized at this point 
-  lda #(LCD_INST_FUNCSET | LCD_FUNCSET_LINE); #%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
-  jsr lcd_instruction
-  jsr delay_ms_50
-  lda #(LCD_INST_DISPLAY | LCD_DISPLAY_DSON); #%00001100 ; Display on; cursor off; blink off
-  jsr lcd_instruction
-  jsr delay_ms_50
-  lda #(LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR); #%00000110 ; Increment and shift cursor; don't shift display
-  jsr lcd_instruction
-  jsr delay_ms_50
-  lda #LCD_INST_CLRDISP; Clear display
-  jsr lcd_instruction
-  jsr delay_ms_50
-  lda #LCD_INST_RTNHOME; return cursor home
-  jsr lcd_instruction    
-  plx
+  inx 
+  bra lcd_init_4bit_reset_4bitraw_loop
+lcd_init_4bit_reset_4bitraw_end:
+  plx    
   pla
   rts
 
+;These instruction sequences are taken from the lcd controller datasheet
+
+lcd_force_reset_rawbytes:
+; got this idea from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
+        .byte LCD_INST_FUNCSET | LCD_FUNCSET_DATA ; #%00110000 ; designate 8-bit mode
+        .byte LCD_INST_FUNCSET | LCD_FUNCSET_DATA ; #%00110000 ; designate 8-bit mode
+        .byte LCD_INST_FUNCSET | LCD_FUNCSET_DATA ; #%00110000 ; designate 8-bit mode
+        .byte LCD_INST_FUNCSET ; #%00100000 ; designate 4-bit mode
+        .byte $00
+
+lcd_force_reset_4bitraw:
+; got this idea from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
+        .byte LCD_INST_FUNCSET | LCD_FUNCSET_LINE ; #%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
+        .byte LCD_INST_DISPLAY ; #%00001100 ; Display on; cursor off; blink off
+        .byte LCD_INST_CLRDISP ; %00000001 ; Clear display
+        .byte LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR ; #%00000110 ; Increment and shift cursor; don't shift display
+        .byte $00
 
 lcd_send_raw_4bit:
 ;Description
-;  Sends the byte to the LCD in 4 bit mode. No wait. No RS bit
+;  Sends the byte to the LCD in 4 bit mode. No wait. No RS flag
 ;Arguments
 ;  A - LCD byte
 ;Precondition
 ;  first half of 4-bit init instructions done
 ;Side Effects
-;  None
-  pha
+;  A is squished
+;
+;  pha - todo remove
   pha
   lsr
   lsr
@@ -200,30 +150,31 @@ lcd_send_raw_4bit:
   pla
   and #%00001111 ; Send low 4 bits
   jsr lcd_send_raw; Send high 4 bits
-  pla
+; pla - todo remove
   rts
 
 lcd_send_raw:
 ;Description
-;  Sends the byte to the LCD, toggling the E flag. No wait
+;  Sends the byte to the LCD, toggling the E flag.
 ;Arguments
 ;  A - LCD byte
 ;Precondition
 ;  LCD has powered up
 ;Side Effects
-;  None
-  pha
-  sta LCD_VIAPORT
-  ora #LCD_PIN_E
-  sta LCD_VIAPORT
-  eor #LCD_PIN_E
-  sta VIA1_PORTB
-  pla
+;  A is squished
+;
+;  pha todo remove
+  sta LCD_VIA_PORT
+  ora #(LCD_PIN_E) ; Set E bit to send instruction
+  sta LCD_VIA_PORT
+  eor #(LCD_PIN_E) ; Clear E bit
+  sta LCD_VIA_PORT
+;  pla todo remove
   rts
 
 lcd_instruction:
 ;Description
-;  Sends instruction byte to the LCD
+;  Sends instruction byte to the LCD in normal operation, respecting the RS flag and the LCD wait register
 ;Arguments
 ;  A - LCD instruction byte
 ;  Y - if Y = 1 THEN we are setting the RS pin with this instruction
@@ -243,24 +194,16 @@ lcd_instruction_y_set: ; if jumping here Y should already be pushed onto the sta
   lsr            ; Send high 4 bits
   cpy #$01 ; are we setting RS ?
   bne lcd_instruction_sendhigh ; IF RS is NOT enabled THEN skip applying the RS mask
-  ora #LCD_PIN_RS
+  ora #(LCD_PIN_RS)
 lcd_instruction_sendhigh:
-  sta LCD_VIAPORT
-  ora #LCD_PIN_E        ; Set E bit to send instruction
-  sta LCD_VIAPORT
-  eor #LCD_PIN_E         ; Clear E bit
-  sta LCD_VIAPORT
+  jsr lcd_send_raw
   pla
   and #%00001111 ; Send low 4 bits
   cpy #$01 ; are we setting RS ?
   bne lcd_instruction_sendlow ;IF RS is NOT enabled THEN skip applying the RS mask
-  ora #LCD_PIN_RS
+  ora #(LCD_PIN_RS)
 lcd_instruction_sendlow: 
-  sta LCD_VIAPORT
-  ora #LCD_PIN_E         ; Set E bit to send instruction
-  sta LCD_VIAPORT
-  eor #LCD_PIN_E         ; Clear E bit
-  sta LCD_VIAPORT
+  jsr lcd_send_raw
   pla
   ply
   rts
@@ -296,12 +239,12 @@ lcd_print_hex:
   lsr
   lsr
   tax
-  lda hexmap, x
+  lda lcd_print_hex_hexmap, x
   jsr lcd_send_byte
   pla
   and #$0F
   tax
-  lda hexmap, x
+  lda lcd_print_hex_hexmap, x
   jsr lcd_send_byte
   pla
   plx
@@ -376,32 +319,35 @@ lcd_wait:
 ;Side Effects
 ;  None
   pha
-  lda #%11110000  ; LCD data is input
-  sta LCD_DDR
+  lda LCD_VIA_DDR ; Set LCD input mask
+  and #(LCD_VIA_INPUTMASK)
+  sta LCD_VIA_DDR
 lcd_wait_busy:
   lda #LCD_PIN_RW
-  sta LCD_VIAPORT
+  sta LCD_VIA_PORT
   lda #(LCD_PIN_RW | LCD_PIN_E)
-  sta LCD_VIAPORT
-  lda LCD_VIAPORT       ; Read high nibble
+  sta LCD_VIA_PORT
+  lda LCD_VIA_PORT       ; Read high nibble
   pha             ; and put on stack since it has the busy flag
   lda #LCD_PIN_RW
-  sta LCD_VIAPORT
+  sta LCD_VIA_PORT
   lda #(LCD_PIN_RW | LCD_PIN_E)
-  sta LCD_VIAPORT
+  sta LCD_VIA_PORT
   ;TODO is this lda doing anything? seems like it is superceded immediately by the pla. 
   ;unless reading from the via port triggers something on the lcd?
-  lda LCD_VIAPORT       ; Read low nibble
+  lda LCD_VIA_PORT       ; Read low nibble
   pla             ; Get high nibble off stack
   and #%00001000
   bne lcd_wait_busy
   ; logical break, we aren't busy anymore
   lda #LCD_PIN_RW
-  sta LCD_VIAPORT
-  lda #%11111111  ; LCD data is output
-  sta LCD_DDR
+  sta LCD_VIA_PORT
+  lda LCD_VIA_DDR ; Set LCD output mask
+  ora #(LCD_VIA_OUTPUTMASK)
+  sta LCD_VIA_DDR
   pla
   rts
 
-hexmap:
+lcd_print_hex_hexmap:
   .byte "0123456789ABCDEF"
+  .byte $00
