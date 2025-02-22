@@ -97,7 +97,6 @@ lcd_init_4bit_reset_bitness_loop:
   inx 
   bra lcd_init_4bit_reset_bitness_loop
 lcd_init_4bit_reset_bitness_end:
-  jsr delay_ms_50
   ;
   ; The LCD is now in 4 bit mode, but is the busy flag cannot yet be used.
   ; We need to walk through a 4 bit instruction sequence to set the starting state

@@ -44,7 +44,7 @@ reset:
   ldx #$ff
   txs
   jsr delay_ms_100 ; give the board time to come up
-  jsr delay_ms_100 ; give the board time to come up
+  jsr delay_ms_100
   jsr via_init ; setup the via
   jsr lcd_init_4bit ; init the lcd in 4 bit mode
   ; Execute LCD parameter initialization sequence
@@ -52,14 +52,12 @@ reset:
   ; initialize index to walk through sequence
   ldx #$00
 main_lcd_init_sequence_loop:
-  jsr delay_ms_10
   lda main_lcd_init_sequence,x ; Read next byte of force reset sequence data
   beq main_lcd_init_sequence_end ; Exit loop if $00 read
   jsr lcd_instruction
   inx 
   bra main_lcd_init_sequence_loop
 main_lcd_init_sequence_end:
-  jsr delay_ms_50
   ;load custom character(s)
   load_addr_to_zp_macro dinochar, LCD_ADDR_ZP ;set dinochar as the next LCD_ADDR_ZP
   jsr lcd_load_custom_character ;load dinochar as a custom character
