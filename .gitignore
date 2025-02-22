@@ -2,3 +2,6 @@ examples/
 *.o
 *.lst
 *.bin
+schematics/BenEater_1-backups/
+schematics/#auto_saved_files#
+schematics/~BenEater_1.kicad_sch.lck
