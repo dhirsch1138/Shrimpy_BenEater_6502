@@ -44,6 +44,7 @@ reset:
   ldx #$ff
   txs
   jsr delay_ms_100 ; give the board time to come up
+  jsr delay_ms_100 ; give the board time to come up
   jsr via_init ; setup the via
   jsr lcd_init_4bit ; init the lcd in 4 bit mode
   ; Execute LCD parameter initialization sequence
@@ -58,7 +59,7 @@ main_lcd_init_sequence_loop:
   inx 
   bra main_lcd_init_sequence_loop
 main_lcd_init_sequence_end:
-  jsr delay_ms_10
+  jsr delay_ms_50
   ;load custom character(s)
   load_addr_to_zp_macro dinochar, LCD_ADDR_ZP ;set dinochar as the next LCD_ADDR_ZP
   jsr lcd_load_custom_character ;load dinochar as a custom character
@@ -70,7 +71,7 @@ main_lcd_init_sequence:
   .byte LCD_INST_DISPLAY | LCD_DISPLAY_DSON ; #%00001100 ; Display on; cursor off; blink off
   .byte LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR ; #%00000110 ; Increment and shift cursor; don't shift display
   .byte LCD_INST_CLRDISP ; %00000001 ; Clear display
-  .byte LCD_INST_RTNHOME ; return cursor home
+  .byte LCD_INST_RTNHOME ; return cursor home  
   .byte $00
 
 main_loop:
@@ -112,6 +113,17 @@ loop_delay:
 
 
 dinosaur_says: .asciiz "Rwaaaar!"
-dinochar: .byte %00000000, %00001111, %00001010, %00001111, %00001100, %00001110, %00011100, %00001010, %00000000
+dinochar: 
+  .byte %00000000  ;address 
+  .byte %00001111  ;b0
+  .byte %00001010  ;b1
+  .byte %00001111  ;b2
+  .byte %00001100  ;b3
+  .byte %00001110  ;b4
+  .byte %00011100  ;b5
+  .byte %00001010  ;b6
+  .byte %00000000  ;b7
+  .byte %00000000  ;b8
+  .byte %00000000  ;b9
 ;Offset 0    - CGRAM address
-;Offset 1-8  - values to write to CGRAM
+;Offset 1-10  - values to write to CGRAM

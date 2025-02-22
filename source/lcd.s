@@ -1,14 +1,10 @@
 ;PURPOSE - defines the static register references & lcd functions 
-;  interface as provided by Ben Eater's videos https://eater.net/6502
-; adaptation from Ben Eater's keyboard.s https://eater.net/downloads/keyboard.s
-;  much of the code is just copied from his work, but there are many changes from me.
-;  rather than try to keep a diff in comments, I would encourage the reader to just diff
-;  this code against the linked code above.
+;  * interface as provided by Ben Eater's videos https://eater.net/6502
+;  * adaptation from Ben Eater's keyboard.s https://eater.net/downloads/keyboard.s
+;    much of the code is just copied from his work, but there are many changes from me.
+;  * I also cribbed ideas from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
+;  * rather than try to keep a diff in comments, I would encourage the reader to just reference the original masters 
 ;
-;NOTE/TODO-
-;  While the LCD doesn't use all of PORTB of the VIA, this code will clobber
-;  DDRB for the non-LCD ports right now (basically presuming they are output)
-;  ideally we should try to preserve the non-LCD DDRB bits.
 ;
 
 ;====================================================
@@ -45,7 +41,6 @@ LCD_VIA_DDR = VIA1_DDRB
 LCD_VIA_PORT = VIA1_PORTB
 
 ;the lcd is using ports D0 - D6
-;NOTE THE LCD DDR SHOULD INITIALLY BE ALL INPUT $00 from via_init
 LCD_VIA_OUTPUTMASK = %01111111
 LCD_VIA_INPUTMASK = %01110000
 
@@ -63,7 +58,8 @@ LCD_VIA_INPUTMASK = %01110000
 
 lcd_init_4bit:
 ;Description
-;  Inializes the lcd, sets 4 bit mode
+;  Inializes the lcd & sets 4 bit mode using the initialization by instruction sequence
+;  Doing things the hard way as the LCD seems super whiny about timing and power issues.
 ;Arguments
 ;  None
 ;Preconditions
@@ -71,8 +67,7 @@ lcd_init_4bit:
 ;Side Effects
 ;  LCD is set to accept 4-bit mode
 ;Notes
-;  Does not include a wait for the LCD to be ready for the next command,
-;  presuming that the code invoking the command will be smart enough to wait
+;  The busy flag is not available during the instruction initializtion sequence
   pha
   phx
   lda LCD_VIA_DDR ; Set LCD output mask
@@ -144,14 +139,11 @@ lcd_send_raw:
 ;  LCD has powered up
 ;Side Effects
 ;  A is squished
-;
-;  pha todo remove
   sta LCD_VIA_PORT
   ora #(LCD_PIN_E) ; Set E bit to send instruction
   sta LCD_VIA_PORT
   eor #(LCD_PIN_E) ; Clear E bit
   sta LCD_VIA_PORT
-;  pla todo remove
   rts
 
 lcd_instruction:
@@ -174,7 +166,7 @@ lcd_instruction_y_set: ; if jumping here Y should already be pushed onto the sta
   lsr
   lsr
   lsr
-  lsr            ; Send high 4 bits
+  lsr ; Send high 4 bits
   cpy #$01 ; are we setting RS ?
   bne lcd_instruction_sendhigh ; IF RS is NOT enabled THEN skip applying the RS mask
   ora #(LCD_PIN_RS)
@@ -277,7 +269,7 @@ lcd_load_custom_character:
   lda (LCD_ADDR_ZP)
   ora #LCD_INST_CRAMADR
   jsr lcd_instruction ;set addr
-  jsr delay_ms_10 ; setting character memory seems odd > 1 mhz, add a bit of time
+  jsr delay_ms_50 ; setting character memory seems odd > 1 mhz, add a bit of time
 lcd_load_character_loop:
   inc LCD_ADDR_ZP
   bne lcd_load_character_skiphigh
@@ -285,8 +277,8 @@ lcd_load_character_loop:
 lcd_load_character_skiphigh:
   lda (LCD_ADDR_ZP)
   jsr lcd_send_byte ;as the lcd is in 'write' mode from the CGRAM address, we can send eight sequential bytes to it
-  dex
-  jsr delay_ms_10 ; setting character memory seems odd > 1 mhz, add a bit of time
+  jsr delay_ms_50 ; setting character memory seems odd > 1 mhz, add a bit of time
+  dex 
   bne lcd_load_character_loop ; jmp
 lcd_load_character_done:
   plx
@@ -318,8 +310,6 @@ lcd_wait_busy:
   sta LCD_VIA_PORT
   lda #(LCD_PIN_RW | LCD_PIN_E)
   sta LCD_VIA_PORT
-  ;TODO is this lda doing anything? seems like it is superceded immediately by the pla. 
-  ;unless reading from the via port triggers something on the lcd?
   lda LCD_VIA_PORT       ; Read low nibble
   pla             ; Get high nibble off stack
   and #%00001000

@@ -77,13 +77,16 @@ VIA1_PANH  = __VIA1_START__ + VIA_REGISTER_PANH
 
 via_init:
 ;Description
-;  sets all the known via to safe input states
+;  sets all the known via to input states
 ;Arguments
 ;  None
 ;Preconditions
 ;  None, but via should be awake
 ;Side Effects
 ;  * all known via ports are set to input
+;Notes
+;  Decided on input as the default as it might prevent us from accidentally setting the wrong pin high and creating
+;  magic smoke
 pha
 lda #%00000000
 sta VIA1_DDRA
