@@ -88,3 +88,14 @@ delay:
 .endmacro
 .endif
 
+.if    .definedmacro(inc_zp_addr_macro)
+.else
+.macro inc_zp_addr_macro zp_addr
+.local skiphigh
+  inc zp_addr
+  bne skiphigh
+  inc zp_addr+1
+skiphigh:
+.endmacro
+.endif
+
