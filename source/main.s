@@ -123,7 +123,5 @@ dinochar:
   .byte %00011100  ;b5
   .byte %00001010  ;b6
   .byte %00000000  ;b7
-  .byte %00000000  ;b8
-  .byte %00000000  ;b9
 ;Offset 0    - CGRAM address
-;Offset 1-10  - values to write to CGRAM
+;Offset 1-9  - values to write to CGRAM

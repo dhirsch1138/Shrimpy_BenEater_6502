@@ -84,7 +84,7 @@ lcd_init_4bit:
   ; bytes of a coordinated sequence of 'bitness' instructions
   ldx #$00 ; initialize index to walk through sequence
 lcd_init_4bit_reset_bitness_loop:
-  jsr delay_ms_100 ; this is likely far too much, I may refine this later.
+  jsr delay_ms_50 ; this is likely far too much, I may refine this later.
   ; Read next byte of force reset sequence data
   lda lcd_force_reset_bitnesssequence,x
   ; Exit loop if $00 read
@@ -255,7 +255,7 @@ lcd_load_custom_character:
 ;Arguments
 ;  LCD_ADDR_ZP - address of character set
 ;      Offset 0    - CGRAM address
-;      Offset 1-8  - values to write to CGRAM
+;      Offset 1-9  - values to write to CGRAM
 ;Uses
 ;  X - count how many bytes we have to send for the character
 ;  Y - current character ram address
@@ -266,47 +266,23 @@ lcd_load_custom_character:
 ;Note
 ;  Expected character definition format:
 ;    Offset 0    - CGRAM address
-;    Offset 1-11  - values to write to CGRAM
+;    Offset 1-9  - values to write to CGRAM
   pha
   phx
-  phy
-  ldx $0a
+  ldx #$00
   ;set the starting address of the character
   lda (LCD_ADDR_ZP)
   ora #LCD_INST_CRAMADR
-  tay
   jsr lcd_instruction ;set addr
-  jsr delay_ms_10 ; setting character memory seems odd > 1 mhz, add a bit of time
 lcd_load_character_loop:
-  tya ; read the current value in character ram as tracked by Y (datasheet says newly written cram can fail to read unless explicity read first, page 31)
-  ora #LCD_PIN_RW
-  jsr lcd_send_byte 
-  lda LCD_VIA_PORT ; Read high nibble
-  tya ; continue to read the current value in character ram
-  ora #LCD_PIN_RW
-  jsr lcd_send_byte 
-  lda LCD_VIA_PORT ; Read low nibble
   jsr delay_ms_10 ; setting character memory seems odd > 1 mhz, add a bit of time
   inc_zp_addr_macro LCD_ADDR_ZP ; increment ZP address pointer to get next character (or terminating NUL)
-  iny ; increment CRAM address being tracked in Y
-  tya ; set the CRAM address to where the next characer should be written
-  ora #LCD_INST_CRAMADR 
-  jsr lcd_instruction
   lda (LCD_ADDR_ZP)
   jsr lcd_send_byte ; write the character to CRAM
-  jsr delay_ms_10 ; setting character memory seems odd > 1 mhz, add a bit of time
-  dex 
+  inx
+  cpx #$09
   bne lcd_load_character_loop ; jmp
 lcd_load_character_done:
-  tya ; read the current value in character ram as tracked by Y (datasheet says newly written cram can fail to read unless explicity read first, page 31)
-  ora #LCD_PIN_RW
-  jsr lcd_send_byte
-  lda LCD_VIA_PORT       ; Read high nibble
-  tya ; continue to read the current value in character ram
-  ora #LCD_PIN_RW
-  jsr lcd_send_byte
-  lda LCD_VIA_PORT       ; Read low nibble
-  ply
   plx
   pla
   rts
