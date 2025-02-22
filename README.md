@@ -1,7 +1,7 @@
 # Shrimpy
 This is my attempt at slowly building up a 6502 based microcomputer loosely structured around Ben Eater's lessons. I will wander off and chase squirrels, wrestle with interesting problems, and generally follow the "rule of cool" when deciding what to do next.
 
-*2/20/2025 NOTE: photo and schematic are obsolete, computer has been completely rebuilt. We are now using a PLD for address decoding, a faster clock (currently 1.843 mhz) and an IC for collating interrupts. Using DS1813 for reset circuit now.*
+*2/22/2025 NOTE: photo is obsolete. Shrimpy has been completely rebuilt. We are now using a PLD for address decoding, a faster clock (currently 1.843 mhz) and an IC for collating interrupts. Using DS1813 for reset circuit now.*
 
 ![Image of build](build_photo.png)
 
@@ -9,7 +9,7 @@ This is my attempt at slowly building up a 6502 based microcomputer loosely stru
 
 
 # Current Status
-2/20/2025 - Reset @ 1.843 stabilized by changing the capacitor from .1uf to 1uf (reference Garth Wilson on the 6502 forum), I am replacing it with a DS1813 (again, credit to Garth) for a proper solution. Implemented the full initialization sequence for the LCD (in 4 bit) to help ensure it consistently gets off the ground. I discovered that character ram is a touchy beast, and needed a small delay to play nice at >1 mhz. The full initalization + DS1813 + character ram delay = a seemingly consistent & happy LCD at poweron & reset.
+2/22/2025 - DS1813 reset supervisor implemented, this is so much better! Consistent behavior from everything on powerup. I finally nailed down the longstanding lcd custom character bug, I was doing a ``lda $0a`` instead of a ``lda #$0a``. Weeks of hassle for a simple #.
 
 # Goals
 See [Shopping List](shopping_list.md) for parts that I would need to get for these.
