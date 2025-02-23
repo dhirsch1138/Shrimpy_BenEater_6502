@@ -9,7 +9,7 @@ This is my attempt at slowly building up a 6502 based microcomputer loosely stru
 
 
 # Current Status
-2/22/2025 - DS1813 reset supervisor implemented, this is so much better! Consistent behavior from everything on powerup. I finally nailed down the longstanding lcd custom character bug, I was doing a ``lda $0a`` instead of a ``lda #$0a``. Weeks of hassle for a simple #.
+2/23/2025 - Reflowed a lot of the code to make it more human friendly. Finally identified and squished the 'why do I need delays after clearing the lcd in order to see certain text?' bug. I was missing an lcd_wait call if sending chars to the LCD and clears are relatively pokey, so the chars were getting lost.
 
 # Goals
 See [Shopping List](shopping_list.md) for parts that I would need to get for these.
