@@ -1,4 +1,5 @@
-;PURPOSE - defines the static register references & lcd functions 
+;PURPOSE - provides an interface for a HD44780U LCD controller, in 4-bit serial mode, by a VIA.
+;  DATASHEET - ..\doc\HD44780.pdf
 ;  * interface as provided by Ben Eater's videos https://eater.net/6502
 ;  * adaptation from Ben Eater's keyboard.s https://eater.net/downloads/keyboard.s
 ;  * I also cribbed ideas from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
@@ -62,7 +63,7 @@ LCD_VIA_INPUTMASK = %11110000
 ;Arguments
 ;  None
 ;Preconditions
-;  VIA DDRB must have the LCD's bits set to output
+;  None
 ;Side Effects
 ;  LCD is set to accept 4-bit mode
 ;Notes

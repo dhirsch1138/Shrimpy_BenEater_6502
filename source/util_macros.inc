@@ -91,6 +91,16 @@
 .if    .definedmacro(inc_zp_addr_macro)
 .else
 .macro inc_zp_addr_macro zp_addr
+;Description
+;  increments the address stored in the provided ZP address
+;Arguments
+;  zp_adder - ZP address housing address to increment 
+;Preconditions
+;  none
+;Side Effects
+;  address @ zp_addr is incremented
+;Note
+;  I am still working on how 16 bit addresses are handled in an 8 bit context, so there might be better ways to do this
 .local @skiphigh
   inc zp_addr
   bne @skiphigh

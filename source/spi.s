@@ -1,5 +1,7 @@
 ;PURPOSE - implement a basic bit-bang SPI interface
 
+;TODO NONE OF THIS HAS BEEN IMPLEMENTED OR TESTED, I JUST SLAPPED THE CODE HERE AS A PLACEHOLDER
+
 ;Awesome algorithm by Jeff Laughton (http://forum.6502.org/viewtopic.php?p=45555#p45555), with tweaks
 ;by Paul Dorish (https://www.youtube.com/watch?v=siKiNMOqcDA https://github.com/dourish/mitemon/blob/master/apps/spiv.a65)
 
