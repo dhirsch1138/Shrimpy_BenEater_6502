@@ -69,7 +69,6 @@ main_lcd_init_sequence:
   .byte LCD_INST_DISPLAY | LCD_DISPLAY_DSON ; #%00001100 ; Display on; cursor off; blink off
   .byte LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR ; #%00000110 ; Increment and shift cursor; don't shift display
   .byte LCD_INST_CLRDISP ; %00000001 ; Clear display
-  .byte LCD_INST_RTNHOME ; return cursor home  
   .byte $00
 
 main_loop:

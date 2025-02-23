@@ -7,6 +7,9 @@
 ;====================================================
 ;Reserve RAM addresses
 
+.segment "UTIL_RAM"
+UTIL_SCRATCH_BYTE:        .res 1, $00
+
 ;====================================================
 ;Macros
 
@@ -14,7 +17,7 @@
 
 ;Defines
 
-;Uncomment the appropriate timings to get delays for PHI2 frequence
+;Uncomment the appropriate delay timings for the implemented oscillator
 
 ;1 mhz
 ;delay for 10000 cycles, which is ~10ms @ 1 mhz
@@ -26,7 +29,15 @@
 DELAY10MS_A = $07
 DELAY10MS_B = $FD
 
+;2 mhz
+;delay for 20000 cycles, which is ~10ms @ 1 mhz
+;DELAY10MS_A = $08
+;DELAY10MS_B = $AB
 
+;4 mhz
+;delay for 40000 cycles, which is ~10ms @ 1 mhz
+;DELAY10MS_A = $11
+;DELAY10MS_B = $59
 
 ;====================================================
 
@@ -39,6 +50,7 @@ DELAY10MS_B = $FD
 .export delay_ms_100
 .export delay_ms_50
 .export delay_ms_10
+.export util_joinnibbles
 
 .include "util_macros.inc"
 
@@ -122,3 +134,26 @@ delay_ms_deca:
   bne delay_ms_deca ; jmp
   plx
   rts
+
+util_joinnibbles:
+;Description
+;  Joins two nibbles into a byte
+;Arguments
+;  X - low nibble as xxxx####
+;  Y - high nibble as xxxx####
+;Preconditions
+;  none
+;Side Effects
+;  joined nibble put in accumulator
+phx
+phy
+tya 
+and #%00001111
+swn_macro
+sta UTIL_SCRATCH_BYTE
+txa
+and #%00001111
+ora UTIL_SCRATCH_BYTE
+ply
+plx
+rts

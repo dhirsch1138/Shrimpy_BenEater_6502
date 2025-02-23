@@ -42,7 +42,7 @@ LCD_VIA_PORT = VIA1_PORTB
 
 ;the lcd is using ports D0 - D6
 LCD_VIA_OUTPUTMASK = %01111111
-LCD_VIA_INPUTMASK = %01110000
+LCD_VIA_INPUTMASK = %11110000
 
 ;====================================================
 
@@ -70,9 +70,6 @@ lcd_init_4bit:
 ;  The busy flag is not available during the instruction initializtion sequence
   pha
   phx
-  lda LCD_VIA_DDR ; Set LCD output mask
-  ora #(LCD_VIA_OUTPUTMASK)
-  sta LCD_VIA_DDR  
   ; got this idea from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
   ;
   ; The initialize from instruction sequence is specified in the datasheet, and is very specific. It requires
@@ -141,6 +138,11 @@ lcd_send_raw:
 ;  LCD has powered up
 ;Side Effects
 ;  A is squished
+  pha
+  lda LCD_VIA_DDR ; Set LCD output mask
+  ora #(LCD_VIA_OUTPUTMASK)
+  sta LCD_VIA_DDR
+  pla
   sta LCD_VIA_PORT
   ora #(LCD_PIN_E) ; Set E bit to send instruction
   sta LCD_VIA_PORT
@@ -297,33 +299,49 @@ lcd_wait:
 ;Side Effects
 ;  None
   pha
+lcd_wait_busy:
+  jsr lcd_read_byte
+  and #%10000000
+  bne lcd_wait_busy
+  pla
+  rts
+
+lcd_read_byte:
+;Description
+;  reads byte from lcd in 4-bit mode
+;Arguments
+;  None
+;Uses
+;  Y - read high nibble as xxxx####
+;  X - read low nibble as xxxx####
+;Preconditions
+;  LCD is initialized and has its parameters set
+;  LCD is in 4 bit mode
+;Side Effects
+;  A is set to the read byte
+  phx
+  phy
   lda LCD_VIA_DDR ; Set LCD input mask
   and #(LCD_VIA_INPUTMASK)
-  sta LCD_VIA_DDR
-lcd_wait_busy:
+  sta LCD_VIA_DDR  
   lda #LCD_PIN_RW
   sta LCD_VIA_PORT
   lda #(LCD_PIN_RW | LCD_PIN_E)
   sta LCD_VIA_PORT
   lda LCD_VIA_PORT       ; Read high nibble
-  pha             ; and put on stack since it has the busy flag
+  tay
   lda #LCD_PIN_RW
   sta LCD_VIA_PORT
   lda #(LCD_PIN_RW | LCD_PIN_E)
   sta LCD_VIA_PORT
   lda LCD_VIA_PORT       ; Read low nibble
-  pla             ; Get high nibble off stack
-  and #%00001000
-  bne lcd_wait_busy
-  ; logical break, we aren't busy anymore
+  tax
   lda #LCD_PIN_RW
   sta LCD_VIA_PORT
-  lda LCD_VIA_DDR ; Set LCD output mask
-  ora #(LCD_VIA_OUTPUTMASK)
-  sta LCD_VIA_DDR
-  pla
+  jsr util_joinnibbles
+  ply
+  plx
   rts
 
 lcd_print_hex_hexmap:
   .byte "0123456789ABCDEF"
-  .byte $00
