@@ -12,7 +12,7 @@
 
 ;subroutines
 .export lcd_instruction
-.export lcd_init_4bit
+.export lcd_init
 .export lcd_load_custom_character
 .export lcd_print_asciiz_ZP
 .export lcd_send_byte
@@ -25,9 +25,10 @@
 ;Reserve RAM addresses
 
 .segment "LCD_RAM"
+LCD_RS_BOOL:        .byte  $00
 
 .segment "LCD_PAGEZERO": zeropage
-LCD_ADDR_ZP:        .res 2, $0000
+LCD_ADDR_ZP:        .addr  $0000
 
 
 ;====================================================
@@ -56,7 +57,7 @@ LCD_VIA_INPUTMASK = %11110000
 .include "lcd_statics.inc"
 .include "util.inc"
 
-lcd_init_4bit:
+.proc lcd_init ; label + scope (This isn't required, I am just experimenting w/ ca65 functionality)
 ;Description
 ;  Inializes the lcd & sets 4 bit mode using the initialization by instruction sequence
 ;  Doing things the hard way as the LCD seems super whiny about timing and power issues.
@@ -68,90 +69,67 @@ lcd_init_4bit:
 ;  LCD is set to accept 4-bit mode
 ;Notes
 ;  The busy flag is not available during the instruction initializtion sequence
+;  The initialize from instruction sequence is specified in the datasheet, and is very specific. 
+;   reference : (figure 24 on page 26 of datasheet)
   pha
   phx
-  ; got this idea from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
-  ;
-  ; The initialize from instruction sequence is specified in the datasheet, and is very specific. It requires
-  ; sending 'raw' commands to the LCD that do not otherwise conform the to expected 4bit high/low nibble protocol
-  ; used for other LCD 4 bit communication. Thus this will utilize 'raw' lcd send commands that should not be used
-  ; outside of this context
-  ;
-  ;
-  jsr delay_ms_100 ; give the LCD time to power up
-  jsr delay_ms_50
   ; First we need to force the LCD into 4 bit mode. We do this by only sending the high
-  ; bytes of a coordinated sequence of 'bitness' instructions
+  ; bytes of a coordinated sequence of 'bitness' instructions.
+  ; These instructions are unique because:
+  ;  * These direct byte submissions, with swapped nibbles due to the 4-bit connection.
+  ;  * We are not sending the low byte, or checking the lcd busy flag. These are blind writes.
+  jsr delay_ms_50 ; give the LCD time to power up
   ldx #$00 ; initialize index to walk through sequence
-@bitness_loop:
-  jsr delay_ms_50 ; this is likely far too much, I may refine this later.
+@bitness_instruction_loop:
+  jsr delay_ms_10 ; this is likely far too much, I may refine this later.
   ; Read next byte of force reset sequence data
-  lda lcd_force_reset_bitnesssequence,x
+  lda bitness_instructions,x
   ; Exit loop if $00 read
-  beq lcd_init_4bit_reset_bitness_end
+  beq @bitness_instruction_loop_end
+  lsr ; Send high 4 bits, so we need to shift them into the effective low nibble
   lsr
   lsr
   lsr
-  lsr ; Send high 4 bits
-  jsr lcd_send_raw 
+  jsr lcd_send_nibble 
   inx 
-  bra @bitness_loop
-lcd_init_4bit_reset_bitness_end:
+  bra @bitness_instruction_loop ; jmp
+@bitness_instruction_loop_end:
   ;
   ; The LCD is now in 4 bit mode, but is the busy flag cannot yet be used.
   ; We need to walk through a 4 bit instruction sequence to set the starting state
   ; of the LCD based on the datasheet's instructions.
   ldx #$00 ; initialize index to walk through sequence
-lcd_init_4bit_reset_instruction_loop:
+@instruction_loop:
   jsr delay_ms_10 ; this is likely far too much, I may refine this later.
-  lda lcd_force_reset_instructionsequence,x ; Read next byte of force reset sequence data
-  beq lcd_init_4bit_reset_instruction_end ; Exit loop if $00 read
+  lda reset_instructions,x ; Read next byte of force reset sequence data
+  beq @instruction_loop_end ; Exit loop if $00 read
   jsr lcd_instruct_nobusycheck ; send an instruction w/o checking the busy
   inx 
-  bra lcd_init_4bit_reset_instruction_loop
-lcd_init_4bit_reset_instruction_end:
+  bra @instruction_loop
+@instruction_loop_end:
   plx    
   pla
   rts
 
 ;These instruction sequences are taken from the lcd controller datasheet
+;these are tied to the scope of lcd_init
+;I took this idea from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
 
-lcd_force_reset_bitnesssequence:
-; got this idea from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
-        .byte LCD_INST_FUNCSET | LCD_FUNCSET_DATA ; #%00110000 ; designate 8-bit mode
-        .byte LCD_INST_FUNCSET | LCD_FUNCSET_DATA ; #%00110000 ; designate 8-bit mode
-        .byte LCD_INST_FUNCSET | LCD_FUNCSET_DATA ; #%00110000 ; designate 8-bit mode
-        .byte LCD_INST_FUNCSET ; #%00100000 ; designate 4-bit mode
-        .byte $00
+bitness_instructions:
+  .byte LCD_INST_FUNCSET | LCD_FUNCSET_DATA ; #%00110000 ; designate 8-bit mode
+  .byte LCD_INST_FUNCSET | LCD_FUNCSET_DATA ; #%00110000 ; designate 8-bit mode
+  .byte LCD_INST_FUNCSET | LCD_FUNCSET_DATA ; #%00110000 ; designate 8-bit mode
+  .byte LCD_INST_FUNCSET ; #%00100000 ; designate 4-bit mode
+  .byte $00
 
-lcd_force_reset_instructionsequence:
-; got this idea from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
-        .byte LCD_INST_FUNCSET | LCD_FUNCSET_LINE ; #%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
-        .byte LCD_INST_DISPLAY ; #%00001100 ; Display on; cursor off; blink off
-        .byte LCD_INST_CLRDISP ; %00000001 ; Clear display
-        .byte LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR ; #%00000110 ; Increment and shift cursor; don't shift display
-        .byte $00
+reset_instructions:
+  .byte LCD_INST_FUNCSET | LCD_FUNCSET_LINE ; #%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
+  .byte LCD_INST_DISPLAY ; #%00001100 ; Display on; cursor off; blink off
+  .byte LCD_INST_CLRDISP ; %00000001 ; Clear display
+  .byte LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR ; #%00000110 ; Increment and shift cursor; don't shift display
+  .byte $00
 
-lcd_send_raw:
-;Description
-;  Sends the byte to the LCD, toggling the E flag.
-;Arguments
-;  A - LCD byte
-;Precondition
-;  LCD has powered up
-;Side Effects
-;  A is squished
-  pha
-  lda LCD_VIA_DDR ; Set LCD output mask
-  ora #(LCD_VIA_OUTPUTMASK)
-  sta LCD_VIA_DDR
-  pla
-  sta LCD_VIA_PORT
-  ora #(LCD_PIN_E) ; Set E bit to send instruction
-  sta LCD_VIA_PORT
-  eor #(LCD_PIN_E) ; Clear E bit
-  sta LCD_VIA_PORT
-  rts
+.endproc ;end of lcd_init procedure scope
 
 lcd_instruction:
 ;Description
@@ -175,17 +153,17 @@ lcd_instruction_y_set: ; if jumping here Y should already be pushed onto the sta
   lsr
   lsr ; Send high 4 bits
   cpy #$01 ; are we setting RS ?
-  bne lcd_instruction_sendhigh ; IF RS is NOT enabled THEN skip applying the RS mask
+  bne @sendhigh ; IF RS is NOT enabled THEN skip applying the RS mask
   ora #(LCD_PIN_RS)
-lcd_instruction_sendhigh:
-  jsr lcd_send_raw
+@sendhigh:
+  jsr lcd_send_nibble
   pla
   and #%00001111 ; Send low 4 bits
   cpy #$01 ; are we setting RS ?
-  bne lcd_instruction_sendlow ;IF RS is NOT enabled THEN skip applying the RS mask
+  bne @sendlow ;IF RS is NOT enabled THEN skip applying the RS mask
   ora #(LCD_PIN_RS)
-lcd_instruction_sendlow: 
-  jsr lcd_send_raw
+@sendlow: 
+  jsr lcd_send_nibble
   pla
   ply
   rts
@@ -243,13 +221,13 @@ lcd_print_asciiz_ZP:
 ;  * LCD_ADDR_ZP is iterated through and printed to the LCD
 ;Note
   pha
-lcd_print_asciiz_print_loop:
+@loop:
   lda (LCD_ADDR_ZP)
-  beq lcd_print_asciiz_print_escape
+  beq @loop_end
   jsr lcd_send_byte
   inc_zp_addr_macro LCD_ADDR_ZP
-  bra lcd_print_asciiz_print_loop ; jmp
-lcd_print_asciiz_print_escape:
+  bra @loop ; jmp
+@loop_end:
   pla
   rts
 
@@ -282,34 +260,14 @@ lcd_load_custom_character:
   asl
   ora #LCD_INST_CRAMADR
   jsr lcd_instruction ;set addr
-lcd_load_character_loop:
-  jsr delay_ms_10 ; setting character memory seems odd > 1 mhz, add a bit of time
+@loop:
   inc_zp_addr_macro LCD_ADDR_ZP ; increment ZP address pointer to get next character (or terminating NUL)
   lda (LCD_ADDR_ZP)
   jsr lcd_send_byte ; write the character to CRAM
   inx
   cpx #$09
-  bne lcd_load_character_loop ; jmp
-lcd_load_character_done:
+  bne @loop ; jmp
   plx
-  pla
-  rts
-
-lcd_wait:
-;Description
-;  Loops until the LCD no longer shows a busy status
-;Arguments
-;  None
-;Preconditions
-;  LCD is initialized and has its parameters set
-;  LCD is in 4 bit mode
-;Side Effects
-;  None
-  pha
-lcd_wait_busy:
-  jsr lcd_read_byte
-  and #%10000000
-  bne lcd_wait_busy
   pla
   rts
 
@@ -325,7 +283,7 @@ lcd_read_byte:
 ;  LCD is initialized and has its parameters set
 ;  LCD is in 4 bit mode
 ;Side Effects
-;  A is set to the read byte
+;  The read byte is put into the accumulator
   phx
   phy
   lda LCD_VIA_DDR ; Set LCD input mask
@@ -335,19 +293,59 @@ lcd_read_byte:
   sta LCD_VIA_PORT
   lda #(LCD_PIN_RW | LCD_PIN_E)
   sta LCD_VIA_PORT
-  lda LCD_VIA_PORT       ; Read high nibble
-  tay
+  lda LCD_VIA_PORT ; Read high nibble
+  tay ; store high nibble in Y for util_joinnibbles
   lda #LCD_PIN_RW
   sta LCD_VIA_PORT
   lda #(LCD_PIN_RW | LCD_PIN_E)
   sta LCD_VIA_PORT
-  lda LCD_VIA_PORT       ; Read low nibble
-  tax
+  lda LCD_VIA_PORT ; Read low nibble
+  tax ; store low nibble in X for util_joinnibbles
   lda #LCD_PIN_RW
   sta LCD_VIA_PORT
   jsr util_joinnibbles
   ply
   plx
+  rts
+
+lcd_send_nibble:
+;Description
+;  Sends the nibble to the LCD, toggling the E flag.
+;  The instructions are full byte, of course, but as this is a 4-bit connection
+;  only the lower nibble of the byte in the accumulator are actually sent.
+;Arguments
+;  A - LCD byte
+;Precondition
+;  LCD has powered up
+;Side Effects
+  pha
+  lda LCD_VIA_DDR ; Set LCD output mask
+  ora #(LCD_VIA_OUTPUTMASK)
+  sta LCD_VIA_DDR
+  pla
+  sta LCD_VIA_PORT
+  ora #(LCD_PIN_E) ; Set E bit to send instruction
+  sta LCD_VIA_PORT
+  eor #(LCD_PIN_E) ; Clear E bit
+  sta LCD_VIA_PORT
+  rts
+
+lcd_wait:
+;Description
+;  Loops until the LCD no longer shows a busy status
+;Arguments
+;  None
+;Preconditions
+;  LCD is initialized and has its parameters set
+;  LCD is in 4 bit mode
+;Side Effects
+;  None
+  pha
+@busy_loop:
+  jsr lcd_read_byte
+  and #%10000000
+  bne @busy_loop
+  pla
   rts
 
 lcd_print_hex_hexmap:

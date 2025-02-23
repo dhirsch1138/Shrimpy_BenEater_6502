@@ -8,7 +8,7 @@
 ;Reserve RAM addresses
 
 .segment "UTIL_RAM"
-UTIL_SCRATCH_BYTE:        .res 1, $00
+UTIL_SCRATCH_BYTE:        .byte $00
 
 ;====================================================
 ;Macros
@@ -117,7 +117,7 @@ delay_ms_1000:
 ;  Delays by 50ms
   phx
   ldx #$64
-  bra delay_ms_deca
+  ; continue executing into delay_ms_deca ; bra delay_ms_deca
 
 delay_ms_deca:
 ;Description
@@ -129,9 +129,10 @@ delay_ms_deca:
 ;Side Effects
 ;  Delaying for X * 10 ms
 ;  X is squished
+@loop:
   delay_macro #DELAY10MS_A, #DELAY10MS_B
   dex
-  bne delay_ms_deca ; jmp
+  bne @loop ; jmp
   plx
   rts
 
@@ -145,15 +146,15 @@ util_joinnibbles:
 ;  none
 ;Side Effects
 ;  joined nibble put in accumulator
-phx
-phy
-tya 
-and #%00001111
-swn_macro
-sta UTIL_SCRATCH_BYTE
-txa
-and #%00001111
-ora UTIL_SCRATCH_BYTE
-ply
-plx
-rts
+  phx
+  phy
+  tya 
+  and #%00001111
+  swn_macro
+  sta UTIL_SCRATCH_BYTE
+  txa
+  and #%00001111
+  ora UTIL_SCRATCH_BYTE
+  ply
+  plx
+  rts

@@ -57,16 +57,16 @@
 ;       ply - 4
 ;       lda (immediate) - 2
 ;       ldy (immediate) - 2
-  .local delay
+  .local @delay
   pha
   phy
   lda acount
   ldy ycount
-delay:
+@delay:
   cpy #1
   dey
   sbc #0
-  bcs delay
+  bcs @delay
   ply
   pla
 .endmacro
@@ -91,11 +91,11 @@ delay:
 .if    .definedmacro(inc_zp_addr_macro)
 .else
 .macro inc_zp_addr_macro zp_addr
-.local skiphigh
+.local @skiphigh
   inc zp_addr
-  bne skiphigh
+  bne @skiphigh
   inc zp_addr+1
-skiphigh:
+@skiphigh:
 .endmacro
 .endif
 
