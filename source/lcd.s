@@ -69,7 +69,7 @@ LCD_VIA_INPUTMASK = %11110000
 ;Notes
 ;  The busy flag is not available during the instruction initialization sequence
 ;  The initialize from instruction sequence is specified in the datasheet, and is very specific. 
-;   reference : (figure 24 on page 26 of datasheet)
+;   reference : (figure 24 on page 46 of datasheet)
   pha
   phx
   ; First we need to force the LCD into 4 bit mode. We do this by only sending the high
