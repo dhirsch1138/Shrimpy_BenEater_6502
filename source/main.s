@@ -69,7 +69,6 @@ main_loop:
   lda #LCD_INST_CLRDISP ; clear the screen and reset pointers
   jsr lcd_instruction
 @loop:
-  jsr delay_ms_10 ; wait just a smidge because clearing the lcd (at least on my lcd) seems to release the busy flag too early?
   lda MAIN_LOOPCOUNTER ; write loop counter as hex
   jsr lcd_print_hex 
   lda #$20 ; write space " "
@@ -99,8 +98,6 @@ main_loop:
 
 dinosaur_says: .asciiz "Rwaaaar!"
 
-
-
 .proc set_lcd_params ; label + scope (This isn't required, I am just experimenting w/ ca65 functionality)
 ;Description
 ;  sets the initial operating parameters for this program
@@ -122,7 +119,6 @@ dinosaur_says: .asciiz "Rwaaaar!"
   inx 
   bra @loop
 @loop_end:
-  jsr delay_ms_10 ; wait just a smidge because clearing the lcd (at least on my lcd) seems to release the busy flag too early?
   rts
 
 instructions:
@@ -162,7 +158,7 @@ load_lcd_custom_characters:
 ;The primary benefit of this structure is that the program can simply reference the label when wanting to send the custom character,
 ;as offset 0 is the DDRAM that the custom character should be addressible at (if it was loaded)
 ;
-;The lcd_load_custom_character handles the translation of the DDROM address to the applicable CGRAM addresses that the character will be
+;The lcd_load_custom_character subroutine handles the translation of the DDROM address to the applicable CGRAM addresses that the character will be
 ;stored.
 dinochar: 
   .byte $00 ;DDRAM address 

@@ -1,7 +1,6 @@
 ;PURPOSE - defines the static register references & lcd functions 
 ;  * interface as provided by Ben Eater's videos https://eater.net/6502
 ;  * adaptation from Ben Eater's keyboard.s https://eater.net/downloads/keyboard.s
-;    much of the code is just copied from his work, but there are many changes from me.
 ;  * I also cribbed ideas from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
 ;  * rather than try to keep a diff in comments, I would encourage the reader to just reference the original masters 
 ;
@@ -25,7 +24,6 @@
 ;Reserve RAM addresses
 
 .segment "LCD_RAM"
-LCD_RS_BOOL:        .byte  $00
 
 .segment "LCD_PAGEZERO": zeropage
 LCD_ADDR_ZP:        .addr  $0000
@@ -68,7 +66,7 @@ LCD_VIA_INPUTMASK = %11110000
 ;Side Effects
 ;  LCD is set to accept 4-bit mode
 ;Notes
-;  The busy flag is not available during the instruction initializtion sequence
+;  The busy flag is not available during the instruction initialization sequence
 ;  The initialize from instruction sequence is specified in the datasheet, and is very specific. 
 ;   reference : (figure 24 on page 26 of datasheet)
   pha
@@ -124,8 +122,8 @@ bitness_instructions:
 
 reset_instructions:
   .byte LCD_INST_FUNCSET | LCD_FUNCSET_LINE ; #%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
-  .byte LCD_INST_DISPLAY ; #%00001100 ; Display on; cursor off; blink off
-  .byte LCD_INST_CLRDISP ; %00000001 ; Clear display
+  .byte LCD_INST_DISPLAY ; #%00001000 ; Display off; cursor off; blink off
+  .byte LCD_INST_CLRDISP ; #%00000001 ; Clear display
   .byte LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR ; #%00000110 ; Increment and shift cursor; don't shift display
   .byte $00
 
@@ -145,7 +143,7 @@ lcd_instruction:
 lcd_instruct_nobusycheck: ; send an instruction w/o checking the busy flag, should only really be used by instruction init sequence
   phy
   ldy #$00 ; THEN this is being called as a command (as in it is invoked as lcd_instruction) THEN store 0 to Y to flag this as not a RS operation
-lcd_instruction_y_set: ; if jumping here Y should already be pushed onto the stack, and Y should 1
+lcd_instruction_y_set: ; if jumping here Y should already be pushed onto the stack, the lcd_wait should already be performed, and Y should 1
   pha
   pha
   lsr
@@ -174,12 +172,12 @@ lcd_send_byte:
 ;Arguments
 ;  A - byte to send
 ;Preconditions
-;  LCD is ready to accept instruction bytes in RS (basically is it initialized and/or in a mode expecting writes)
+;  LCD is fully initialized
 ;Side Effects
-;  Instruction byte is sent to the LCD
-;  Unless another mode is in effect (like writing CGRAM) this will write to the LCD DDRAM and increment the pointer if so configured
+;  Byte is sent to the LCD with the register select flag (RS) set 
   phy ; y will be pulled from stack in lcd_instruction
   ldy #$01 ; set Y to 1 to flag that the register select flag should be sent as this is data / vs command
+  jsr lcd_wait ;wait until lcd is no longer showing BUSY
   bra lcd_instruction_y_set ;jmp
 
 lcd_print_hex:
@@ -209,6 +207,9 @@ lcd_print_hex:
   pla
   plx
   rts
+
+lcd_print_hex_hexmap:
+  .byte "0123456789ABCDEF"  
 
 lcd_print_asciiz_ZP:
 ;Description
@@ -247,33 +248,75 @@ lcd_load_custom_character:
 ;  Character definition is loaded into CGRAM
 ;Note
 ;  Expected character definition format:
-;    Offset 0    - DDRAM address
+;    Offset 0    - DDROM address
 ;    Offset 1-9  - values to write to CGRAM
   pha
   phx
   ldx #$00
   ;set the starting address of the character in CGRAM
-  lda (LCD_ADDR_ZP)
-  ;CGRAM for 5x8 is DDRAM addr shifted left * 3 (page 19 HD44780U datasheet)
-  asl
+  lda (LCD_ADDR_ZP) ; get the DDROM address from the definition
+  asl ;CGRAM for 5x8 is DDROM addr shifted left * 3 (page 19 HD44780U datasheet)
   asl
   asl
   ora #LCD_INST_CRAMADR
-  jsr lcd_instruction ;set addr
+  jsr lcd_instruction ; set address CGRAM address counter to the transformed CGRAM address from the definition
 @loop:
-  inc_zp_addr_macro LCD_ADDR_ZP ; increment ZP address pointer to get next character (or terminating NUL)
+  inc_zp_addr_macro LCD_ADDR_ZP ; increment ZP address pointer to get next byte: the next row of the character
   lda (LCD_ADDR_ZP)
-  jsr lcd_send_byte ; write the character to CRAM
+  jsr lcd_send_byte ; write the character data byte/row to CRAM
   inx
-  cpx #$09
+  cpx #$09 ; loop until write all 8 bytes/rows
   bne @loop ; jmp
   plx
   pla
   rts
 
-lcd_read_byte:
+lcd_send_nibble:
 ;Description
-;  reads byte from lcd in 4-bit mode
+;  Sends the nibble to the LCD, toggling the E flag.
+;  The instructions are full byte, of course, but as this is a 4-bit connection
+;  only the lower nibble of the byte in the accumulator are actually sent.
+;Arguments
+;  A - LCD byte
+;Precondition
+;  LCD has powered up
+;Side Effects
+;  * LCD output mask is applied to the VIA DD
+;  * The nibble is sent to the LCD port via the VIA, strobing the E input 
+;None
+  pha
+  lda LCD_VIA_DDR ; Set LCD output mask
+  ora #(LCD_VIA_OUTPUTMASK)
+  sta LCD_VIA_DDR
+  pla
+  sta LCD_VIA_PORT
+  ora #(LCD_PIN_E) ; Set E bit to send instruction
+  sta LCD_VIA_PORT
+  eor #(LCD_PIN_E) ; Clear E bit
+  sta LCD_VIA_PORT
+  rts
+
+lcd_wait:
+;Description
+;  Loops until the LCD no longer shows a busy status
+;Arguments
+;  None
+;Preconditions
+;  LCD is initialized and has its parameters set
+;  LCD is in 4 bit mode
+;Side Effects
+;  None
+  pha
+@busy_loop:
+  jsr lcd_read_register
+  and #%10000000
+  bne @busy_loop
+  pla
+  rts
+
+lcd_read_register:
+;Description
+;  reads byte from lcd in 4-bit mode (note the RS flag is not set, so this is for reading the register right now)
 ;Arguments
 ;  None
 ;Uses
@@ -307,46 +350,3 @@ lcd_read_byte:
   ply
   plx
   rts
-
-lcd_send_nibble:
-;Description
-;  Sends the nibble to the LCD, toggling the E flag.
-;  The instructions are full byte, of course, but as this is a 4-bit connection
-;  only the lower nibble of the byte in the accumulator are actually sent.
-;Arguments
-;  A - LCD byte
-;Precondition
-;  LCD has powered up
-;Side Effects
-  pha
-  lda LCD_VIA_DDR ; Set LCD output mask
-  ora #(LCD_VIA_OUTPUTMASK)
-  sta LCD_VIA_DDR
-  pla
-  sta LCD_VIA_PORT
-  ora #(LCD_PIN_E) ; Set E bit to send instruction
-  sta LCD_VIA_PORT
-  eor #(LCD_PIN_E) ; Clear E bit
-  sta LCD_VIA_PORT
-  rts
-
-lcd_wait:
-;Description
-;  Loops until the LCD no longer shows a busy status
-;Arguments
-;  None
-;Preconditions
-;  LCD is initialized and has its parameters set
-;  LCD is in 4 bit mode
-;Side Effects
-;  None
-  pha
-@busy_loop:
-  jsr lcd_read_byte
-  and #%10000000
-  bne @busy_loop
-  pla
-  rts
-
-lcd_print_hex_hexmap:
-  .byte "0123456789ABCDEF"
