@@ -43,24 +43,24 @@ reset:
 ;   
   ldx #$ff
   txs
-  jsr delay_ms_100 ; give the board time to come up
-  jsr delay_ms_100
   jsr via_init ; setup the via
   jsr lcd_init_4bit ; init the lcd in 4 bit mode
   ; Execute LCD parameter initialization sequence
   ; got this idea from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
   ; initialize index to walk through sequence
   ldx #$00
-main_lcd_init_sequence_loop:
+@init_sequence_loop:
   lda main_lcd_init_sequence,x ; Read next byte of force reset sequence data
-  beq main_lcd_init_sequence_end ; Exit loop if $00 read
+  beq @init_sequence_end ; Exit loop if $00 read
   jsr lcd_instruction
   inx 
-  bra main_lcd_init_sequence_loop
-main_lcd_init_sequence_end:
+  bra @init_sequence_loop
+@init_sequence_end:
   ;load custom character(s)
   load_addr_to_zp_macro dinochar, LCD_ADDR_ZP ;set dinochar as the next LCD_ADDR_ZP
   jsr lcd_load_custom_character ;load dinochar as a custom character
+  load_addr_to_zp_macro heartchar, LCD_ADDR_ZP ;set dinochar as the next LCD_ADDR_ZP
+  jsr lcd_load_custom_character ;load dinochar as a custom character  
   bra main_loop ; jmp
 
 main_lcd_init_sequence:
@@ -84,34 +84,45 @@ main_loop:
 ;Side Effects
 ;  Updates LCD
   ldx #$00
-  ldy #LCD_DDRAM2LN48CR ;dino starts at the beginning of the second line of the display
-loop:
+  ldy #LCD_DDRAM2LN58CR ;dino starts at the beginning of the second line of the display
+@loop:
   txa ; get the loop count
   jsr lcd_print_hex
+  lda #$20 ;space
+  lda heartchar
+  jsr lcd_send_byte  
   lda #$20 ;space
   jsr lcd_send_byte
   load_addr_to_zp_macro dinosaur_says, LCD_ADDR_ZP ;load the address of addr to LCD_ADDR_ZP ZP word
   jsr lcd_print_asciiz_ZP ;print the LCD_ADDR_ZP ZP word on the LCD
   tya ; set dinosaur location
   jsr lcd_instruction
-  lda dinochar ;dino char set (offset 0 is the address!)
+  lda dinochar
   jsr lcd_send_byte
   iny ; increase dinosaur location
-  cpy #(LCD_DDRAM2LN48CR | %00010000) ;if dino gets to end of line (16 characters) reset it
-  bmi loop_delay
-  ldy #LCD_DDRAM2LN48CR ;reset dino to beginning of the second line of the display
-loop_delay:
+  cpy #(LCD_DDRAM2LN58CR | %00010000) ;if dino gets to end of line (16 characters) reset it
+  bmi @skip_dinoreset
+  ldy #LCD_DDRAM2LN58CR ;reset dino to beginning of the second line of the display
+@skip_dinoreset:
   jsr delay_ms_1000 ; dino moves once a second
   lda #LCD_INST_CLRDISP; Clear display
   jsr lcd_instruction
   jsr delay_ms_10
   inx
-  bra loop ;jmp
+  bra @loop ;jmp
 
 
 dinosaur_says: .asciiz "Rwaaaar!"
+
+;custom character definition
+;
+;datasheet says we get eight customer characters (DDRAM $00 - $08)
+;=========
+;Offset 0    - DDRAM address
+;Offset 1-9  - bytes to write to CGRAM
+;
 dinochar: 
-  .byte %00000000  ;address 
+  .byte $00 ;DDRAM address 
   .byte %00001111  ;b0
   .byte %00001010  ;b1
   .byte %00001111  ;b2
@@ -120,5 +131,13 @@ dinochar:
   .byte %00011100  ;b5
   .byte %00001010  ;b6
   .byte %00000000  ;b7
-;Offset 0    - CGRAM address
-;Offset 1-9  - values to write to CGRAM
+heartchar: 
+  .byte $01  ;DDRAM address 
+  .byte %00000000  ;b0
+  .byte %00001010  ;b1
+  .byte %00011111  ;b2
+  .byte %00011111  ;b3
+  .byte %00001110  ;b4
+  .byte %00000100  ;b5
+  .byte %00000000  ;b6
+  .byte %00000000  ;b7

@@ -77,10 +77,13 @@ lcd_init_4bit:
   ; used for other LCD 4 bit communication. Thus this will utilize 'raw' lcd send commands that should not be used
   ; outside of this context
   ;
+  ;
+  jsr delay_ms_100 ; give the LCD time to power up
+  jsr delay_ms_50
   ; First we need to force the LCD into 4 bit mode. We do this by only sending the high
   ; bytes of a coordinated sequence of 'bitness' instructions
   ldx #$00 ; initialize index to walk through sequence
-lcd_init_4bit_reset_bitness_loop:
+@bitness_loop:
   jsr delay_ms_50 ; this is likely far too much, I may refine this later.
   ; Read next byte of force reset sequence data
   lda lcd_force_reset_bitnesssequence,x
@@ -92,7 +95,7 @@ lcd_init_4bit_reset_bitness_loop:
   lsr ; Send high 4 bits
   jsr lcd_send_raw 
   inx 
-  bra lcd_init_4bit_reset_bitness_loop
+  bra @bitness_loop
 lcd_init_4bit_reset_bitness_end:
   ;
   ; The LCD is now in 4 bit mode, but is the busy flag cannot yet be used.
@@ -255,7 +258,7 @@ lcd_load_custom_character:
 ;  Loads the character definition to CGRAM
 ;Arguments
 ;  LCD_ADDR_ZP - address of character set
-;      Offset 0    - CGRAM address
+;      Offset 0    - DDRAM address
 ;      Offset 1-9  - values to write to CGRAM
 ;Uses
 ;  X - count how many bytes we have to send for the character
@@ -266,13 +269,17 @@ lcd_load_custom_character:
 ;  Character definition is loaded into CGRAM
 ;Note
 ;  Expected character definition format:
-;    Offset 0    - CGRAM address
+;    Offset 0    - DDRAM address
 ;    Offset 1-9  - values to write to CGRAM
   pha
   phx
   ldx #$00
-  ;set the starting address of the character
+  ;set the starting address of the character in CGRAM
   lda (LCD_ADDR_ZP)
+  ;CGRAM for 5x8 is DDRAM addr shifted left * 3 (page 19 HD44780U datasheet)
+  asl
+  asl
+  asl
   ora #LCD_INST_CRAMADR
   jsr lcd_instruction ;set addr
 lcd_load_character_loop:
