@@ -73,7 +73,7 @@ main_loop:
   jsr lcd_print_hex 
   lda #$20 ; write space " "
   jsr lcd_send_byte  
-  lda heartchar ; write heart customer character
+  lda heartchar ; write a heart
   jsr lcd_send_byte  
   lda #$20 ; write space " "
   jsr lcd_send_byte
@@ -81,7 +81,7 @@ main_loop:
   jsr lcd_print_asciiz_ZP ; send the asciiz that LCD_ADDR_ZP is pointing to the LCD
   lda DINOSAUR_X_LOCATION ; set the lcd cursor to the location of the dinosaur
   jsr lcd_instruction
-  lda dinochar ; write the dinosaur customer character
+  lda dinochar ; write a dinosaur
   jsr lcd_send_byte
   inc DINOSAUR_X_LOCATION ; increment the dinosaur location
   lda DINOSAUR_X_LOCATION ; IF the dinosaur's location puts it off the end of the display THEN reset it.

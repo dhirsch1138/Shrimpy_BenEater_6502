@@ -241,8 +241,7 @@ lcd_load_custom_character:
 ;      Offset 0    - DDRAM address
 ;      Offset 1-9  - values to write to CGRAM
 ;Uses
-;  X - count how many bytes we have to send for the character
-;  Y - current character ram address
+;  X - count of how many bytes we have sent for the character
 ;Preconditions
 ;  LCD should be fully initialized, it seems to get cranky if you try to poke CGRAM too early
 ;Side Effects
@@ -344,7 +343,7 @@ lcd_read_register:
   lda #(LCD_PIN_RW | LCD_PIN_E)
   sta LCD_VIA_PORT
   lda LCD_VIA_PORT ; Read low nibble
-  tax ; store low nibble in X for util_joinnibbles
+  tax ; store low nibble in X f.or util_joinnibbles
   lda #LCD_PIN_RW
   sta LCD_VIA_PORT
   jsr util_joinnibbles
