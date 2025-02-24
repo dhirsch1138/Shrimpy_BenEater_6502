@@ -221,8 +221,8 @@ lcd_print_asciiz_ZP:
 ;  LCD_ADDR_ZP is pointed at a null terminated string
 ;Side Effects
 ;  * LCD_ADDR_ZP is iterated through and printed to the LCD
+;  * A is squished
 ;Note
-  pha
 @loop:
   lda (LCD_ADDR_ZP)
   beq @loop_end
@@ -230,7 +230,6 @@ lcd_print_asciiz_ZP:
   inc_zp_addr_macro LCD_ADDR_ZP
   bra @loop ; jmp
 @loop_end:
-  pla
   rts
 
 lcd_load_custom_character:
@@ -246,11 +245,11 @@ lcd_load_custom_character:
 ;  LCD should be fully initialized, it seems to get cranky if you try to poke CGRAM too early
 ;Side Effects
 ;  Character definition is loaded into CGRAM
+;  A is squished
 ;Note
 ;  Expected character definition format:
 ;    Offset 0    - DDROM address
 ;    Offset 1-9  - values to write to CGRAM
-  pha
   phx
   ldx #$00
   ;set the starting address of the character in CGRAM
@@ -268,7 +267,6 @@ lcd_load_custom_character:
   cpx #$09 ; loop until write all 8 bytes/rows
   bne @loop ; jmp
   plx
-  pla
   rts
 
 lcd_send_nibble:
@@ -328,7 +326,6 @@ lcd_read_register:
 ;Side Effects
 ;  The read byte is put into the accumulator
   phx
-  phy
   lda LCD_VIA_DDR ; Set LCD input mask
   and #(LCD_VIA_INPUTMASK)
   sta LCD_VIA_DDR  
@@ -337,16 +334,16 @@ lcd_read_register:
   lda #(LCD_PIN_RW | LCD_PIN_E)
   sta LCD_VIA_PORT
   lda LCD_VIA_PORT ; Read high nibble
-  tay ; store high nibble in Y for util_joinnibbles
+  pha
   lda #LCD_PIN_RW
   sta LCD_VIA_PORT
   lda #(LCD_PIN_RW | LCD_PIN_E)
   sta LCD_VIA_PORT
   lda LCD_VIA_PORT ; Read low nibble
-  tax ; store low nibble in X f.or util_joinnibbles
+  tax ; store low nibble in X for util_joinnibbles
   lda #LCD_PIN_RW
   sta LCD_VIA_PORT
+  pla ; pull the high nibble into A for util_joinnibbles
   jsr util_joinnibbles
-  ply
   plx
   rts

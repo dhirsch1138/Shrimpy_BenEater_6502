@@ -8,8 +8,6 @@
 ;Reserve RAM addresses
 
 .segment "UTIL_RAM"
-UTIL_SCRATCH_BYTE:        .byte $00
-
 ;====================================================
 ;Macros
 
@@ -140,21 +138,27 @@ util_joinnibbles:
 ;Description
 ;  Joins two nibbles into a byte
 ;Arguments
+;  A - high nibble as xxxx####
 ;  X - low nibble as xxxx####
-;  Y - high nibble as xxxx####
 ;Preconditions
 ;  none
 ;Side Effects
 ;  joined nibble put in accumulator
-  phx
-  phy
-  tya 
-  and #%00001111
-  swn_macro
-  sta UTIL_SCRATCH_BYTE
+  pha
+  txa ; accumulator - xxxx####
+  sec ; set sentinel bit in carry flag
+  rol ; rotate it into the accumulator, which is now xxx####1
+  asl ; accumulator -  xx####10
+  asl ; accumulator -  x####100
+  asl ; accumulator -  ####1000
+  asl ; shift the highest bit into carry flag
+@loop:
+  tax ; carry flag not impacted by tax
+  pla ; carry flag not impacted by pla
+  rol ; rotate carry bit into least bit of what was previous the high nibble
+  pha
   txa
-  and #%00001111
-  ora UTIL_SCRATCH_BYTE
-  ply
-  plx
+  asl ; shift the highest bit into carry flag, also sets the zero flag if appropriate.
+  bne @loop ; if the accumulator has the zero flag, that means we've shifted the sentinel bit into carry and we're done
+  pla
   rts
