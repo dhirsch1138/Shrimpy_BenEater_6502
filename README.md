@@ -1,7 +1,7 @@
 # Shrimpy
 This is my attempt at slowly building up a 6502 based microcomputer loosely structured around Ben Eater's lessons. I will wander off and chase squirrels, wrestle with interesting problems, and generally follow the "rule of cool" when deciding what to do next.
 
-02/25/2025 Note: schematic does not include IC AND being used for combining interrupts per (6502 primer)[https://wilsonminesco.com/6502primer/IRQconx.html]
+02/25/2025 Note: schematic does not include IC AND being used for combining interrupts per [6502 primer](https://wilsonminesco.com/6502primer/IRQconx.html)
 ![schematic](schematics/shrimpy.png)
 
 
