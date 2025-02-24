@@ -49,4 +49,3 @@ Project was initially based on Ben Eater's keyboard.s [https://eater.net/downloa
 * Got the LCD consistenly initializing on cold start and reset, writing to two lines in both scenarios.
   * Did it by implementing the full initialization by instruction sequence for 4-bit operation
 * Custom characters for the LCD (yay dinosaurs)
-  * *note to all who follow, getting customer character ram to play nice was a pain. It seems exceptionally touchy about timing and sequence. Be warned*
