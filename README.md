@@ -1,10 +1,7 @@
 # Shrimpy
 This is my attempt at slowly building up a 6502 based microcomputer loosely structured around Ben Eater's lessons. I will wander off and chase squirrels, wrestle with interesting problems, and generally follow the "rule of cool" when deciding what to do next.
 
-*2/22/2025 NOTE: photo is obsolete. Shrimpy has been completely rebuilt. We are now using a PLD for address decoding, a faster clock (currently 1.843 mhz) and an IC for collating interrupts. Using DS1813 for reset circuit now.*
-
-![Image of build](build_photo.png)
-
+02/25/2025 Note: schematic does not include IC AND being used for combining interrupts per (6502 primer)[https://wilsonminesco.com/6502primer/IRQconx.html]
 ![schematic](schematics/shrimpy.png)
 
 
