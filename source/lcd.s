@@ -194,17 +194,17 @@ lcd_send_byte:
   lsr
   lsr
   tax
-  lda lcd_print_hex_hexmap, x
+  lda hexmap, x
   jsr lcd_send_byte
   pla
   and #$0F
   tax
-  lda lcd_print_hex_hexmap, x
+  lda hexmap, x
   jsr lcd_send_byte
   plx
   rts
 
-lcd_print_hex_hexmap:
+hexmap:
   .byte "0123456789ABCDEF"  
 
 .endproc ; end scope of lcd_print_hex
@@ -304,7 +304,7 @@ lcd_wait:
   pha
 @busy_loop:
   jsr lcd_read_register
-  and #%10000000
+  and #LCD_BUSYFLAG
   bne @busy_loop
   pla
   rts
@@ -322,8 +322,10 @@ lcd_read_register:
 ;Side Effects
 ;  The read byte is put into the accumulator
   phx
+  lda #LCD_REGISTER_READ ; set 'mask' for the nibble read from register
   jsr lcd_read_nibble ; read high nibble into accumulator
   pha
+  lda #LCD_REGISTER_READ ; set 'mask' for the nibble read from register
   jsr lcd_read_nibble ; read low nibble into accumulator
   tax ; store low nibble in X for util_joinnibbles
   pla ; pull the high nibble into A for util_joinnibbles
@@ -331,28 +333,59 @@ lcd_read_register:
   plx
   rts
 
+lcd_read_byte:
+;Description
+;  reads the data byte from lcd in 4-bit mode
+;Arguments
+;  None
+;Uses
+;  X - read low nibble as xxxx####
+;Preconditions
+;  LCD is initialized and has its parameters set
+;  LCD is in 4 bit mode
+;Side Effects
+;  The read byte is put into the accumulator
+  phx
+  lda #LCD_PIN_RS ; set 'mask' for the nibble read from lcd
+  jsr lcd_read_nibble ; read high nibble into accumulator
+  pha
+  lda #LCD_PIN_RS  ; set 'mask' for the nibble read from lcd
+  jsr lcd_read_nibble ; read low nibble into accumulator
+  tax ; store low nibble in X for util_joinnibbles
+  pla ; pull the high nibble into A for util_joinnibbles
+  jsr util_joinnibbles
+  plx
+  rts
+
+
 lcd_read_nibble:
 ;Description
 ;  reads nibble from lcd in 4-bit mode (note the RS flag is not set, so this is for reading the register right now)
 ;Arguments
-;  None
+;  A - #LCD_PIN_RS mask OR #LCD_REGISTER_READ
 ;Uses
-;  None
+;  X - enabled read byte
 ;Preconditions
 ;  LCD is initialized and has its parameters set
 ;  LCD is in 4 bit mode
 ;Side Effects
 ;  The read nibble is put into the accumulator as xxxx####
+  phx
+  pha
   lda LCD_VIA_DDR ; Set LCD input mask
   and #(LCD_VIA_INPUTMASK)
-  sta LCD_VIA_DDR  
-  lda #LCD_PIN_RW
+  sta LCD_VIA_DDR
+  pla
+  ora #LCD_PIN_RW   
   sta LCD_VIA_PORT
-  lda #(LCD_PIN_RW | LCD_PIN_E)
+  ora #LCD_PIN_E
   sta LCD_VIA_PORT
+  tax
   lda LCD_VIA_PORT ; Read nibble
   pha
-  lda #LCD_PIN_RW
+  txa
+  eor #LCD_PIN_E
   sta LCD_VIA_PORT
   pla
+  plx
   rts

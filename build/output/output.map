@@ -3,7 +3,7 @@ Modules list:
 acia.o:
 lcd.o:
     LCD_PAGEZERO      Offs=000000  Size=000002  Align=00001  Fill=0000
-    LCD_CODE          Offs=000000  Size=000102  Align=00001  Fill=0000
+    LCD_CODE          Offs=000000  Size=00011F  Align=00001  Fill=0000
 main.o:
     CODE              Offs=000000  Size=0000B2  Align=00001  Fill=0000
     MAIN_RAM          Offs=000000  Size=000002  Align=00001  Fill=0000
@@ -31,10 +31,10 @@ MAIN_RAM              000300  000301  000002  00001
 WOZ_RAM               000302  000380  00007F  00001
 CODE                  008000  0080B1  0000B2  00001
 VIA_CODE              0080B2  0080BB  00000A  00001
-LCD_CODE              0080BC  0081BD  000102  00001
-SPI_CODE              0081BE  0081FB  00003E  00001
-WOZ_CODE              0081FC  0082F5  0000FA  00001
-UTIL_CODE             0082F6  008332  00003D  00001
+LCD_CODE              0080BC  0081DA  00011F  00001
+SPI_CODE              0081DB  008218  00003E  00001
+WOZ_CODE              008219  008312  0000FA  00001
+UTIL_CODE             008313  00834F  00003D  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
@@ -45,12 +45,12 @@ ACIA_DATA                 000210 REA    ACIA_STATUS               000211 REA
 LCD_ADDR_ZP               000000 RLZ    VIA1_DDRB                 000202 REA    
 VIA1_PORTA                000201 REA    VIA1_PORTB                000200 REA    
 __ACIA1_START__           000210 RLA    __CODE_LOAD__             008000 RLA    
-__VIA1_START__            000200 RLA    delay_ms_10               0082F6 RLA    
-delay_ms_1000             00830A RLA    delay_ms_50               0082FB RLA    
+__VIA1_START__            000200 RLA    delay_ms_10               008313 RLA    
+delay_ms_1000             008327 RLA    delay_ms_50               008318 RLA    
 lcd_init                  0080BC RLA    lcd_instruction           0080F0 RLA    
 lcd_load_custom_character 008151 RLA    lcd_print_asciiz_ZP       008141 RLA    
 lcd_print_hex             008118 RLA    lcd_send_byte             008102 RLA    
-util_joinnibbles          008321 RLA    via_init                  0080B2 RLA    
+util_joinnibbles          00833E RLA    via_init                  0080B2 RLA    
 
 
 
@@ -65,8 +65,8 @@ __CODE_LOAD__             008000 RLA    via_init                  0080B2 RLA
 lcd_init                  0080BC RLA    lcd_instruction           0080F0 RLA    
 lcd_send_byte             008102 RLA    lcd_print_hex             008118 RLA    
 lcd_print_asciiz_ZP       008141 RLA    lcd_load_custom_character 008151 RLA    
-delay_ms_10               0082F6 RLA    delay_ms_50               0082FB RLA    
-delay_ms_1000             00830A RLA    util_joinnibbles          008321 RLA    
+delay_ms_10               008313 RLA    delay_ms_50               008318 RLA    
+delay_ms_1000             008327 RLA    util_joinnibbles          00833E RLA    
 
 
 
