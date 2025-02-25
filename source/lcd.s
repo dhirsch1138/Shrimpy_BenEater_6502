@@ -13,12 +13,10 @@
 ;subroutines
 .export lcd_instruction
 .export lcd_init
-.export lcd_load_custom_character
 .export lcd_send_byte
 .export lcd_print_hex
 
 ;variables
-.export LCD_ADDR_ZP
 
 ;====================================================
 ;Reserve RAM addresses
@@ -26,8 +24,6 @@
 .segment "LCD_RAM"
 
 .segment "LCD_PAGEZERO": zeropage
-LCD_ADDR_ZP:        .addr  $0000
-
 
 ;====================================================
 ;Macros
@@ -80,10 +76,8 @@ LCD_VIA_INPUTMASK = %11110000
   ldx #$00 ; initialize index to walk through sequence
 @bitness_instruction_loop:
   jsr delay_ms_10 ; this is likely far too much, I may refine this later.
-  ; Read next byte of force reset sequence data
-  lda bitness_instructions,x
-  ; Exit loop if $00 read
-  beq @bitness_instruction_loop_end
+  lda bitness_instructions,x ; Read next byte of force reset sequence data
+  beq @bitness_instruction_loop_end ; Exit loop if nul $00 read
   jsr lcd_send_nibble 
   inx 
   bra @bitness_instruction_loop ; jmp
@@ -203,43 +197,6 @@ hexmap:
   .byte "0123456789ABCDEF"  
 
 .endproc ; end scope of lcd_print_hex
-
-lcd_load_custom_character:
-;Description
-;  Loads the character definition to CGRAM
-;Arguments
-;  LCD_ADDR_ZP - address of character set
-;      Offset 0    - DDRAM address
-;      Offset 1-9  - values to write to CGRAM
-;Uses
-;  X - count of how many bytes we have sent for the character
-;Preconditions
-;  LCD should be fully initialized, it seems to get cranky if you try to poke CGRAM too early
-;Side Effects
-;  Character definition is loaded into CGRAM
-;  A is squished
-;Note
-;  Expected character definition format:
-;    Offset 0    - DDRAM address
-;    Offset 1-9  - values to write to CGRAM
-  phx
-  ldx #$00
-  ;set the starting address of the character in CGRAM
-  lda (LCD_ADDR_ZP) ; get the DDRAM address from the definition
-  asl ;CGRAM for 5x8 is DDRAM addr shifted left * 3 (page 19 HD44780U datasheet)
-  asl
-  asl
-  ora #LCD_INST_CRAMADR
-  jsr lcd_instruction ; set address CGRAM address counter to the transformed CGRAM address from the definition
-@loop:
-  inc_zp_addr_macro LCD_ADDR_ZP ; increment ZP address pointer to get next byte: the next row of the character
-  lda (LCD_ADDR_ZP)
-  jsr lcd_send_byte ; write the character data byte/row to CRAM
-  inx
-  cpx #$09 ; loop until write all 8 bytes/rows
-  bne @loop ; jmp
-  plx
-  rts
 
 lcd_send_nibble:
 ;Description

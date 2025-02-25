@@ -4,14 +4,15 @@
 
 .segment "WOZ_PAGEZERO": zeropage
 
-XAML: .res 1, $00                      ; Last "opened" location Low
 XAMH: .res 1, $00                         ; Last "opened" location High
+XAML: .res 1, $00                      ; Last "opened" location Low
 STL: .res 1, $00                            ; Store address Low
 STH: .res 1, $00                            ; Store address High
 L: .res 1, $00                           ; Hex value parsing Low
 H: .res 1, $00                            ; Hex value parsing High
 YSAV: .res 1, $00                            ; Used to see if hex value is given
 MODE: .res 1, $00                            ; $00=XAM, $7F=STOR, $AE=BLOCK XAM
+
 
 .segment "WOZ_RAM"
 IN: .res 127                        ; Input buffer

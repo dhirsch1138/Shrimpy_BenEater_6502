@@ -141,10 +141,8 @@ load_lcd_custom_characters:
 ;  LCD should be fully initialized and set to 5x8 font mode
 ;Side Effects
 ;  Custom characters are loaded to lcd
-  load_addr_to_zp_macro dinochar, LCD_ADDR_ZP ;set dinochar as the next LCD_ADDR_ZP
-  jsr lcd_load_custom_character ;load dinochar as a custom character
-  load_addr_to_zp_macro heartchar, LCD_ADDR_ZP ;set dinochar as the next LCD_ADDR_ZP
-  jsr lcd_load_custom_character ;load dinochar as a custom character
+  lcd_load_custom_character_macro dinochar
+  lcd_load_custom_character_macro heartchar
   rts
 
 ;custom character definitions:
