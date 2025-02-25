@@ -68,7 +68,47 @@ main_loop:
   lda #LCD_INST_CLRDISP ; clear the screen and reset pointers
   jsr lcd_instruction
 @loop:
-  ; draw top line by writing incrementally
+  jsr draw_lcd_frame
+  ; update the dinosaur's location, resetting the position if it walked off the lcd
+  inc DINOSAUR_X_LOCATION ; increment the dinosaur location
+  lda DINOSAUR_X_LOCATION ; IF the dinosaur's location puts it off the end of the display THEN reset it.
+  cmp #(LCD_DDRAM2LN58CR | %00010000) ; the display is sixteen characters, so if position is not 16 (0 indexed) then it doesn't need a reposition
+  bmi @skip_dino_reposition
+  lda #LCD_DDRAM2LN58CR ; dino resets to the beginning of the second line of the display
+  sta DINOSAUR_X_LOCATION
+@skip_dino_reposition:
+  ; delay and loop
+  jsr delay_ms_1000 ; wait one second, this whole loop should take ~1 second (recognize that the actual instructions will make it take longer of course)
+  lda #LCD_INST_CLRDISP; Clear display
+  jsr lcd_instruction
+  inc MAIN_LOOPCOUNTER ; increment the loop counter. 
+  bra @loop ;jmp ; loop forever
+
+.proc draw_lcd_frame
+;Description
+;  draws LCD frame
+;Arguments
+;  None
+;Uses
+;  DINOSAUR_X_LOCATION is the dinosaur location address
+;  MAIN_LOOPCOUNTER is the loop counter
+;Preconditions
+;  lcd is intialized and setup for display, custom characters are loaded
+;  expected to be cleared already
+;Side Effects
+;  Updates LCD
+;  squishes A
+;
+  ; Expected LCD
+  ;******************
+  ;*AA B CCCCCCCCCC *
+  ;* D             E*
+  ;******************
+  ; AA - loop counter as hex
+  ; B - animated heart
+  ; C - asciiz text
+  ; D - custom character (dino!) that advances across the row, resetting when it exits screen
+  ; E - custom character (cake!) that gets overwritten by dinosaur                           
   lda MAIN_LOOPCOUNTER ; write loop counter as hex
   jsr lcd_print_hex 
   lda #$20 ; write space " "
@@ -96,25 +136,26 @@ main_loop:
   cmp DINOSAUR_X_LOCATION ; if the cake would overwrite the dinosaur do not draw cake
   beq @nocake
   jsr lcd_instruction
+  lda MAIN_LOOPCOUNTER ; use the least bit of the MAIN_LOOPCOUNTER and DINOSAUR_X_LOCATION to determine which cake char
+  ror
+  bcs @cake1
+  ror
+  bcs @cake2
+  lda cakealt2char
+  bra @drawcake
+@cake2:
+  lda cakealt1char
+  bra @drawcake
+@cake1:  
   lda cakechar ; write cake
+@drawcake:
   jsr lcd_send_byte
 @nocake:
-  ; update the dinosaur's location, resetting the position if it walked off the lcd
-  inc DINOSAUR_X_LOCATION ; increment the dinosaur location
-  lda DINOSAUR_X_LOCATION ; IF the dinosaur's location puts it off the end of the display THEN reset it.
-  cmp #(LCD_DDRAM2LN58CR | %00010000) ; the display is sixteen characters, so if position is not 16 (0 indexed) then it doesn't need a reposition
-  bmi @skip_dino_reposition
-  lda #LCD_DDRAM2LN58CR ; dino resets to the beginning of the second line of the display
-  sta DINOSAUR_X_LOCATION
-@skip_dino_reposition:
-  ; delay and loop
-  jsr delay_ms_1000 ; wait one second, this whole loop should take ~1 second (recognize that the actual instructions will make it take longer of course)
-  lda #LCD_INST_CLRDISP; Clear display
-  jsr lcd_instruction
-  inc MAIN_LOOPCOUNTER ; increment the loop counter. 
-  bra @loop ;jmp
+  rts
 
 dinosaur_says: .asciiz "Rwaaaar!"
+
+.endproc ; end draw_lcd_frame
 
 .proc setup_lcd ; label & scope, not required but it limits the scope of the instruction list
 ;Description
@@ -134,6 +175,8 @@ dinosaur_says: .asciiz "Rwaaaar!"
   lcd_foreach_instruction_macro instructions, jsr lcd_instruction; specify the lcd parameters for this program
   lcd_load_custom_character_list_macro character_load_list ; load characters from a character list
   lcd_load_custom_character_macro cakechar ; make sure we can still load single characters
+  lcd_load_custom_character_macro cakealt1char
+  lcd_load_custom_character_macro cakealt2char
   rts
 
 instructions:
@@ -191,15 +234,33 @@ emptyheartchar:
   .byte %00000100  ;b5
   .byte %00000000  ;b6
   .byte %00000000  ;b7  
-
-
-  cakechar: 
+cakechar: 
   .byte $03  ;DDRAM address 
   .byte %00000000  ;b0
   .byte %00000000  ;b1
   .byte %00000000  ;b2
   .byte %00001010  ;b3
   .byte %00011111  ;b4
-  .byte %00011111  ;b5
+  .byte %00010001  ;b5
   .byte %00011111  ;b6
   .byte %00000000  ;b7
+cakealt1char: 
+  .byte $04  ;DDRAM address 
+  .byte %00000010  ;b0
+  .byte %00000000  ;b1
+  .byte %00000000  ;b2
+  .byte %00001010  ;b3
+  .byte %00011111  ;b4
+  .byte %00010001  ;b5
+  .byte %00011111  ;b6
+  .byte %00000000  ;b7
+cakealt2char: 
+  .byte $05  ;DDRAM address 
+  .byte %00000000  ;b0
+  .byte %00001000  ;b1
+  .byte %00000000  ;b2
+  .byte %00001010  ;b3
+  .byte %00011111  ;b4
+  .byte %00010001  ;b5
+  .byte %00011111  ;b6
+  .byte %00000000  ;b7   
