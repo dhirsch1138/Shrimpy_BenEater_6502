@@ -36,6 +36,7 @@
 .macro delay_macro acount, ycount
 ;Description
 ;  delays for a calculable amount of cycles
+;  I borrowed this from someone on line but I didn't write it down. I am so sorry :(
 ;Arguments
 ;  None
 ;Preconditions

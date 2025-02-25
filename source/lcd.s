@@ -246,13 +246,13 @@ lcd_load_custom_character:
 ;  A is squished
 ;Note
 ;  Expected character definition format:
-;    Offset 0    - DDROM address
+;    Offset 0    - DDRAM address
 ;    Offset 1-9  - values to write to CGRAM
   phx
   ldx #$00
   ;set the starting address of the character in CGRAM
-  lda (LCD_ADDR_ZP) ; get the DDROM address from the definition
-  asl ;CGRAM for 5x8 is DDROM addr shifted left * 3 (page 19 HD44780U datasheet)
+  lda (LCD_ADDR_ZP) ; get the DDRAM address from the definition
+  asl ;CGRAM for 5x8 is DDRAM addr shifted left * 3 (page 19 HD44780U datasheet)
   asl
   asl
   ora #LCD_INST_CRAMADR
