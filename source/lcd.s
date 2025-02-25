@@ -66,11 +66,11 @@ LCD_VIA_INPUTMASK = %11110000
 ;  None
 ;Side Effects
 ;  LCD is set to accept 4-bit mode
+;  A is squished
 ;Notes
 ;  The busy flag is not available during the instruction initialization sequence
 ;  The initialize from instruction sequence is specified in the datasheet, and is very specific. 
 ;   reference : (figure 24 on page 46 of datasheet)
-  pha
   phx
   ; First we need to force the LCD into 4 bit mode. We do this by only sending the high
   ; bytes of a coordinated sequence of 'bitness' instructions.
@@ -106,8 +106,7 @@ LCD_VIA_INPUTMASK = %11110000
   inx 
   bra @instruction_loop
 @instruction_loop_end:
-  plx    
-  pla
+  plx
   rts
 
 ;These instruction sequences are taken from the lcd controller datasheet
@@ -139,32 +138,19 @@ lcd_instruction:
 ;Preconditions
 ;  LCD is initialized and has its parameters set
 ;Side Effects
-;  None
+;  byte is sent to LCD as instruction
+;  A is squished
   jsr lcd_wait ;wait until lcd is no longer showing BUSY
 lcd_instruct_nobusycheck: ; send an instruction w/o checking the busy flag, should only really be used by instruction init sequence
-  phy
-  ldy #$00 ; THEN this is being called as a command (as in it is invoked as lcd_instruction) THEN store 0 to Y to flag this as not a RS operation
-lcd_instruction_y_set: ; if jumping here Y should already be pushed onto the stack, the lcd_wait should already be performed, and Y should 1
-  pha
   pha
   lsr
   lsr
   lsr
   lsr ; Send high 4 bits
-  cpy #$01 ; are we setting RS ?
-  bne @sendhigh ; IF RS is NOT enabled THEN skip applying the RS mask
-  ora #(LCD_PIN_RS)
-@sendhigh:
   jsr lcd_send_nibble
-  pla
-  and #%00001111 ; Send low 4 bits
-  cpy #$01 ; are we setting RS ?
-  bne @sendlow ;IF RS is NOT enabled THEN skip applying the RS mask
-  ora #(LCD_PIN_RS)
-@sendlow: 
+  pla ; Send low 4 bits
+  and #%00001111 
   jsr lcd_send_nibble
-  pla
-  ply
   rts
 
 lcd_send_byte:
@@ -176,12 +162,22 @@ lcd_send_byte:
 ;  LCD is fully initialized
 ;Side Effects
 ;  Byte is sent to the LCD with the register select flag (RS) set 
-  phy ; y will be pulled from stack in lcd_instruction
-  ldy #$01 ; set Y to 1 to flag that the register select flag should be sent as this is data / vs command
-  jsr lcd_wait ;wait until lcd is no longer showing BUSY
-  bra lcd_instruction_y_set ;jmp
+;  A is squished
+  jsr lcd_wait ; wait until lcd is no longer showing BUSY
+  pha
+  lsr
+  lsr
+  lsr
+  lsr ; Send high 4 bits
+  ora #(LCD_PIN_RS)
+  jsr lcd_send_nibble
+  pla ; Send low 4 bits
+  and #%00001111 
+  ora #(LCD_PIN_RS)
+  jsr lcd_send_nibble
+  rts
 
-lcd_print_hex:
+.proc lcd_print_hex ; label + scope, not required but I am having fun using ca65 features
 ;Description
 ;  Sends hex byte to the LCD
 ;Arguments
@@ -190,8 +186,8 @@ lcd_print_hex:
 ;  hex  is sent to lcd to get printed
 ;Side Effects
 ;  two hex characters are sent to the LCD
+;  A is squished
   phx
-  pha
   pha
   lsr
   lsr
@@ -205,12 +201,13 @@ lcd_print_hex:
   tax
   lda lcd_print_hex_hexmap, x
   jsr lcd_send_byte
-  pla
   plx
   rts
 
 lcd_print_hex_hexmap:
   .byte "0123456789ABCDEF"  
+
+.endproc ; end scope of lcd_print_hex
 
 lcd_print_asciiz_ZP:
 ;Description
@@ -314,11 +311,10 @@ lcd_wait:
 
 lcd_read_register:
 ;Description
-;  reads byte from lcd in 4-bit mode (note the RS flag is not set, so this is for reading the register right now)
+;  reads the register byte from lcd in 4-bit mode
 ;Arguments
 ;  None
 ;Uses
-;  Y - read high nibble as xxxx####
 ;  X - read low nibble as xxxx####
 ;Preconditions
 ;  LCD is initialized and has its parameters set
@@ -326,6 +322,27 @@ lcd_read_register:
 ;Side Effects
 ;  The read byte is put into the accumulator
   phx
+  jsr lcd_read_nibble ; read high nibble into accumulator
+  pha
+  jsr lcd_read_nibble ; read low nibble into accumulator
+  tax ; store low nibble in X for util_joinnibbles
+  pla ; pull the high nibble into A for util_joinnibbles
+  jsr util_joinnibbles
+  plx
+  rts
+
+lcd_read_nibble:
+;Description
+;  reads nibble from lcd in 4-bit mode (note the RS flag is not set, so this is for reading the register right now)
+;Arguments
+;  None
+;Uses
+;  None
+;Preconditions
+;  LCD is initialized and has its parameters set
+;  LCD is in 4 bit mode
+;Side Effects
+;  The read nibble is put into the accumulator as xxxx####
   lda LCD_VIA_DDR ; Set LCD input mask
   and #(LCD_VIA_INPUTMASK)
   sta LCD_VIA_DDR  
@@ -333,17 +350,9 @@ lcd_read_register:
   sta LCD_VIA_PORT
   lda #(LCD_PIN_RW | LCD_PIN_E)
   sta LCD_VIA_PORT
-  lda LCD_VIA_PORT ; Read high nibble
+  lda LCD_VIA_PORT ; Read nibble
   pha
   lda #LCD_PIN_RW
   sta LCD_VIA_PORT
-  lda #(LCD_PIN_RW | LCD_PIN_E)
-  sta LCD_VIA_PORT
-  lda LCD_VIA_PORT ; Read low nibble
-  tax ; store low nibble in X for util_joinnibbles
-  lda #LCD_PIN_RW
-  sta LCD_VIA_PORT
-  pla ; pull the high nibble into A for util_joinnibbles
-  jsr util_joinnibbles
-  plx
+  pla
   rts
