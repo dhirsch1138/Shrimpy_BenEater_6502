@@ -73,12 +73,12 @@ LCD_VIA_INPUTMASK = %11110000
   ; These instructions are unique because:
   ;  * These direct byte submissions, with swapped nibbles due to the 4-bit connection.
   ;  * We are not sending the low byte, or checking the lcd busy flag. These are blind writes.
-  lcd_send_instructions_macro bitness_instructions, jsr lcd_send_nibble, jsr delay_ms_10 ; send bitness nibbles
+  lcd_foreach_instruction_macro bitness_instructions, jsr lcd_send_nibble, jsr delay_ms_10 ; send bitness nibbles
   ;
   ; The LCD is now in 4 bit mode, but is the busy flag cannot yet be used.
   ; We need to walk through a 4 bit instruction sequence to set the starting state
   ; of the LCD based on the datasheet's instructions.
-  lcd_send_instructions_macro reset_instructions, jsr lcd_instruct_nobusycheck, jsr delay_ms_10 ; send init functions w/o checking busy flag
+  lcd_foreach_instruction_macro reset_instructions, jsr lcd_instruct_nobusycheck, jsr delay_ms_10 ; send init functions w/o checking busy flag
   rts
 
 ;These instruction sequences are taken from the lcd controller datasheet
@@ -106,7 +106,6 @@ lcd_instruction:
 ;  Sends instruction byte to the LCD in normal operation, respecting the RS flag and the LCD wait register
 ;Arguments
 ;  A - LCD instruction byte
-;  Y - if Y = 1 THEN we are setting the RS pin with this instruction
 ;Preconditions
 ;  LCD is initialized and has its parameters set
 ;Side Effects
