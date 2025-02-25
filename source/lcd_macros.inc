@@ -73,3 +73,26 @@
   plx
 .endmacro
 .endif
+
+
+.if    .definedmacro(lcd_send_instructions_macro)
+.else
+.macro lcd_send_instructions_macro absolute_add_to_instructions_z, instruction_call, delay_call
+  .local @loop
+  .local @end
+  phx
+  ldx #$00 ; initialize index to walk through sequence
+@loop:
+  .ifnblank delay_call
+    delay_call
+  .endif
+  lda absolute_add_to_instructions_z,x ; read next instruction
+  beq @end; exit loop if nul $00 read
+  instruction_call
+  inx 
+  beq @end ; if the counter rolls over stop, lest we loop forever
+  bra @loop ; jmp
+@end:
+  plx
+.endmacro
+.endif

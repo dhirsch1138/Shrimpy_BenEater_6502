@@ -49,6 +49,7 @@ LCD_VIA_INPUTMASK = %11110000
 .include "via.inc"
 .include "util_macros.inc"
 .include "lcd_statics.inc"
+.include "lcd_macros.inc"
 .include "util.inc"
 
 .proc lcd_init ; label + scope (This isn't required, I am just experimenting w/ ca65 functionality)
@@ -66,36 +67,18 @@ LCD_VIA_INPUTMASK = %11110000
 ;  The busy flag is not available during the instruction initialization sequence
 ;  The initialize from instruction sequence is specified in the datasheet, and is very specific. 
 ;   reference : (figure 24 on page 46 of datasheet)
-  phx
+  jsr delay_ms_50 ; give the LCD time to power up
   ; First we need to force the LCD into 4 bit mode. We do this by only sending the high
   ; bytes of a coordinated sequence of 'bitness' instructions.
   ; These instructions are unique because:
   ;  * These direct byte submissions, with swapped nibbles due to the 4-bit connection.
   ;  * We are not sending the low byte, or checking the lcd busy flag. These are blind writes.
-  jsr delay_ms_50 ; give the LCD time to power up
-  ldx #$00 ; initialize index to walk through sequence
-@bitness_instruction_loop:
-  jsr delay_ms_10 ; this is likely far too much, I may refine this later.
-  lda bitness_instructions,x ; Read next byte of force reset sequence data
-  beq @bitness_instruction_loop_end ; Exit loop if nul $00 read
-  jsr lcd_send_nibble 
-  inx 
-  bra @bitness_instruction_loop ; jmp
-@bitness_instruction_loop_end:
+  lcd_send_instructions_macro bitness_instructions, jsr lcd_send_nibble, jsr delay_ms_10 ; send bitness nibbles
   ;
   ; The LCD is now in 4 bit mode, but is the busy flag cannot yet be used.
   ; We need to walk through a 4 bit instruction sequence to set the starting state
   ; of the LCD based on the datasheet's instructions.
-  ldx #$00 ; initialize index to walk through sequence
-@instruction_loop:
-  jsr delay_ms_10 ; this is likely far too much, I may refine this later.
-  lda reset_instructions,x ; Read next byte of force reset sequence data
-  beq @instruction_loop_end ; Exit loop if $00 read
-  jsr lcd_instruct_nobusycheck ; send an instruction w/o checking the busy
-  inx 
-  bra @instruction_loop
-@instruction_loop_end:
-  plx
+  lcd_send_instructions_macro reset_instructions, jsr lcd_instruct_nobusycheck, jsr delay_ms_10 ; send init functions w/o checking busy flag
   rts
 
 ;These instruction sequences are taken from the lcd controller datasheet

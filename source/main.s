@@ -30,7 +30,7 @@ DINOSAUR_X_LOCATION:        .byte  $00
   .include "util_macros.inc"
   .include "util.inc"  
 
-reset:
+.proc reset ; procedure not required, but I like having data scoped to the thing calling it
 ;Description
 ;  The reset entrypoint for this project
 ;Arguments
@@ -47,9 +47,19 @@ reset:
   txs
   jsr via_init ; setup the via
   jsr lcd_init ; init the lcd in 4 bit mode
-  jsr set_lcd_params ; specify the lcd parameters for this program
+  lcd_send_instructions_macro instructions, jsr lcd_instruction; specify the lcd parameters for this program
   jsr load_lcd_custom_characters ; load custom characters to the lcd
-  ;continue executing into main_loop ; bra main_loop ; jmp
+  bra main_loop ; jmp
+
+instructions:
+; got this idea from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
+  .byte LCD_INST_FUNCSET | LCD_FUNCSET_LINE ; #%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
+  .byte LCD_INST_DISPLAY | LCD_DISPLAY_DSON ; #%00001100 ; Display on; cursor off; blink off
+  .byte LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR ; #%00000110 ; Increment and shift cursor; don't shift display
+  .byte LCD_INST_CLRDISP ; %00000001 ; Clear display
+  .byte $00
+
+.endproc ; end reset procedure
 
 main_loop:
 ;Description
@@ -97,40 +107,6 @@ main_loop:
   bra @loop ;jmp
 
 dinosaur_says: .asciiz "Rwaaaar!"
-
-.proc set_lcd_params ; label + scope (This isn't required, I am just experimenting w/ ca65 functionality)
-;Description
-;  sets the initial operating parameters for this program
-;Arguments
-;  None
-;Preconditions
-;  lcd should be initialized
-;Side Effects
-;  initial operating parameters for LCD are setup
-;   
-; Execute LCD parameter initialization sequence
-; got this idea from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
-; initialize index to walk through sequence
-  ldx #$00
-@loop:
-  lda instructions,x ; Read next byte of force reset sequence data
-  beq @loop_end ; Exit loop if $00 read
-  jsr lcd_instruction
-  inx 
-  bra @loop
-@loop_end:
-  rts
-
-instructions:
-; got this idea from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
-  .byte LCD_INST_FUNCSET | LCD_FUNCSET_LINE ; #%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
-  .byte LCD_INST_DISPLAY | LCD_DISPLAY_DSON ; #%00001100 ; Display on; cursor off; blink off
-  .byte LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR ; #%00000110 ; Increment and shift cursor; don't shift display
-  .byte LCD_INST_CLRDISP ; %00000001 ; Clear display
-  .byte $00
-
-.endproc ; end of set_lcd_params scope
-
 
 load_lcd_custom_characters:
 ;Description
