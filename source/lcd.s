@@ -183,7 +183,7 @@ lcd_send_byte:
 ;Arguments
 ;  A - hex to print
 ;Preconditions
-;  hex  is sent to lcd to get printed
+;  lcd is initialized in 4-bit mode
 ;Side Effects
 ;  two hex characters are sent to the LCD
 ;  A is squished
@@ -216,6 +216,7 @@ lcd_print_asciiz_ZP:
 ;  LCD_ADDR_ZP - references a nul terminated string in memory
 ;Preconditions
 ;  LCD_ADDR_ZP is pointed at a null terminated string
+;  lcd is initialized in 4-bit mode
 ;Side Effects
 ;  * LCD_ADDR_ZP is iterated through and printed to the LCD
 ;  * A is squished
@@ -303,57 +304,40 @@ lcd_wait:
 ;  None
   pha
 @busy_loop:
-  jsr lcd_read_register
+  lda #LCD_REGISTER_READ
+  jsr lcd_read_byte
   and #LCD_BUSYFLAG
   bne @busy_loop
   pla
-  rts
-
-lcd_read_register:
-;Description
-;  reads the register byte from lcd in 4-bit mode
-;Arguments
-;  None
-;Uses
-;  X - read low nibble as xxxx####
-;Preconditions
-;  LCD is initialized and has its parameters set
-;  LCD is in 4 bit mode
-;Side Effects
-;  The read byte is put into the accumulator
-  phx
-  lda #LCD_REGISTER_READ ; set 'mask' for the nibble read from register
-  jsr lcd_read_nibble ; read high nibble into accumulator
-  pha
-  lda #LCD_REGISTER_READ ; set 'mask' for the nibble read from register
-  jsr lcd_read_nibble ; read low nibble into accumulator
-  tax ; store low nibble in X for util_joinnibbles
-  pla ; pull the high nibble into A for util_joinnibbles
-  jsr util_joinnibbles
-  plx
   rts
 
 lcd_read_byte:
 ;Description
 ;  reads the data byte from lcd in 4-bit mode
 ;Arguments
-;  None
+;   A - #LCD_PIN_RS mask if we are reading data from a lcd memory address
+;       OR #LCD_REGISTER_READ if we are reading from the lcd register
 ;Uses
+;  Y - #LCD_PIN_RS mask if we are reading from an lcd memory address
+;       OR #LCD_REGISTER_READ if we are reading from the lcd register
 ;  X - read low nibble as xxxx####
 ;Preconditions
 ;  LCD is initialized and has its parameters set
 ;  LCD is in 4 bit mode
+;  IF A - #LCD_PIN_RS the lcd address counter should be set to the address to read
 ;Side Effects
 ;  The read byte is put into the accumulator
   phx
-  lda #LCD_PIN_RS ; set 'mask' for the nibble read from lcd
+  phy
+  tay ; load the read mask from the argument (reading register or data)
   jsr lcd_read_nibble ; read high nibble into accumulator
   pha
-  lda #LCD_PIN_RS  ; set 'mask' for the nibble read from lcd
+  tya ; load the read mask from the argument (reading register or data)
   jsr lcd_read_nibble ; read low nibble into accumulator
   tax ; store low nibble in X for util_joinnibbles
   pla ; pull the high nibble into A for util_joinnibbles
   jsr util_joinnibbles
+  ply
   plx
   rts
 
@@ -376,16 +360,16 @@ lcd_read_nibble:
   and #(LCD_VIA_INPUTMASK)
   sta LCD_VIA_DDR
   pla
-  ora #LCD_PIN_RW   
-  sta LCD_VIA_PORT
+  ora #LCD_PIN_RW ; apply the RW pin mask so that the lcd knows we are reading
+  sta LCD_VIA_PORT ; write the command
   ora #LCD_PIN_E
-  sta LCD_VIA_PORT
+  sta LCD_VIA_PORT ; strobe the enable on 
   tax
   lda LCD_VIA_PORT ; Read nibble
   pha
   txa
   eor #LCD_PIN_E
-  sta LCD_VIA_PORT
+  sta LCD_VIA_PORT ; turn off enable strobe
   pla
   plx
   rts
