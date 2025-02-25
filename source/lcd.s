@@ -14,7 +14,6 @@
 .export lcd_instruction
 .export lcd_init
 .export lcd_load_custom_character
-.export lcd_print_asciiz_ZP
 .export lcd_send_byte
 .export lcd_print_hex
 
@@ -85,10 +84,6 @@ LCD_VIA_INPUTMASK = %11110000
   lda bitness_instructions,x
   ; Exit loop if $00 read
   beq @bitness_instruction_loop_end
-  lsr ; Send high 4 bits, so we need to shift them into the effective low nibble
-  lsr
-  lsr
-  lsr
   jsr lcd_send_nibble 
   inx 
   bra @bitness_instruction_loop ; jmp
@@ -114,10 +109,10 @@ LCD_VIA_INPUTMASK = %11110000
 ;I took this idea from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
 
 bitness_instructions:
-  .byte LCD_INST_FUNCSET | LCD_FUNCSET_DATA ; #%00110000 ; designate 8-bit mode
-  .byte LCD_INST_FUNCSET | LCD_FUNCSET_DATA ; #%00110000 ; designate 8-bit mode
-  .byte LCD_INST_FUNCSET | LCD_FUNCSET_DATA ; #%00110000 ; designate 8-bit mode
-  .byte LCD_INST_FUNCSET ; #%00100000 ; designate 4-bit mode
+  .byte (LCD_INST_FUNCSET | LCD_FUNCSET_DATA) >> 4 ; #%00110000 >> 4; #%00000011 ; designate 8-bit mode nibble
+  .byte (LCD_INST_FUNCSET | LCD_FUNCSET_DATA) >> 4 ; #%00110000 >> 4; #%00000011 ; designate 8-bit mode nibble
+  .byte (LCD_INST_FUNCSET | LCD_FUNCSET_DATA) >> 4; #%00110000 >> 4;#%00000011 ;  designate 8-bit mode nibble
+  .byte LCD_INST_FUNCSET >> 4; #%00100000 >> 4; #%0000010 ; designate 4-bit mode nibble
   .byte $00
 
 reset_instructions:
@@ -208,27 +203,6 @@ hexmap:
   .byte "0123456789ABCDEF"  
 
 .endproc ; end scope of lcd_print_hex
-
-lcd_print_asciiz_ZP:
-;Description
-;  Prints the message to the LCD character by character from the ZP variable
-;Arguments
-;  LCD_ADDR_ZP - references a nul terminated string in memory
-;Preconditions
-;  LCD_ADDR_ZP is pointed at a null terminated string
-;  lcd is initialized in 4-bit mode
-;Side Effects
-;  * LCD_ADDR_ZP is iterated through and printed to the LCD
-;  * A is squished
-;Note
-@loop:
-  lda (LCD_ADDR_ZP)
-  beq @loop_end
-  jsr lcd_send_byte
-  inc_zp_addr_macro LCD_ADDR_ZP
-  bra @loop ; jmp
-@loop_end:
-  rts
 
 lcd_load_custom_character:
 ;Description

@@ -25,6 +25,7 @@ DINOSAUR_X_LOCATION:        .byte  $00
 
   .include "via.inc"
   .include "lcd.inc"
+  .include "lcd_macros.inc"
   .include "lcd_statics.inc"
   .include "util_macros.inc"
   .include "util.inc"  
@@ -77,8 +78,7 @@ main_loop:
   jsr lcd_send_byte  
   lda #$20 ; write space " "
   jsr lcd_send_byte
-  load_addr_to_zp_macro dinosaur_says, LCD_ADDR_ZP ; load the address of nul terminated string (asciiz) to LCD_ADDR_ZP ZP word
-  jsr lcd_print_asciiz_ZP ; send the asciiz that LCD_ADDR_ZP is pointing to the LCD
+  lcd_print_asciiz_macro dinosaur_says
   lda DINOSAUR_X_LOCATION ; set the lcd cursor to the location of the dinosaur
   jsr lcd_instruction
   lda dinochar ; write a dinosaur
