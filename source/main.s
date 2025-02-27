@@ -61,8 +61,7 @@ main_loop:
 ;  lcd is intialized and setup for display, custom characters are loaded
 ;Side Effects
 ;  Updates LCD
-  lda #$00
-  sta MAIN_LOOPCOUNTER
+  stz MAIN_LOOPCOUNTER ; lda #$00 ; sta MAIN_LOOPCOUNTER
   lda #LCD_DDRAM2LN58CR ; dino resets to the beginning of the second line of the display
   sta DINOSAUR_X_LOCATION
   lda #LCD_INST_CLRDISP ; clear the screen and reset pointers
@@ -70,13 +69,13 @@ main_loop:
 @loop:
   jsr draw_lcd_frame
   ; update the dinosaur's location, resetting the position if it walked off the lcd
-  inc DINOSAUR_X_LOCATION ; increment the dinosaur location
-  lda DINOSAUR_X_LOCATION ; IF the dinosaur's location puts it off the end of the display THEN reset it.
-  cmp #(LCD_DDRAM2LN58CR | %00010000) ; the display is sixteen characters, so if position is not 16 (0 indexed) then it doesn't need a reposition
+  lda DINOSAUR_X_LOCATION 
+  inc
+  cmp #(LCD_DDRAM2LN58CR | $10) ; IF the dinosaur's location puts it off the end of the display THEN reset it.
   bmi @skip_dino_reposition
   lda #LCD_DDRAM2LN58CR ; dino resets to the beginning of the second line of the display
-  sta DINOSAUR_X_LOCATION
 @skip_dino_reposition:
+  sta DINOSAUR_X_LOCATION
   ; delay and loop
   jsr delay_ms_1000 ; wait one second, this whole loop should take ~1 second (recognize that the actual instructions will make it take longer of course)
   lda #LCD_INST_CLRDISP; Clear display
@@ -92,6 +91,7 @@ main_loop:
 ;Uses
 ;  DINOSAUR_X_LOCATION is the dinosaur location address
 ;  MAIN_LOOPCOUNTER is the loop counter
+;  X - animation counter 0-3
 ;Preconditions
 ;  lcd is intialized and setup for display, custom characters are loaded
 ;  expected to be cleared already
@@ -108,22 +108,18 @@ main_loop:
   ; B - animated heart
   ; C - asciiz text
   ; D - custom character (dino!) that advances across the row, resetting when it exits screen
-  ; E - custom character (cake!) that gets overwritten by dinosaur                           
+  ; E - custom character (cake!) that gets overwritten by dinosaur                  
+  phx         
+  lda MAIN_LOOPCOUNTER ; use the MAIN_LOOPCOUNTER to determine the animation counter
+  and #$03
+  tax
   lda MAIN_LOOPCOUNTER ; write loop counter as hex
   jsr lcd_print_hex 
-  lda #$20 ; write space " "
+  lda #' '
   jsr lcd_send_byte 
-  ; write a hearts, animating it with loop count
-  lda MAIN_LOOPCOUNTER
-  ror
-  bcs @full_heart
-  lda emptyheartchar
-  bra @past_heart
-@full_heart:
-  lda fullheartchar
-@past_heart:
+  lda heart_animation,x
   jsr lcd_send_byte  
-  lda #$20 ; write space " "
+  lda #' '
   jsr lcd_send_byte
   lcd_print_asciiz_macro dinosaur_says
   ; draw bottom line by drawing dinosaur to its specific location
@@ -132,26 +128,29 @@ main_loop:
   lda dinorightchar ; write a dinosaur
   jsr lcd_send_byte
   ; draw cake @ position 15 on second row
-  lda #(LCD_DDRAM2LN58CR | $0F)
-  cmp DINOSAUR_X_LOCATION ; if the cake would overwrite the dinosaur do not draw cake
+  lda #cake_location; compare DINOSAUR_X_LOCATION against the cake position
+  cmp DINOSAUR_X_LOCATION
   beq @nocake
   jsr lcd_instruction
-  lda MAIN_LOOPCOUNTER ; use the least bit of the MAIN_LOOPCOUNTER and DINOSAUR_X_LOCATION to determine which cake char
-  ror
-  bcs @cake1
-  ror
-  bcs @cake2
-  lda cakealt2char
-  bra @drawcake
-@cake2:
-  lda cakealt1char
-  bra @drawcake
-@cake1:  
-  lda cakechar ; write cake
-@drawcake:
-  jsr lcd_send_byte
+  lda cake_animation,x
+  jsr lcd_send_byte ; write cake
 @nocake:
+  plx
   rts
+
+cake_location = LCD_DDRAM2LN58CR | $0F
+
+cake_animation:
+  .byte CAKECHAR
+  .byte CAKECHAR
+  .byte CAKEALT2CHAR
+  .byte CAKEALT1CHAR
+
+heart_animation:
+  .byte EMPTYHEARTCHAR
+  .byte FULLHEARTCHAR
+  .byte FULLHEARTCHAR
+  .byte FULLHEARTCHAR
 
 dinosaur_says: .asciiz "Rwaaaar!"
 
@@ -173,10 +172,7 @@ dinosaur_says: .asciiz "Rwaaaar!"
 ;  the character loading is redundant, but I wanted to see if I could load character sets and single characters
   jsr lcd_init ; init the lcd in 4 bit mode
   lcd_foreach_instruction_macro instructions, jsr lcd_instruction; specify the lcd parameters for this program
-  lcd_load_custom_character_list_macro character_load_list ; load characters from a character list
-  lcd_load_custom_character_macro cakechar ; make sure we can still load single characters
-  lcd_load_custom_character_macro cakealt1char
-  lcd_load_custom_character_macro cakealt2char
+  lcd_load_custom_character_list_macro customcharset
   rts
 
 instructions:
@@ -195,17 +191,18 @@ instructions:
 ;
 ;To make referencing these characters simple, I created a basic structure for 5x8 font custom character definitions
 ; * Offset 0    - DDRAM address
-; * Offset 1-9  - bytes to write to CGRAM
+; * Offset 1-8  - bytes to write to CGRAM
 ;
 ;The primary benefit of this structure is that the program can simply reference the label when wanting to send the custom character,
 ;as offset 0 is the DDRAM that the custom character should be addressible at (if it was loaded)
 ;
-;The lcd_load_custom_character subroutine handles the translation of the DDROM address to the applicable CGRAM addresses that the character will be
+;The lcd_load_custom_character_macro macro handles the translation of the DDROM address to the applicable CGRAM addresses that the character will be
 ;stored.
-character_load_list:
-  .byte $03 ;number of characters to load
-dinorightchar: 
-  .byte $00 ;DDRAM address 
+customcharset:
+  .byte $06
+dinorightchar:
+DINORIGHTCHAR = $00 
+  .byte DINORIGHTCHAR ;DDRAM address 
   .byte %00001111  ;b0
   .byte %00001010  ;b1
   .byte %00001111  ;b2
@@ -214,8 +211,10 @@ dinorightchar:
   .byte %00011100  ;b5
   .byte %00001010  ;b6
   .byte %00000000  ;b7
-fullheartchar: 
-  .byte $01  ;DDRAM address 
+
+fullheartchar:
+FULLHEARTCHAR = $01 
+  .byte FULLHEARTCHAR  ;DDRAM address 
   .byte %00000000  ;b0
   .byte %00001010  ;b1
   .byte %00011111  ;b2
@@ -224,8 +223,10 @@ fullheartchar:
   .byte %00000100  ;b5
   .byte %00000000  ;b6
   .byte %00000000  ;b7
-emptyheartchar: 
-  .byte $02  ;DDRAM address 
+
+emptyheartchar:
+EMPTYHEARTCHAR = $02 
+  .byte EMPTYHEARTCHAR  ;DDRAM address 
   .byte %00000000  ;b0
   .byte %00001010  ;b1
   .byte %00010101  ;b2
@@ -234,8 +235,10 @@ emptyheartchar:
   .byte %00000100  ;b5
   .byte %00000000  ;b6
   .byte %00000000  ;b7  
+
 cakechar: 
-  .byte $03  ;DDRAM address 
+CAKECHAR = $03
+  .byte CAKECHAR  ;DDRAM address 
   .byte %00000000  ;b0
   .byte %00000000  ;b1
   .byte %00000000  ;b2
@@ -244,8 +247,10 @@ cakechar:
   .byte %00010001  ;b5
   .byte %00011111  ;b6
   .byte %00000000  ;b7
-cakealt1char: 
-  .byte $04  ;DDRAM address 
+
+cakealt1char:
+CAKEALT1CHAR = $04 
+  .byte CAKEALT1CHAR  ;DDRAM address 
   .byte %00000010  ;b0
   .byte %00000000  ;b1
   .byte %00000000  ;b2
@@ -254,10 +259,12 @@ cakealt1char:
   .byte %00010001  ;b5
   .byte %00011111  ;b6
   .byte %00000000  ;b7
-cakealt2char: 
-  .byte $05  ;DDRAM address 
+
+cakealt2char:
+CAKEALT2CHAR = $05 
+  .byte CAKEALT2CHAR  ;DDRAM address 
   .byte %00000000  ;b0
-  .byte %00001000  ;b1
+  .byte %00000100  ;b1
   .byte %00000000  ;b2
   .byte %00001010  ;b3
   .byte %00011111  ;b4

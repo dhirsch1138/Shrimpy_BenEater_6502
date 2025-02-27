@@ -20,14 +20,12 @@
   .local @loop_end
   phx
   ldx #$00
-  lda absolute_addr,x
-  beq @loop_end ; if empty, short circuit
 @loop:
+  lda absolute_addr,x
+  beq @loop_end
   jsr lcd_send_byte
   inx
-  beq @loop_end ; if counter rolls over, stop; lest we loop forever
-  lda absolute_addr,x
-  bne @loop
+  bne @loop ; if counter rolls over, stop; lest we loop forever
 @loop_end:
   plx
 .endmacro
@@ -55,8 +53,6 @@
 ;    Offset 0    - DDRAM address
 ;    Offset 1-9  - values to write to CGRAM
   .local @loop
-  phx
-  ldx #$00
   ;set the starting address of the character in CGRAM
   lda absolute_addr ; get the DDRAM address from the definition
   asl ;CGRAM for 5x8 is DDRAM addr shifted left * 3 (page 19 HD44780U datasheet)
@@ -64,10 +60,12 @@
   asl
   ora #LCD_INST_CRAMADR
   jsr lcd_instruction ; set address CGRAM address counter to the transformed CGRAM address from the definition
+  phx
+  ldx #$01
 @loop:
-  inx
   lda absolute_addr,x
   jsr lcd_send_byte ; write the character data byte/row to CRAM
+  inx
   cpx #$09 ; loop until write all 8 bytes/rows
   bne @loop ; jmp
   plx

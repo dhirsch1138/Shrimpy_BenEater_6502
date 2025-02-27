@@ -4,7 +4,7 @@ acia.o:
 lcd.o:
     LCD_CODE          Offs=000000  Size=0000DD  Align=00001  Fill=0000
 main.o:
-    CODE              Offs=000000  Size=00016B  Align=00001  Fill=0000
+    CODE              Offs=000000  Size=000106  Align=00001  Fill=0000
     MAIN_RAM          Offs=000000  Size=000002  Align=00001  Fill=0000
 reset_interrupt.o:
     VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
@@ -27,12 +27,12 @@ Name                   Start     End    Size  Align
 WOZ_PAGEZERO          000000  000007  000008  00001
 MAIN_RAM              000300  000301  000002  00001
 WOZ_RAM               000302  000380  00007F  00001
-CODE                  008000  00816A  00016B  00001
-VIA_CODE              00816B  008174  00000A  00001
-LCD_CODE              008175  008251  0000DD  00001
-SPI_CODE              008252  00828F  00003E  00001
-WOZ_CODE              008290  008389  0000FA  00001
-UTIL_CODE             00838A  0083C6  00003D  00001
+CODE                  008000  008105  000106  00001
+VIA_CODE              008106  00810F  00000A  00001
+LCD_CODE              008110  0081EC  0000DD  00001
+SPI_CODE              0081ED  00822A  00003E  00001
+WOZ_CODE              00822B  008324  0000FA  00001
+UTIL_CODE             008325  008361  00003D  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
@@ -43,11 +43,11 @@ ACIA_DATA                 000210 REA    ACIA_STATUS               000211 REA
 VIA1_DDRB                 000202 REA    VIA1_PORTA                000201 REA    
 VIA1_PORTB                000200 REA    __ACIA1_START__           000210 RLA    
 __CODE_LOAD__             008000 RLA    __VIA1_START__            000200 RLA    
-delay_ms_10               00838A RLA    delay_ms_1000             00839E RLA    
-delay_ms_50               00838F RLA    lcd_init                  008175 RLA    
-lcd_instruction           0081A7 RLA    lcd_print_hex             0081CF RLA    
-lcd_send_byte             0081B9 RLA    util_joinnibbles          0083B5 RLA    
-via_init                  00816B RLA    
+delay_ms_10               008325 RLA    delay_ms_1000             008339 RLA    
+delay_ms_50               00832A RLA    lcd_init                  008110 RLA    
+lcd_instruction           008142 RLA    lcd_print_hex             00816A RLA    
+lcd_send_byte             008154 RLA    util_joinnibbles          008350 RLA    
+via_init                  008106 RLA    
 
 
 Exports list by value:
@@ -57,11 +57,11 @@ VIA1_PORTA                000201 REA    VIA1_DDRB                 000202 REA
 ACIA_DATA                 000210 REA    __ACIA1_START__           000210 RLA    
 ACIA_STATUS               000211 REA    ACIA_CMD                  000212 REA    
 ACIA_CTRL                 000213 REA    __CODE_LOAD__             008000 RLA    
-via_init                  00816B RLA    lcd_init                  008175 RLA    
-lcd_instruction           0081A7 RLA    lcd_send_byte             0081B9 RLA    
-lcd_print_hex             0081CF RLA    delay_ms_10               00838A RLA    
-delay_ms_50               00838F RLA    delay_ms_1000             00839E RLA    
-util_joinnibbles          0083B5 RLA    
+via_init                  008106 RLA    lcd_init                  008110 RLA    
+lcd_instruction           008142 RLA    lcd_send_byte             008154 RLA    
+lcd_print_hex             00816A RLA    delay_ms_10               008325 RLA    
+delay_ms_50               00832A RLA    delay_ms_1000             008339 RLA    
+util_joinnibbles          008350 RLA    
 
 
 Imports list:
