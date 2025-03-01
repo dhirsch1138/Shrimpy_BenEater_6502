@@ -32,6 +32,16 @@ TIMERCOUNTER:        .byte  $00
   .include "util_macros.inc"
   .include "util.inc"  
 
+
+;====================================================
+;Defines
+
+;update this for your oscillator
+VIA_TIMER_LOW = VIA_TIMER_10MS_18432_LOW
+VIA_TIMER_HIGH = VIA_TIMER_10MS_18432_HIGH
+
+
+
 reset:
 ;Description
 ;  The reset entrypoint for this project
@@ -45,37 +55,45 @@ reset:
 ;  * LCD is initialized
 ;  * Custom characters are loaded
   sei
+  cld ; not required for a cmos CPU but why not
   ldx #$ff
   txs
   jsr via_init ; setup the via
   jsr setup_lcd ; setup the lcd
-  lda #'1'
-  jsr lcd_send_byte 
+  lda #LCD_INST_CLRDISP ; clear the screen and reset pointers
+  jsr lcd_instruction
+  lcd_print_asciiz_macro start_up
+  jsr setup_via_timers
+  lda #'T'
+  jsr lcd_send_byte   
+  cli
+  lda #'I'
+  jsr lcd_send_byte
+  bra main_loop ; jmp
+
+setup_via_timers:
+;Description
+;  Defines and starts via interrupt timer(s)s
+;Arguments
+;  None
+;Preconditions
+;  None
+;Side Effects
+;  * Sets up the via timer T1 as a freerun generating interrupts @ 10ms
   lda #%01000000 ; timer 1 in continuous mode, not pulsing PB7
   sta VIA1_ACR
-  lda #'2'
-  jsr lcd_send_byte  
+  jsr delay_ms_10 ; TODO: research why this is needed further
   lda #%01111111 ; disable all interrupts
   sta VIA1_IER
-  lda #'3'
-  jsr lcd_send_byte  
   lda #%11000000 ; set interrupt - timer 1
   sta VIA1_IER
-  lda #'4'
-  jsr lcd_send_byte  
-  ;1843000 / 100 = 18430 = $47FE
-  lda #$FE
+  lda #VIA_TIMER_LOW
   sta VIA1_T1LL
-  lda #'5'
-  jsr lcd_send_byte  
-  lda #$47
-  sta VIA1_T1CH 
-  lda #'6'
-  jsr lcd_send_byte 
-  cli
-  lda #'7'
-  jsr lcd_send_byte  
-  bra main_loop ; jmp
+  lda #VIA_TIMER_HIGH
+  sta VIA1_T1CH
+  rts  
+
+start_up: .asciiz "OK? "
 
 interrupt:
   bit VIA1_T1CL
