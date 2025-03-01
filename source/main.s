@@ -6,13 +6,15 @@
 
 ;====================================================
 ;Exports
-;nothing here
+.export interrupt
+.export reset
 
 ;====================================================
 ;Reserve RAM addresses
 .segment "MAIN_RAM"
 MAIN_LOOPCOUNTER:           .byte  $00
 DINOSAUR_X_LOCATION:        .byte  $00
+TIMERCOUNTER:        .byte  $00
 ;====================================================
 ;Macros
 
@@ -42,18 +44,58 @@ reset:
 ;  * via is initialized
 ;  * LCD is initialized
 ;  * Custom characters are loaded
-;   
+  sei
   ldx #$ff
   txs
   jsr via_init ; setup the via
   jsr setup_lcd ; setup the lcd
-  ;continue executing into main_loop ; bra main_loop ; jmp
+  lda #'1'
+  jsr lcd_send_byte 
+  lda #%01000000 ; timer 1 in continuous mode, not pulsing PB7
+  sta VIA1_ACR
+  lda #'2'
+  jsr lcd_send_byte  
+  lda #%01111111 ; disable all interrupts
+  sta VIA1_IER
+  lda #'3'
+  jsr lcd_send_byte  
+  lda #%11000000 ; set interrupt - timer 1
+  sta VIA1_IER
+  lda #'4'
+  jsr lcd_send_byte  
+  ;1843000 / 100 = 18430 = $47FE
+  lda #$FE
+  sta VIA1_T1LL
+  lda #'5'
+  jsr lcd_send_byte  
+  lda #$47
+  sta VIA1_T1CH 
+  lda #'6'
+  jsr lcd_send_byte 
+  cli
+  lda #'7'
+  jsr lcd_send_byte  
+  bra main_loop ; jmp
+
+interrupt:
+  bit VIA1_T1CL
+  inc TIMERCOUNTER
+  rti
+
+
+;service_via1:
+;  bit VIA1_IFR
+;  bpl @via_clear
+;  bvc @via_clear
+;  bit VIA1_T1CL
+;@via_clear:
+;  rts 
 
 main_loop:
 ;Description
 ;  Loops forever updating lcd 
 ;Arguments
-;  None
+;  None100MS_CYCLES_HIGH
 ;Uses
 ;  DINOSAUR_X_LOCATION is the dinosaur location address
 ;  MAIN_LOOPCOUNTER is the loop counter
@@ -77,7 +119,11 @@ main_loop:
 @skip_dino_reposition:
   sta DINOSAUR_X_LOCATION
   ; delay and loop
-  jsr delay_ms_1000 ; wait one second, this whole loop should take ~1 second (recognize that the actual instructions will make it take longer of course)
+  stz TIMERCOUNTER
+@delay:
+  wai
+  lda TIMERCOUNTER
+  bne @delay
   lda #LCD_INST_CLRDISP; Clear display
   jsr lcd_instruction
   inc MAIN_LOOPCOUNTER ; increment the loop counter. 
