@@ -69,7 +69,7 @@ reset:
   cli
   lda #'I'
   jsr lcd_send_byte
-  bra main_loop ; jmp
+  jmp main_loop
 
 setup_via_timers:
 ;Description
@@ -80,6 +80,7 @@ setup_via_timers:
 ;  None
 ;Side Effects
 ;  * Sets up the via timer T1 as a freerun generating interrupts @ 10ms
+  stz TIMERFLAG
   lda #%01000000 ; timer 1 in continuous mode, not pulsing PB7
   sta VIA1_ACR
   nop ; TODO: research why this is needed further, via freaks out if I don't do this
@@ -97,22 +98,42 @@ setup_via_timers:
 start_up: .asciiz "OK? "
 
 interrupt:
-;TODO: replace this with service calls lke below
-  bit VIA1_T1CL ; clear
-  bit TIMERFLAG
-  bne @timertrue
-  inc TIMERFLAG
- @timertrue: 
+;Description
+;  Handles interrupts.
+;Arguments
+;  None
+;Preconditions
+;  None
+;Side Effects
+;  Handles and (hopefully) clears interrupts
+  jsr service_via1
+interrupt_cleared:  
   rti
 
 
-;service_via1:
-;  bit VIA1_IFR
-;  bpl @via_clear
-;  bvc @via_clear
-;  bit VIA1_T1CL
-;@via_clear:
-;  rts 
+service_via1:
+;Description
+;  Looks for and handles interrupts from via1
+;Arguments
+;  None
+;Preconditions
+;  invoked as part of the interrup handler
+;Side Effects
+;  Handles:
+;    * T1 interrupts - setting TIMERFLAG if is not already set
+  bit VIA1_IFR ; if the interrupt didn't come from via then fallback
+  bpl @via_clear
+  bvc @not_t1 ; if the interrupt didn't come from timer one then continue checking
+  ;interrupt is from timer1
+  bit VIA1_T1CL ; clear t1 interrupt by reading from lower order counter
+  bit TIMERFLAG
+  bmi @timertrue
+  dec TIMERFLAG
+ @timertrue: 
+  bra @via_clear ; jmp ; this could be an rti, right? we've cleared one interrupt and could just fallout.
+@not_t1:
+@via_clear:
+  rts 
 
 main_loop:
 ;Description
@@ -147,8 +168,8 @@ main_loop:
 @delay:
   wai
   bit TIMERFLAG ; if the interrupt didn't flag the timer ignore it and continue waiting
-  beq @delay
-  dec TIMERFLAG ; else clear the timer flag
+  bpl @delay
+  inc TIMERFLAG ; else clear the timer flag
   dex ; decrement the counter
   bne @delay ;and continue waiting if we have more timer events
   lda #LCD_INST_CLRDISP; Clear display
