@@ -82,7 +82,8 @@ setup_via_timers:
 ;  * Sets up the via timer T1 as a freerun generating interrupts @ 10ms
   lda #%01000000 ; timer 1 in continuous mode, not pulsing PB7
   sta VIA1_ACR
-  jsr delay_ms_10 ; TODO: research why this is needed further
+  nop ; TODO: research why this is needed further, via freaks out if I don't do this
+  nop
   lda #%01111111 ; disable all interrupts
   sta VIA1_IER
   lda #%11000000 ; set interrupt - timer 1
