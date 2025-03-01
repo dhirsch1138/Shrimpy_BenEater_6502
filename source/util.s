@@ -15,33 +15,10 @@
 
 ;Defines
 
-;Uncomment the appropriate delay timings for the implemented oscillator
-
-;1 mhz
-;delay for 10000 cycles, which is ~10ms @ 1 mhz
-;DELAY10MS_A = $04
-;DELAY10MS_B = $54
-
-;1.843 mhz
-;delay for 18430 cycles, which is ~10ms @ 1.843mhz
-DELAY10MS_A = $07
-DELAY10MS_B = $FD
-
-;2 mhz
-;delay for 20000 cycles, which is ~10ms @ 1 mhz
-;DELAY10MS_A = $08
-;DELAY10MS_B = $AB
-
-;4 mhz
-;delay for 40000 cycles, which is ~10ms @ 1 mhz
-;DELAY10MS_A = $11
-;DELAY10MS_B = $59
-
 ;====================================================
 
 ;Code
 .segment "UTIL_CODE"
-
 
 .export delay_ms_1000
 .export delay_ms_500
@@ -51,6 +28,19 @@ DELAY10MS_B = $FD
 .export util_joinnibbles
 
 .include "util_macros.inc"
+.include "defines.inc"
+
+;default - if not otherwise defined default to 1 mhz timings
+;delay for 10000 cycles, which is ~10ms @ 1 mhz
+.if     .defined(DELAY10MS_A)
+.else
+DELAY10MS_A = $04
+.endif
+.if     .defined(DELAY10MS_B)
+.else
+DELAY10MS_B = $54
+.endif
+
 
 delay_ms_10:
 ;Description

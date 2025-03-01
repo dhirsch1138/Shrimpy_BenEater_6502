@@ -29,17 +29,13 @@ TIMERFLAG:        .byte  $00
   .include "lcd.inc"
   .include "lcd_macros.inc"
   .include "lcd_statics.inc"
+  .include "defines.inc"
   .include "util_macros.inc"
   .include "util.inc"  
 
 
 ;====================================================
 ;Defines
-
-;update this for your oscillator
-VIA_TIMER_LOW = VIA_TIMER_10MS_18432_LOW
-VIA_TIMER_HIGH = VIA_TIMER_10MS_18432_HIGH
-
 
 
 reset:
@@ -73,13 +69,14 @@ reset:
 
 setup_via_timers:
 ;Description
-;  Defines and starts via interrupt timer(s)s
+;  Defines and starts via interrupt timer(s)
 ;Arguments
 ;  None
 ;Preconditions
 ;  None
 ;Side Effects
 ;  * Sets up the via timer T1 as a freerun generating interrupts @ 10ms
+;  * squishes A
   stz TIMERFLAG
   lda #%01000000 ; timer 1 in continuous mode, not pulsing PB7
   sta VIA1_ACR
@@ -89,9 +86,9 @@ setup_via_timers:
   sta VIA1_IER
   lda #%11000000 ; set interrupt - timer 1
   sta VIA1_IER
-  lda #VIA_TIMER_LOW
+  lda #VIA_TIMER_10MS_LOW
   sta VIA1_T1LL
-  lda #VIA_TIMER_HIGH
+  lda #VIA_TIMER_10MS_HIGH
   sta VIA1_T1CH
   rts  
 

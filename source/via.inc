@@ -19,10 +19,3 @@
   .import VIA1_PANH
 
   .import via_init
-
-
-  ;Timer values
-;==========================
-;1843000 / 100 = 18430 = $47FE
-VIA_TIMER_10MS_18432_LOW = $FE
-VIA_TIMER_10MS_18432_HIGH = $47
