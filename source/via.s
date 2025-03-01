@@ -25,6 +25,8 @@
 
   .export via_init
 
+  .export via1_init_timer_1
+
 VIA_REGISTER_PORTB = $00
 VIA_REGISTER_PORTA = $01
 VIA_REGISTER_DDRB  = $02
@@ -65,7 +67,7 @@ VIA1_PANH  = __VIA1_START__ + VIA_REGISTER_PANH
 
 ;====================================================
 ;Includes
-;nothing here
+  .include "defines.inc"
 
 ;====================================================
 ;Macros
@@ -74,6 +76,17 @@ VIA1_PANH  = __VIA1_START__ + VIA_REGISTER_PANH
 ;====================================================
 ;Code
 .segment "VIA_CODE"
+
+;default - if not otherwise defined default to 1 mhz timings
+;1000000 / 100 = 10000 = $2710
+.if     .defined(VIA_TIMER_10MS_LOW)
+.else
+VIA_TIMER_10MS_LOW = $10
+.endif
+.if     .defined(VIA_TIMER_10MS_HIGH)
+.else
+VIA_TIMER_10MS_HIGH = $27
+.endif
 
 via_init:
 ;Description
@@ -87,9 +100,57 @@ via_init:
 ;Notes
 ;  Decided on input as the default as it might prevent us from accidentally setting the wrong pin high and creating
 ;  magic smoke
-pha
-lda #%00000000
-sta VIA1_DDRA
-sta VIA1_DDRB
-pla
-; 
+  lda #%00000000
+  sta VIA1_DDRA
+  sta VIA1_DDRB
+  lda #%00000000 ; set the ACR to a known starting state
+  sta VIA1_ACR
+  nop ; TODO: research why this is needed further, via freaks out if I don't do this
+  nop
+  lda #%01111111 ; disable all interrupts
+  sta VIA1_IER
+  rts
+
+via1_init_timer_1:
+;Description
+;  sets up timer 1
+;Arguments
+;  Accumulator lowest two bits as T1 ACR values
+;   $00 = %00 = Timed interrupt each time T1 is loaded. PB7 disabled
+;   $01 = %01 = Continuous interrupts. PB7 disabled
+;   $02 = %10 = Timed interrupt each time T1 is loaded. One shot PB7
+;   $03 = %11 = Continuous interrupts. Square wave output
+;  (reference page 16 of w65c22 datasheet)
+;Preconditions
+;  None, but via should be awake
+;Uses
+;  X - argument
+;Side Effects
+;  * timer is loaded & started by updating the top two bits of the ACR with the argument
+  phx
+  tax ; put argument in X - %xxxxxxAB
+  lda VIA1_ACR ; load ACR
+  asl ; shift ACR left pulling off D7 %6543210x
+  asl ; shift ACR left pulling off D6 %543210xx
+  pha ; push ACR onto stack
+  txa ; get argument %xxxxxxAB
+  ror ; rotate right to put lowest argument bit into carry bit - %xxxxxxxA - B
+  tax ; put argument back into x
+  pla ; pull ACR onto stack
+  ror ; rotate the carry bit onto the ACR - %B543210x
+  pha ; push the ACR onto stack
+  txa ; put the remaining argument back into x
+  ror ; rotate right to put the higher argument bit into the carry bit - %xxxxxxxx - A
+  pla ; pull the ACR onto the stack
+  ror ; rotate the carry bit onto the ACR - %AB543210
+  sta VIA1_ACR ; store the new ACR
+  nop ; TODO: research why this is needed further, via freaks out if I don't do this
+  nop
+  lda #%11000000 ; set interrupt - timer 1
+  sta VIA1_IER
+  lda #VIA_TIMER_10MS_LOW
+  sta VIA1_T1LL
+  lda #VIA_TIMER_10MS_HIGH
+  sta VIA1_T1CH
+  plx
+  rts

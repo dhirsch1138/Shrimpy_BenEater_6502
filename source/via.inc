@@ -19,3 +19,4 @@
   .import VIA1_PANH
 
   .import via_init
+  .import via1_init_timer_1

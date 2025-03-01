@@ -78,18 +78,8 @@ setup_via_timers:
 ;  * Sets up the via timer T1 as a freerun generating interrupts @ 10ms
 ;  * squishes A
   stz TIMERFLAG
-  lda #%01000000 ; timer 1 in continuous mode, not pulsing PB7
-  sta VIA1_ACR
-  nop ; TODO: research why this is needed further, via freaks out if I don't do this
-  nop
-  lda #%01111111 ; disable all interrupts
-  sta VIA1_IER
-  lda #%11000000 ; set interrupt - timer 1
-  sta VIA1_IER
-  lda #VIA_TIMER_10MS_LOW
-  sta VIA1_T1LL
-  lda #VIA_TIMER_10MS_HIGH
-  sta VIA1_T1CH
+  lda #$01
+  jsr via1_init_timer_1 ; setup timer 1 on via 1 as a continuous timer that w/ PB7 pulsing disabled.
   rts  
 
 start_up: .asciiz "OK? "
