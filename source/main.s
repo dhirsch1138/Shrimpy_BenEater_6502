@@ -14,7 +14,7 @@
 .segment "MAIN_RAM"
 MAIN_LOOPCOUNTER:           .byte  $00
 DINOSAUR_X_LOCATION:        .byte  $00
-TIMERCOUNTER:        .byte  $00
+TIMERFLAG:        .byte  $00
 ;====================================================
 ;Macros
 
@@ -97,8 +97,12 @@ setup_via_timers:
 start_up: .asciiz "OK? "
 
 interrupt:
-  bit VIA1_T1CL
-  inc TIMERCOUNTER
+;TODO: replace this with service calls lke below
+  bit VIA1_T1CL ; clear
+  bit TIMERFLAG
+  bne @timertrue
+  inc TIMERFLAG
+ @timertrue: 
   rti
 
 
@@ -118,6 +122,7 @@ main_loop:
 ;Uses
 ;  DINOSAUR_X_LOCATION is the dinosaur location address
 ;  MAIN_LOOPCOUNTER is the loop counter
+;  X delay counter
 ;Preconditions
 ;  lcd is intialized and setup for display, custom characters are loaded
 ;Side Effects
@@ -138,11 +143,14 @@ main_loop:
 @skip_dino_reposition:
   sta DINOSAUR_X_LOCATION
   ; delay and loop
-  stz TIMERCOUNTER
+  ldx #$64 ; delay for 100 timer events, which at 10ms a piece is 1 second
 @delay:
   wai
-  lda TIMERCOUNTER
-  bne @delay
+  bit TIMERFLAG ; if the interrupt didn't flag the timer ignore it and continue waiting
+  beq @delay
+  dec TIMERFLAG ; else clear the timer flag
+  dex ; decrement the counter
+  bne @delay ;and continue waiting if we have more timer events
   lda #LCD_INST_CLRDISP; Clear display
   jsr lcd_instruction
   inc MAIN_LOOPCOUNTER ; increment the loop counter. 
