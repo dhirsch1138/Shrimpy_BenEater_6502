@@ -118,13 +118,7 @@ service_via1:
   bvc @not_t1 ; if the interrupt didn't come from timer one then continue checking
   ;interrupt is from timer1
   bit VIA1_T1CL ; clear t1 interrupt by reading from lower order counter
-  inc RTC_CLOCK
-  bne @via_clear
-  inc RTC_CLOCK + 1
-  bne @via_clear
-  inc RTC_CLOCK + 2
-  bne @via_clear
-  inc RTC_CLOCK + 3
+  inc_dword_at_addr_macro RTC_CLOCK
   bra @via_clear ; jmp
 @not_t1: ; other interrupts would be handled here
 @via_clear: ; once all interrupts for via1 have been accounted for
@@ -150,28 +144,11 @@ main_loop:
   lda #LCD_INST_CLRDISP ; clear the screen and reset pointers
   jsr lcd_instruction
 @loop:
-  jsr draw_lcd_frame
-  ; delay and loop  
+  jsr draw_lcd_frame ; update the lcd
   sei ; quiet interrupt long enough to grab the clock and copy it into RTC_DELAY_TARGET
-  lda RTC_CLOCK
-  sta RTC_DELAY_TARGET
-  lda RTC_CLOCK + 1
-  sta RTC_DELAY_TARGET + 1
-  lda RTC_CLOCK + 2
-  sta RTC_DELAY_TARGET + 2
-  lda RTC_CLOCK + 3
-  sta RTC_DELAY_TARGET + 3      
+  copy_dwords_at_addrs_macro RTC_CLOCK, RTC_DELAY_TARGET ; copy clock into our delay target
   cli
-  clc
-  lda RTC_DELAY_TARGET
-  adc #$64  ; increment delay, mind it is a 32 bit number
-  sta RTC_DELAY_TARGET
-  bcc @delay
-  inc RTC_DELAY_TARGET + 1
-  bne @delay
-  inc RTC_DELAY_TARGET + 2
-  bne @delay
-  inc RTC_DELAY_TARGET + 3
+  adc_dword_at_addr_macro RTC_DELAY_TARGET, #$64 ; increment delay target, mind it is a 32 bit number
 @delay:
   wai
   sei ; quiet interrupt while we compare clock
@@ -215,10 +192,10 @@ main_loop:
 ;
   ; Expected LCD
   ;******************
-  ;*AA B CCCCCCCCCC *
+  ;* B CCC AAAAAAAA *
   ;* D             E*
   ;******************
-  ; AA - loop counter as hex
+  ; AA - RTC_CLOCK counter as dword (32 bit) hex
   ; B - animated heart
   ; C - asciiz text
   ; D - custom character (dino!) that advances across the row, resetting when it exits screen

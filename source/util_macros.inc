@@ -89,24 +89,110 @@
 .endmacro
 .endif
 
-.if    .definedmacro(inc_zp_addr_macro)
+.if    .definedmacro(inc_word_at_addr_macro)
 .else
-.macro inc_zp_addr_macro zp_addr
+.macro inc_word_at_addr_macro addr
 ;Description
-;  increments the address stored in the provided ZP address
+;  increments the word (16 bit value) stored in the provided address
+;  this can be used the increment addresses stored in RAM
 ;Arguments
-;  zp_adder - ZP address housing address to increment 
+;  adder - Address housing word to increment 
 ;Preconditions
 ;  none
 ;Side Effects
-;  address @ zp_addr is incremented
+;  word @ addr is incremented
 ;Note
-;  I am still working on how 16 bit addresses are handled in an 8 bit context, so there might be better ways to do this
+;  I am still working on how 16 bit values are handled in an 8 bit context, so there might be better ways to do this
 .local @skiphigh
-  inc zp_addr
+  inc addr
   bne @skiphigh
-  inc zp_addr+1
+  inc addr+1
 @skiphigh:
 .endmacro
 .endif
 
+.if    .definedmacro(inc_dword_at_addr_macro)
+.else
+.macro inc_dword_at_addr_macro addr
+;Description
+;  increments the dword (32 bit valuee) stored in the provided address
+;  this can be used the increment addresses stored in RAM
+;Arguments
+;  adder - Address housing dword to increment 
+;Preconditions
+;  none
+;Side Effects
+;  dword @ addr is incremented
+;Note
+;  I am still working on how 36 bit values are handled in an 8 bit context, so there might be better ways to do this
+.local @no_carry
+  inc addr
+  bne @no_carry
+  inc addr + 1
+  bne @no_carry
+  inc addr + 2
+  bne @no_carry
+  inc addr + 3
+@no_carry:
+.endmacro
+.endif
+
+.if    .definedmacro(adc_dword_at_addr_macro)
+.else
+.macro adc_dword_at_addr_macro addr, value
+;Description
+;  Adds the provided value to the dword (32 bit valuee) stored in the provided address
+;  this can be use to increment addresses stored in RAM
+;Arguments
+;  addr - Address housing dword to add to 
+;  value - what to add to the dword at the provided address
+;Preconditions
+;  none
+;Side Effects
+;  dword @ addr is increased by value
+;  carry flag is overwritten
+;  A is squished
+;  Carry status flag 'should' accurately reflect if there was any carry from the low bit.
+;Note
+;  I am still working on how 36 bit values are handled in an 8 bit context, so there might be better ways to do this
+.local @no_carry
+  clc
+  lda addr
+  adc value
+  sta addr
+  bcc @no_carry
+  inc addr + 1
+  bne @no_carry
+  inc addr + 2
+  bne @no_carry
+  inc addr + 3
+@no_carry:
+.endmacro
+.endif
+
+.if    .definedmacro(copy_dwords_at_addrs_macro)
+.else
+.macro copy_dwords_at_addrs_macro from_addr, to_addr
+;Description
+;  copies the dword (32 bit valuee) stored in the provided address from_addr
+;  to the dword stored in provided address to_addr
+;Arguments
+;  from_adder - Address housing dword to copy
+;  to_adder -Address to copy the dword to. Existing contents will be overwritten
+;Preconditions
+;  none
+;Side Effects
+;  copies dword from from_addr to to_addr
+;  A is squished
+;Note
+;  I am still working on how 36 bit values are handled in an 8 bit context, so there might be better ways to do this
+  lda from_addr
+  sta to_addr
+  lda from_addr + 1
+  sta to_addr + 1
+  lda from_addr + 2
+  sta to_addr + 2
+  lda from_addr + 3
+  sta to_addr + 3   
+.endmacro
+.endif
