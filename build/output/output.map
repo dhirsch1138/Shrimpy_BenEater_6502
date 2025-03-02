@@ -1,10 +1,12 @@
 Modules list:
 -------------
 acia.o:
+characters.o:
+    CHAR_CODE         Offs=000000  Size=000037  Align=00001  Fill=0000
 lcd.o:
-    LCD_CODE          Offs=000000  Size=0000DD  Align=00001  Fill=0000
+    LCD_CODE          Offs=000000  Size=0000FB  Align=00001  Fill=0000
 main.o:
-    CODE              Offs=000000  Size=0001CD  Align=00001  Fill=0000
+    CODE              Offs=000000  Size=000196  Align=00001  Fill=0000
     MAIN_RAM          Offs=000000  Size=000009  Align=00001  Fill=0000
 reset_interrupt.o:
     VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
@@ -27,12 +29,13 @@ Name                   Start     End    Size  Align
 WOZ_PAGEZERO          000000  000007  000008  00001
 MAIN_RAM              000300  000308  000009  00001
 WOZ_RAM               000309  000387  00007F  00001
-CODE                  008000  0081CC  0001CD  00001
-VIA_CODE              0081CD  008209  00003D  00001
-LCD_CODE              00820A  0082E6  0000DD  00001
-SPI_CODE              0082E7  008324  00003E  00001
-WOZ_CODE              008325  00841E  0000FA  00001
-UTIL_CODE             00841F  00845B  00003D  00001
+CODE                  008000  008195  000196  00001
+VIA_CODE              008196  0081D2  00003D  00001
+LCD_CODE              0081D3  0082CD  0000FB  00001
+SPI_CODE              0082CE  00830B  00003E  00001
+WOZ_CODE              00830C  008405  0000FA  00001
+UTIL_CODE             008406  008442  00003D  00001
+CHAR_CODE             008443  008479  000037  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
@@ -43,12 +46,13 @@ ACIA_DATA                 000210 REA    ACIA_STATUS               000211 REA
 VIA1_DDRB                 000202 REA    VIA1_IFR                  00020D REA    
 VIA1_PORTA                000201 REA    VIA1_PORTB                000200 REA    
 VIA1_T1CL                 000204 REA    __ACIA1_START__           000210 RLA    
-__VIA1_START__            000200 RLA    delay_ms_10               00841F RLA    
-delay_ms_50               008424 RLA    interrupt                 008049 RLA    
-lcd_init                  00820A RLA    lcd_instruction           00823C RLA    
-lcd_print_hex             008264 RLA    lcd_send_byte             00824E RLA    
-reset                     008000 RLA    util_joinnibbles          00844A RLA    
-via1_init_timer_1         0081E2 RLA    via_init                  0081CD RLA    
+__VIA1_START__            000200 RLA    customcharset             008443 RLA    
+delay_ms_10               008406 RLA    delay_ms_50               00840B RLA    
+dinorightchar             008444 RLA    interrupt                 008049 RLA    
+lcd_init                  0081D3 RLA    lcd_instruction           008223 RLA    
+lcd_print_hex             00824B RLA    lcd_send_byte             008235 RLA    
+reset                     008000 RLA    util_joinnibbles          008431 RLA    
+via1_init_timer_1         0081AB RLA    via_init                  008196 RLA    
 
 
 
@@ -60,11 +64,12 @@ VIA1_T1CL                 000204 REA    VIA1_IFR                  00020D REA
 ACIA_DATA                 000210 REA    __ACIA1_START__           000210 RLA    
 ACIA_STATUS               000211 REA    ACIA_CMD                  000212 REA    
 ACIA_CTRL                 000213 REA    reset                     008000 RLA    
-interrupt                 008049 RLA    via_init                  0081CD RLA    
-via1_init_timer_1         0081E2 RLA    lcd_init                  00820A RLA    
-lcd_instruction           00823C RLA    lcd_send_byte             00824E RLA    
-lcd_print_hex             008264 RLA    delay_ms_10               00841F RLA    
-delay_ms_50               008424 RLA    util_joinnibbles          00844A RLA    
+interrupt                 008049 RLA    via_init                  008196 RLA    
+via1_init_timer_1         0081AB RLA    lcd_init                  0081D3 RLA    
+lcd_instruction           008223 RLA    lcd_send_byte             008235 RLA    
+lcd_print_hex             00824B RLA    delay_ms_10               008406 RLA    
+delay_ms_50               00840B RLA    util_joinnibbles          008431 RLA    
+customcharset             008443 RLA    dinorightchar             008444 RLA    
 
 
 
@@ -93,10 +98,14 @@ __ACIA1_START__ ([linker generated]):
     acia.o                    source/acia.s(1)
 __VIA1_START__ ([linker generated]):
     via.o                     source/via.s(7)
+customcharset (characters.o):
+    main.o                    source/characters.inc(2)
 delay_ms_10 (util.o):
     lcd.o                     source/util.inc(5)
 delay_ms_50 (util.o):
     lcd.o                     source/util.inc(4)
+dinorightchar (characters.o):
+    main.o                    source/characters.inc(5)
 interrupt (main.o):
     reset_interrupt.o         source/main.inc(1)
 lcd_init (lcd.o):

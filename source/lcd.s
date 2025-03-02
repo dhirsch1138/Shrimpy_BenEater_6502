@@ -51,11 +51,11 @@ LCD_VIA_INPUTMASK = %11110000
 .include "lcd_statics.inc"
 .include "lcd_macros.inc"
 .include "util.inc"
+.include "defines.inc"
 
 .proc lcd_init ; label + scope (This isn't required, I am just experimenting w/ ca65 functionality)
 ;Description
-;  Inializes the lcd & sets 4 bit mode using the initialization by instruction sequence
-;  Doing things the hard way as the LCD seems super whiny about timing and power issues.
+;  Intializes the lcd & sets 4 bit mode
 ;Arguments
 ;  None
 ;Preconditions
@@ -64,6 +64,26 @@ LCD_VIA_INPUTMASK = %11110000
 ;  LCD is set to accept 4-bit mode
 ;  A is squished
 ;Notes
+;  Uses the power of build time logic!
+  .if     .defined(LCD_DO_INSTRUCTION_INIT)
+    jsr lcd_init_by_instruction
+  .else
+    jsr lcd_init_by_internal_reset
+  .endif
+  rts
+
+lcd_init_by_instruction:
+;Description
+;  Intializes the lcd & sets 4 bit mode using the initialization by instruction sequence
+;  Doing things the hard way as the LCD seems super whiny about timing and power issues.
+;Arguments
+;  None
+;Preconditions
+;  None
+;Side Effects
+;  LCD is set to accept 4-bit mode
+;  A is s
+;
 ;  The busy flag is not available during the instruction initialization sequence
 ;  The initialize from instruction sequence is specified in the datasheet, and is very specific. 
 ;   reference : (figure 24 on page 46 of datasheet)
@@ -80,6 +100,22 @@ LCD_VIA_INPUTMASK = %11110000
   ; of the LCD based on the datasheet's instructions.
   lcd_foreach_instruction_macro reset_instructions, jsr lcd_instruct_nobusycheck, jsr delay_ms_10 ; send init functions w/o checking busy flag
   rts
+
+lcd_init_by_internal_reset:
+;Description
+;  Intializes the lcd & sets 4 bit mode
+;Arguments
+;  None
+;Preconditions
+;  None
+;Side Effects
+;  LCD is set to accept 4-bit mode
+;  A is squished
+  lda #(LCD_INST_FUNCSET >> 4)
+  jsr lcd_send_nibble
+  lcd_foreach_instruction_macro reset_internal_instructions, jsr lcd_instruction ; send init functions normally
+  rts
+
 
 ;These instruction sequences are taken from the lcd controller datasheet
 ;these are tied to the scope of lcd_init
@@ -98,6 +134,13 @@ reset_instructions:
   .byte LCD_INST_CLRDISP ; #%00000001 ; Clear display
   .byte LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR ; #%00000110 ; Increment and shift cursor; don't shift display
   .byte $00
+
+reset_internal_instructions:
+  .byte LCD_INST_FUNCSET | LCD_FUNCSET_LINE ; #%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
+  .byte LCD_INST_DISPLAY ; #%00001000 ; Display off; cursor off; blink off
+  .byte LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR ; #%00000110 ; Increment and shift cursor; don't shift display
+  .byte LCD_INST_CLRDISP ; #%00000001 ; Clear display
+  .byte $00  
 
 .endproc ;end of lcd_init procedure scope
 

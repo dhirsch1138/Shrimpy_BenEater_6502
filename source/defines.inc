@@ -1,7 +1,17 @@
+;Defines that can be changed are flagged with *** in the comment
+;
+
+;LCD defines
+;==========================
+
+;*** LCD init type
+; uncomment to do init by instruction (default is normal internal LCD reset)
+;LCD_DO_INSTRUCTION_INIT = $01
 
 ;Utilty defines
+;==========================
 
-;update this for your oscillator
+;*** update this for your oscillator
 DELAY10MS_A = DELAY10MS_1843_A
 DELAY10MS_B = DELAY10MS_1843_B
 
@@ -29,7 +39,7 @@ DELAY10MS_4000_B = $59
 ;VIA defines
 ;==========================
 
-;update this for your oscillator
+;*** update this for your oscillator
 VIA_TIMER_10MS_LOW = VIA_TIMER_10MS_18432_LOW
 VIA_TIMER_10MS_HIGH = VIA_TIMER_10MS_18432_HIGH
 
