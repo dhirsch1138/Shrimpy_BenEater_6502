@@ -6,7 +6,7 @@ This is my attempt at slowly building up a 6502 based microcomputer loosely stru
 
 
 # Current Status
-2/23/2025 - Reflowed a lot of the code to make it more human friendly. Finally identified and squished the 'why do I need delays after clearing the lcd in order to see certain text?' bug. I was missing an lcd_wait call if sending chars to the LCD and clears are relatively pokey, so the chars were getting lost.
+3/1/2025 - Figured out interrupts and am now using a VIA timer to drive the delay on the main loop. Now I can WAI most of the time, theoretically saving a lot of power and effort.  
 
 # Goals
 See [Shopping List](shopping_list.md) for parts that I would need to get for these.
@@ -45,3 +45,4 @@ Project was initially based on Ben Eater's keyboard.s [https://eater.net/downloa
 * Got the LCD consistenly initializing on cold start and reset, writing to two lines in both scenarios.
   * Did it by implementing the full initialization by instruction sequence for 4-bit operation
 * Custom characters for the LCD (yay dinosaurs)
+* Using a via timer an interrupt driven main loop, no more busy work delays!

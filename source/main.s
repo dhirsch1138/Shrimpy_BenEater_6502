@@ -118,8 +118,8 @@ service_via1:
   dec TIMERFLAG
  @timertrue: 
   bra @via_clear ; jmp ; this could be an rti, right? we've cleared one interrupt and could just fallout.
-@not_t1:
-@via_clear:
+@not_t1: ; other interrupts would be handled here
+@via_clear: ; once all interrupts for via1 have been accounted for
   rts 
 
 main_loop:
@@ -208,7 +208,6 @@ main_loop:
   jsr lcd_instruction
   lda dinorightchar ; write a dinosaur
   jsr lcd_send_byte
-  ; draw cake @ position 15 on second row
   lda #cake_location; compare DINOSAUR_X_LOCATION against the cake position
   cmp DINOSAUR_X_LOCATION
   beq @nocake
