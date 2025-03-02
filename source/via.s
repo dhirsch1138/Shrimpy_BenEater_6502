@@ -149,7 +149,7 @@ via1_init_timer_1:
   lda #%11000000 ; set interrupt - timer 1
   sta VIA1_IER
   lda #VIA_TIMER_10MS_LOW
-  sta VIA1_T1LL
+  sta VIA1_T1CL
   lda #VIA_TIMER_10MS_HIGH
   sta VIA1_T1CH
   plx

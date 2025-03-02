@@ -12,9 +12,9 @@
 ;====================================================
 ;Reserve RAM addresses
 .segment "MAIN_RAM"
-MAIN_LOOPCOUNTER:           .byte  $00
-DINOSAUR_X_LOCATION:        .byte  $00
-TIMERFLAG:        .byte  $00
+MAIN_LOOPCOUNTER:        .byte  $00
+RTC_CLOCK:               .dword  $00 ; four bytes
+RTC_DELAY_TARGET:        .dword  $00 ; four bytes
 ;====================================================
 ;Macros
 
@@ -77,7 +77,11 @@ setup_via_timers:
 ;Side Effects
 ;  * Sets up the via timer T1 as a freerun generating interrupts @ 10ms
 ;  * squishes A
-  stz TIMERFLAG
+  lda #$00
+  sta RTC_CLOCK
+  sta RTC_CLOCK + 1
+  sta RTC_CLOCK + 2
+  sta RTC_CLOCK + 3
   lda #$01
   jsr via1_init_timer_1 ; setup timer 1 on via 1 as a continuous timer that w/ PB7 pulsing disabled.
   rts  
@@ -99,7 +103,7 @@ interrupt_cleared:
 
 
 service_via1:
-;Description
+;DescriptionRTC_CLOCK
 ;  Looks for and handles interrupts from via1
 ;Arguments
 ;  None
@@ -113,11 +117,14 @@ service_via1:
   bvc @not_t1 ; if the interrupt didn't come from timer one then continue checking
   ;interrupt is from timer1
   bit VIA1_T1CL ; clear t1 interrupt by reading from lower order counter
-  bit TIMERFLAG
-  bmi @timertrue
-  dec TIMERFLAG
- @timertrue: 
-  bra @via_clear ; jmp ; this could be an rti, right? we've cleared one interrupt and could just fallout.
+  inc RTC_CLOCK
+  bne @via_clear
+  inc RTC_CLOCK + 1
+  bne @via_clear
+  inc RTC_CLOCK + 2
+  bne @via_clear
+  inc RTC_CLOCK + 3
+  bra @via_clear ; jmp
 @not_t1: ; other interrupts would be handled here
 @via_clear: ; once all interrupts for via1 have been accounted for
   rts 
@@ -126,43 +133,69 @@ main_loop:
 ;Description
 ;  Loops forever updating lcd 
 ;Arguments
-;  None100MS_CYCLES_HIGH
+;  None
 ;Uses
-;  DINOSAUR_X_LOCATION is the dinosaur location address
 ;  MAIN_LOOPCOUNTER is the loop counter
-;  X delay counter
 ;Preconditions
 ;  lcd is intialized and setup for display, custom characters are loaded
 ;Side Effects
 ;  Updates LCD
-  stz MAIN_LOOPCOUNTER ; lda #$00 ; sta MAIN_LOOPCOUNTER
-  lda #LCD_DDRAM2LN58CR ; dino resets to the beginning of the second line of the display
-  sta DINOSAUR_X_LOCATION
+  lda #$00
+  sta RTC_DELAY_TARGET
+  sta RTC_DELAY_TARGET + 1
+  sta RTC_DELAY_TARGET + 2
+  sta RTC_DELAY_TARGET + 3
+  sta MAIN_LOOPCOUNTER ; lda #$00 ; sta MAIN_LOOPCOUNTER
   lda #LCD_INST_CLRDISP ; clear the screen and reset pointers
   jsr lcd_instruction
 @loop:
   jsr draw_lcd_frame
-  ; update the dinosaur's location, resetting the position if it walked off the lcd
-  lda DINOSAUR_X_LOCATION 
-  inc
-  cmp #(LCD_DDRAM2LN58CR | $10) ; IF the dinosaur's location puts it off the end of the display THEN reset it.
-  bmi @skip_dino_reposition
-  lda #LCD_DDRAM2LN58CR ; dino resets to the beginning of the second line of the display
-@skip_dino_reposition:
-  sta DINOSAUR_X_LOCATION
-  ; delay and loop
-  ldx #$64 ; delay for 100 timer events, which at 10ms a piece is 1 second
+  ; delay and loop  
+  sei ; quiet interrupt long enough to grab the clock and copy it into RTC_DELAY_TARGET
+  lda RTC_CLOCK
+  sta RTC_DELAY_TARGET
+  lda RTC_CLOCK + 1
+  sta RTC_DELAY_TARGET + 1
+  lda RTC_CLOCK + 2
+  sta RTC_DELAY_TARGET + 2
+  lda RTC_CLOCK + 3
+  sta RTC_DELAY_TARGET + 3      
+  cli
+  clc
+  lda RTC_DELAY_TARGET
+  adc #$64  ; increment delay, mind it is a 32 bit number
+  sta RTC_DELAY_TARGET
+  bcc @delay
+  inc RTC_DELAY_TARGET + 1
+  bne @delay
+  inc RTC_DELAY_TARGET + 2
+  bne @delay
+  inc RTC_DELAY_TARGET + 3
 @delay:
   wai
-  bit TIMERFLAG ; if the interrupt didn't flag the timer ignore it and continue waiting
-  bpl @delay
-  inc TIMERFLAG ; else clear the timer flag
-  dex ; decrement the counter
-  bne @delay ;and continue waiting if we have more timer events
+  sei ; quiet interrupt while we compare clock
+  lda RTC_CLOCK + 3 ; starting with the highest byte of the 32 bit RTC_CLOCK, see if we have equaled or surpased or delay target
+  cmp RTC_DELAY_TARGET + 3
+  bmi @continue_delay
+  lda RTC_CLOCK + 2
+  cmp RTC_DELAY_TARGET + 2
+  bmi @continue_delay
+  lda RTC_CLOCK + 1
+  cmp RTC_DELAY_TARGET + 1
+  bmi @continue_delay  
+  lda RTC_CLOCK
+  cmp RTC_DELAY_TARGET
+  bmi @continue_delay
+  bra @end_delay
+@continue_delay:
+  cli
+  bra @delay
+@end_delay:
+  cli    
   lda #LCD_INST_CLRDISP; Clear display
   jsr lcd_instruction
   inc MAIN_LOOPCOUNTER ; increment the loop counter. 
-  bra @loop ;jmp ; loop forever
+  jmp @loop ; loop forever
 
 .proc draw_lcd_frame
 ;Description
@@ -170,7 +203,6 @@ main_loop:
 ;Arguments
 ;  None
 ;Uses
-;  DINOSAUR_X_LOCATION is the dinosaur location address
 ;  MAIN_LOOPCOUNTER is the loop counter
 ;  X - animation counter 0-3
 ;Preconditions
@@ -194,27 +226,35 @@ main_loop:
   lda MAIN_LOOPCOUNTER ; use the MAIN_LOOPCOUNTER to determine the animation counter
   and #$03
   tax
-  lda MAIN_LOOPCOUNTER ; write loop counter as hex
-  jsr lcd_print_hex 
-  lda #' '
-  jsr lcd_send_byte 
   lda heart_animation,x
   jsr lcd_send_byte  
   lda #' '
   jsr lcd_send_byte
-  lcd_print_asciiz_macro dinosaur_says
+  lcd_print_asciiz_macro tick_label
+  lda RTC_CLOCK + 3 ; write RTC counter as hex, all four bytes
+  jsr lcd_print_hex
+  lda RTC_CLOCK + 2 ; write RTC counter as hex, all four bytes
+  jsr lcd_print_hex
+  lda RTC_CLOCK + 1 ; write RTC counter as hex, all four bytes
+  jsr lcd_print_hex
+  lda RTC_CLOCK ; write RTC counter as hex, all four bytes
+  jsr lcd_print_hex     
   ; draw bottom line by drawing dinosaur to its specific location
-  lda DINOSAUR_X_LOCATION ; set the lcd cursor to the location of the dinosaur
-  jsr lcd_instruction
-  lda dinorightchar ; write a dinosaur
-  jsr lcd_send_byte
+  lda MAIN_LOOPCOUNTER ; get the dinosaur position from the bottom nibble of the counter (0-15)
+  and #$0F
+  ora #LCD_DDRAM2LN58CR ; put the dinosaur on the second row with this mask
+  pha ; push dinosaur position to stack
+  cmp #cake_location; compare dinosaur address against the cake position address
+  beq @nocake ; do not display cake if dinosaur overlaps
   lda #cake_location; compare DINOSAUR_X_LOCATION against the cake position
-  cmp DINOSAUR_X_LOCATION
-  beq @nocake
   jsr lcd_instruction
   lda cake_animation,x
   jsr lcd_send_byte ; write cake
-@nocake:
+@nocake: 
+  pla ; pull dinosaur position from stack
+  jsr lcd_instruction
+  lda dinorightchar ; write a dinosaur
+  jsr lcd_send_byte
   plx
   rts
 
@@ -232,7 +272,7 @@ heart_animation:
   .byte FULLHEARTCHAR
   .byte FULLHEARTCHAR
 
-dinosaur_says: .asciiz "Rwaaaar!"
+tick_label: .asciiz "RTC : "
 
 .endproc ; end draw_lcd_frame
 
