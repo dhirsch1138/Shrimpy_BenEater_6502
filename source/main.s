@@ -53,10 +53,11 @@ reset:
 ;  * Custom characters are loaded
   sei
   cld ; not required for a cmos CPU but why not
+  clc
   ldx #$ff
   txs
-  jsr via_init ; setup the via
-  jsr setup_lcd ; setup the lcd
+  jsr via_init
+  jsr setup_lcd
   jsr setup_via_timers   
   cli
   jmp main_loop
@@ -90,7 +91,7 @@ interrupt:
 ;Side Effects
 ;  Handles and (hopefully) clears interrupts
   jsr service_via1
-interrupt_cleared:  
+interrupt_cleared:
   rti
 
 
@@ -214,23 +215,29 @@ main_loop:
 @nodinoclear:
   jsr lcd_instruction ; set the dinosaur location to index 0 of the 2nd line
 @dinoclear:
-  lda dinorightchar ; write a dinosaur
+  lda dino_animaton,x ; write a dinosaur
   jsr lcd_send_byte
   plx
   rts
 
 cake_location = LCD_DDRAM2LN58CR | $0F
 
+dino_animaton:
+  .byte DINORIGHTCHAR
+  .byte DINORIGHTCHARALT
+  .byte DINORIGHTCHAR
+  .byte DINORIGHTCHARALT
+
 cake_animation:
   .byte CAKECHAR
-  .byte CAKECHAR
-  .byte CAKEALT2CHAR
   .byte CAKEALT1CHAR
+  .byte CAKEALT2CHAR
+  .byte CAKEALT3CHAR
 
 heart_animation:
   .byte EMPTYHEARTCHAR
   .byte FULLHEARTCHAR
-  .byte FULLHEARTCHAR
+  .byte EMPTYHEARTCHAR  
   .byte FULLHEARTCHAR
 
 tick_label: .asciiz "RTC : "

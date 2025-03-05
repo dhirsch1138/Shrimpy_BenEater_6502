@@ -6,7 +6,7 @@
 	"image": "mcr.microsoft.com/devcontainers/base:debian",
 	"features": {	
 		"ghcr.io/dhirsch1138/cc65_feature/cc65:2.0.11": {},
-		"ghcr.io/dhirsch1138/minipro_feature/minipro:2": {}
+		"ghcr.io/dhirsch1138/minipro_feature/minipro:2.0.1": {}
 	},
 	"customizations": {
 		"vscode": {"extensions": [

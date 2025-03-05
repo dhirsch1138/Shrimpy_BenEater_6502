@@ -5,8 +5,10 @@
 
 ;import custom char def addresses
 .import dinorightchar
+.import dinorightcharalt
 .import fullheartchar
 .import emptyheartchar
 .import cakechar
 .import cakealt1char
 .import cakealt2char
+.import cakealt3char

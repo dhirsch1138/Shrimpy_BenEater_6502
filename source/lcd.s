@@ -40,6 +40,7 @@
 
 .include "via.inc"
 .include "util_macros.inc"
+.include "lcd_defines.inc"
 .include "lcd_statics.inc"
 .include "lcd_macros.inc"
 .include "util.inc"

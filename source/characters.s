@@ -3,11 +3,13 @@
 
 ;export custom char def addresses
 .export dinorightchar
+.export dinorightcharalt
 .export fullheartchar
 .export emptyheartchar
 .export cakechar
 .export cakealt1char
 .export cakealt2char
+.export cakealt3char
 
 .segment "CHAR_CODE"
 
@@ -26,7 +28,7 @@
 ;The lcd_load_custom_character_macro macro handles the translation of the DDROM address to the applicable CGRAM addresses that the character will be
 ;stored.
 customcharset:
-  .byte $06
+  .byte $08
 dinorightchar:
   .byte DINORIGHTCHAR ;DDRAM address 
   .byte %00001111  ;b0
@@ -37,6 +39,19 @@ dinorightchar:
   .byte %00011100  ;b5
   .byte %00001010  ;b6
   .byte %00000000  ;b7
+
+dinorightcharalt:
+  .byte DINORIGHTCHARALT ;DDRAM address 
+  .byte %00001111  ;b0
+  .byte %00001011  ;b1
+  .byte %00001110  ;b2
+  .byte %00001100  ;b3
+  .byte %00001110  ;b4
+  .byte %00011100  ;b5
+  .byte %00010100  ;b6
+  .byte %00000000  ;b7
+
+
 
 fullheartchar:
   .byte FULLHEARTCHAR  ;DDRAM address 
@@ -64,8 +79,8 @@ cakechar:
   .byte CAKECHAR ;DDRAM address 
   .byte %00000000  ;b0
   .byte %00000000  ;b1
-  .byte %00000000  ;b2
-  .byte %00001010  ;b3
+  .byte %00000100  ;b2
+  .byte %00000100  ;b3
   .byte %00011111  ;b4
   .byte %00010001  ;b5
   .byte %00011111  ;b6
@@ -73,10 +88,10 @@ cakechar:
 
 cakealt1char:
   .byte CAKEALT1CHAR ;DDRAM address 
-  .byte %00000010  ;b0
-  .byte %00000000  ;b1
-  .byte %00000000  ;b2
-  .byte %00001010  ;b3
+  .byte %00000000  ;b0
+  .byte %00001000  ;b1
+  .byte %00000100  ;b2
+  .byte %00000100  ;b3
   .byte %00011111  ;b4
   .byte %00010001  ;b5
   .byte %00011111  ;b6
@@ -84,11 +99,22 @@ cakealt1char:
 
 cakealt2char:
   .byte CAKEALT2CHAR ;DDRAM address 
-  .byte %00000000  ;b0
-  .byte %00000100  ;b1
-  .byte %00000000  ;b2
-  .byte %00001010  ;b3
+  .byte %00000010  ;b0
+  .byte %00000000  ;b1
+  .byte %00000100  ;b2
+  .byte %00000100  ;b3
   .byte %00011111  ;b4
   .byte %00010001  ;b5
   .byte %00011111  ;b6
   .byte %00000000  ;b7
+
+ cakealt3char:
+  .byte CAKEALT3CHAR ;DDRAM address 
+  .byte %00000000  ;b0
+  .byte %00000000  ;b1
+  .byte %00000000  ;b2
+  .byte %00000100  ;b3
+  .byte %00011111  ;b4
+  .byte %00010001  ;b5
+  .byte %00011111  ;b6
+  .byte %00000000  ;b7 
