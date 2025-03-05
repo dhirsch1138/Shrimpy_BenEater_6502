@@ -1,3 +1,5 @@
+;PURPOSE - Imports needed symbols defined in util.s
+
 .import delay_ms_1000
 .import delay_ms_500
 .import delay_ms_100

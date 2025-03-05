@@ -33,7 +33,7 @@ RTC_DELAY_TARGET:        .dword  $00 ; four bytes
   .include "util_macros.inc"
   .include "util.inc"  
   .include "characters.inc"
-
+  .include "characters_statics.inc"
 
 ;====================================================
 ;Defines
@@ -57,15 +57,8 @@ reset:
   txs
   jsr via_init ; setup the via
   jsr setup_lcd ; setup the lcd
-  lda #LCD_INST_CLRDISP ; clear the screen and reset pointers
-  jsr lcd_instruction
-  lcd_print_asciiz_macro start_up
-  jsr setup_via_timers
-  lda #'T'
-  jsr lcd_send_byte   
+  jsr setup_via_timers   
   cli
-  lda #'I'
-  jsr lcd_send_byte
   jmp main_loop
 
 setup_via_timers:
@@ -87,8 +80,6 @@ setup_via_timers:
   jsr via1_init_timer_1 ; setup timer 1 on via 1 as a continuous timer that w/ PB7 pulsing disabled.
   rts  
 
-start_up: .asciiz "OK? "
-
 interrupt:
 ;Description
 ;  Handles interrupts.
@@ -104,7 +95,7 @@ interrupt_cleared:
 
 
 service_via1:
-;DescriptionRTC_CLOCK
+;Description
 ;  Looks for and handles interrupts from via1
 ;Arguments
 ;  None
@@ -136,42 +127,22 @@ main_loop:
 ;Side Effects
 ;  Updates LCD
   lda #$00
-  sta RTC_DELAY_TARGET
-  sta RTC_DELAY_TARGET + 1
-  sta RTC_DELAY_TARGET + 2
-  sta RTC_DELAY_TARGET + 3
-  sta MAIN_LOOPCOUNTER ; lda #$00 ; sta MAIN_LOOPCOUNTER
-  lda #LCD_INST_CLRDISP ; clear the screen and reset pointers
-  jsr lcd_instruction
+  sta MAIN_LOOPCOUNTER  
+  ;sta RTC_DELAY_TARGET ; we don't need to init RTC_DELAY_TARGET because it will get overwritten before use. leaving comment as reminder
 @loop:
   jsr draw_lcd_frame ; update the lcd
-  sei ; quiet interrupt long enough to grab the clock and copy it into RTC_DELAY_TARGET
+  sei ; quiet interrupt while we copy clock
   copy_dwords_at_addrs_macro RTC_CLOCK, RTC_DELAY_TARGET ; copy clock into our delay target
   cli
-  adc_dword_at_addr_macro RTC_DELAY_TARGET, #$64 ; increment delay target, mind it is a 32 bit number
+  adc_dword_at_addr_macro RTC_DELAY_TARGET, #$64 ; increment delay target 100 ticks (@10 ms a tick= 1 second), mind it is a 32 bit number
 @delay:
-  wai
+  wai ; sleep until we get an interrupt
   sei ; quiet interrupt while we compare clock
-  lda RTC_CLOCK + 3 ; starting with the highest byte of the 32 bit RTC_CLOCK, see if we have equaled or surpased or delay target
-  cmp RTC_DELAY_TARGET + 3
-  bmi @continue_delay
-  lda RTC_CLOCK + 2
-  cmp RTC_DELAY_TARGET + 2
-  bmi @continue_delay
-  lda RTC_CLOCK + 1
-  cmp RTC_DELAY_TARGET + 1
-  bmi @continue_delay  
-  lda RTC_CLOCK
-  cmp RTC_DELAY_TARGET
-  bmi @continue_delay
-  bra @end_delay
-@continue_delay:
+  compare_dwords_at_addrs_macro RTC_CLOCK, RTC_DELAY_TARGET ; the carry flag will reflect if RTC_CLOCK >= RTC_DELAY_TARGET
   cli
-  bra @delay
+  bcs @end_delay ; IF the RTC_CLOCK >= RTC_DELAY_TARGET THEN we have hit (or surpassed) the delay target
+  bra @delay ; ELSE continue waiting
 @end_delay:
-  cli    
-  lda #LCD_INST_CLRDISP; Clear display
-  jsr lcd_instruction
   inc MAIN_LOOPCOUNTER ; increment the loop counter. 
   jmp @loop ; loop forever
 
@@ -192,7 +163,7 @@ main_loop:
 ;
   ; Expected LCD
   ;******************
-  ;* B CCC AAAAAAAA *
+  ;*B CCCCCCAAAAAAAA*
   ;* D             E*
   ;******************
   ; AA - RTC_CLOCK counter as dword (32 bit) hex
@@ -200,7 +171,9 @@ main_loop:
   ; C - asciiz text
   ; D - custom character (dino!) that advances across the row, resetting when it exits screen
   ; E - custom character (cake!) that gets overwritten by dinosaur                  
-  phx         
+  phx
+  lda #LCD_INST_RTNHOME; return pointer home
+  jsr lcd_instruction         
   lda MAIN_LOOPCOUNTER ; use the MAIN_LOOPCOUNTER to determine the animation counter
   and #$03
   tax
@@ -221,16 +194,26 @@ main_loop:
   lda MAIN_LOOPCOUNTER ; get the dinosaur position from the bottom nibble of the counter (0-15)
   and #$0F
   ora #LCD_DDRAM2LN58CR ; put the dinosaur on the second row with this mask
-  pha ; push dinosaur position to stack
   cmp #cake_location; compare dinosaur address against the cake position address
   beq @nocake ; do not display cake if dinosaur overlaps
   lda #cake_location; compare DINOSAUR_X_LOCATION against the cake position
   jsr lcd_instruction
   lda cake_animation,x
   jsr lcd_send_byte ; write cake
-@nocake: 
-  pla ; pull dinosaur position from stack
+@nocake:
+  lda MAIN_LOOPCOUNTER ; get the dinosaur position from the bottom nibble of the counter (0-15)
+  and #$0F
+  ora #LCD_DDRAM2LN58CR ; put the dinosaur on the second row with this mask
+  cmp #LCD_DDRAM2LN58CR ; if the dinosaur is at 0, the cake will overwrite its previous location of 15
+  beq @nodinoclear
+  dec ; decrement one location to the previous dino location and write a space
   jsr lcd_instruction
+  lda #' '
+  jsr lcd_send_byte ; pointer will increment to dinosaur location
+  jmp @dinoclear
+@nodinoclear:
+  jsr lcd_instruction ; set the dinosaur location to index 0 of the 2nd line
+@dinoclear:
   lda dinorightchar ; write a dinosaur
   jsr lcd_send_byte
   plx
@@ -254,7 +237,7 @@ tick_label: .asciiz "RTC : "
 
 .endproc ; end draw_lcd_frame
 
-.proc setup_lcd ; label &import
+.proc setup_lcd ; label & import
 ;Side Effects
 ;  * LCD is initialized
 ;  * LCD parameters are set

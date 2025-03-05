@@ -30,14 +30,6 @@
 
 ;====================================================
 ;Defines
-;Adjust these to fit implementation with your VIA(s)
-
-LCD_VIA_DDR = VIA1_DDRB
-LCD_VIA_PORT = VIA1_PORTB
-
-;the lcd is using ports D0 - D6
-LCD_VIA_OUTPUTMASK = %01111111
-LCD_VIA_INPUTMASK = %11110000
 
 ;====================================================
 
@@ -53,7 +45,8 @@ LCD_VIA_INPUTMASK = %11110000
 .include "util.inc"
 .include "defines.inc"
 
-.proc lcd_init ; label + scope (This isn't required, I am just experimenting w/ ca65 functionality)
+
+.proc lcd_init
 ;Description
 ;  Intializes the lcd & sets 4 bit mode
 ;Arguments
@@ -64,14 +57,12 @@ LCD_VIA_INPUTMASK = %11110000
 ;  LCD is set to accept 4-bit mode
 ;  A is squished
 ;Notes
-;  Uses the power of build time logic!
-  .if     .defined(LCD_DO_INSTRUCTION_INIT)
-    jsr lcd_init_by_instruction
-  .else
-    jsr lcd_init_by_internal_reset
-  .endif
-  rts
+;  Uses the power of build time logic! will return back to calling code through the init routine's rts
+;lcd init will depend on the defined instruction init in defines.inc (default is internal reset). That way we 
+;only include the code & data we're using in the ROM
 
+.if     .defined(LCD_DO_INSTRUCTION_INIT)
+;IF LCD_DO_INSTRUCTION_INIT is defined THEN do init by instruction
 lcd_init_by_instruction:
 ;Description
 ;  Intializes the lcd & sets 4 bit mode using the initialization by instruction sequence
@@ -100,23 +91,6 @@ lcd_init_by_instruction:
   ; of the LCD based on the datasheet's instructions.
   lcd_foreach_instruction_macro reset_instructions, jsr lcd_instruct_nobusycheck, jsr delay_ms_10 ; send init functions w/o checking busy flag
   rts
-
-lcd_init_by_internal_reset:
-;Description
-;  Intializes the lcd & sets 4 bit mode
-;Arguments
-;  None
-;Preconditions
-;  None
-;Side Effects
-;  LCD is set to accept 4-bit mode
-;  A is squished
-  lda #(LCD_INST_FUNCSET >> 4)
-  jsr lcd_send_nibble
-  lcd_foreach_instruction_macro reset_internal_instructions, jsr lcd_instruction ; send init functions normally
-  rts
-
-
 ;These instruction sequences are taken from the lcd controller datasheet
 ;these are tied to the scope of lcd_init
 ;I took this idea from Dawid Buchwald @ https://github.com/dbuchwald/6502/blob/master/Software/common/source/lcd4bit.s
@@ -135,14 +109,33 @@ reset_instructions:
   .byte LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR ; #%00000110 ; Increment and shift cursor; don't shift display
   .byte $00
 
+.else
+;ELSE do init by internal reset
+lcd_init_by_internal_reset:
+;Description
+;  Intializes the lcd & sets 4 bit mode
+;Arguments
+;  None
+;Preconditions
+;  None
+;Side Effects
+;  LCD is set to accept 4-bit mode
+;  A is squished
+  lda #(LCD_INST_FUNCSET >> 4)
+  jsr lcd_send_nibble
+  lcd_foreach_instruction_macro reset_internal_instructions, jsr lcd_instruction ; send init functions normally
+  rts
+
 reset_internal_instructions:
   .byte LCD_INST_FUNCSET | LCD_FUNCSET_LINE ; #%00101000 ; Set 4-bit mode; 2-line display; 5x8 font
   .byte LCD_INST_DISPLAY ; #%00001000 ; Display off; cursor off; blink off
   .byte LCD_INST_ENTRYMO | LCD_ENTRYMO_INCR ; #%00000110 ; Increment and shift cursor; don't shift display
   .byte LCD_INST_CLRDISP ; #%00000001 ; Clear display
   .byte $00  
+.endif
 
-.endproc ;end of lcd_init procedure scope
+.endproc  ; end  lcd_init
+
 
 lcd_instruction:
 ;Description

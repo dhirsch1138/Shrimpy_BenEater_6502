@@ -124,7 +124,7 @@
 ;Side Effects
 ;  dword @ addr is incremented
 ;Note
-;  I am still working on how 36 bit values are handled in an 8 bit context, so there might be better ways to do this
+;  I am still working on how 32 bit values are handled in an 8 bit context, so there might be better ways to do this
 .local @no_carry
   inc addr
   bne @no_carry
@@ -154,7 +154,7 @@
 ;  A is squished
 ;  Carry status flag 'should' accurately reflect if there was any carry from the low bit.
 ;Note
-;  I am still working on how 36 bit values are handled in an 8 bit context, so there might be better ways to do this
+;  I am still working on how 3 bit values are handled in an 8 bit context, so there might be better ways to do this
 .local @no_carry
   clc
   lda addr
@@ -185,7 +185,7 @@
 ;  copies dword from from_addr to to_addr
 ;  A is squished
 ;Note
-;  I am still working on how 36 bit values are handled in an 8 bit context, so there might be better ways to do this
+;  I am still working on how 32 bit values are handled in an 8 bit context, so there might be better ways to do this
   lda from_addr
   sta to_addr
   lda from_addr + 1
@@ -194,5 +194,46 @@
   sta to_addr + 2
   lda from_addr + 3
   sta to_addr + 3   
+.endmacro
+.endif
+
+.if    .definedmacro(compare_dwords_at_addrs_macro)
+.else
+.macro compare_dwords_at_addrs_macro dword_B, dword_A 
+;Description
+;  compares two dwords to see if dword_B - dword_A >= 0
+;Arguments
+;  dword_A - address of 32 bit value (double word)
+;  dword_B - address of 32 bit value (double word)
+;Preconditions
+;  dword_A & dword_B must be initialized
+;Side Effects
+;  A is squished
+;Returns
+;  carry flag is set if dword_B - dword_A >= 0
+;  else carry flag is clear
+;Note
+;  I am still working on how 32 bit values are handled in an 8 bit context, so there might be better ways to do this
+.local @true
+.local @false
+.local @end
+  lda dword_B + 3 ; starting with the highest byte of the 32 bit dword_A
+  cmp dword_A + 3
+  bmi @false
+  lda dword_B + 2
+  cmp dword_A + 2
+  bmi @false
+  lda dword_B + 1
+  cmp dword_A + 1
+  bmi @false  
+  lda dword_B
+  cmp dword_A
+  bmi @false
+@true:
+  sec
+  jmp @end
+@false:
+  clc
+@end:
 .endmacro
 .endif

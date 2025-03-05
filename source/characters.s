@@ -10,6 +10,8 @@
 .export cakealt2char
 
 .segment "CHAR_CODE"
+
+.include "characters_statics.inc"
 ;custom character definitions:
 ;
 ;The datasheet says we get eight usuable custom character address that are in CGRAM (addressible in DDROM as $00 - $08)
@@ -26,7 +28,7 @@
 customcharset:
   .byte $06
 dinorightchar:
-  .byte $00 ;DDRAM address 
+  .byte DINORIGHTCHAR ;DDRAM address 
   .byte %00001111  ;b0
   .byte %00001010  ;b1
   .byte %00001111  ;b2
@@ -37,7 +39,7 @@ dinorightchar:
   .byte %00000000  ;b7
 
 fullheartchar:
-  .byte $01  ;DDRAM address 
+  .byte FULLHEARTCHAR  ;DDRAM address 
   .byte %00000000  ;b0
   .byte %00001010  ;b1
   .byte %00011111  ;b2
@@ -48,7 +50,7 @@ fullheartchar:
   .byte %00000000  ;b7
 
 emptyheartchar:
-  .byte $02  ;DDRAM address 
+  .byte EMPTYHEARTCHAR  ;DDRAM address 
   .byte %00000000  ;b0
   .byte %00001010  ;b1
   .byte %00010101  ;b2
@@ -59,7 +61,7 @@ emptyheartchar:
   .byte %00000000  ;b7  
 
 cakechar: 
-  .byte $03  ;DDRAM address 
+  .byte CAKECHAR ;DDRAM address 
   .byte %00000000  ;b0
   .byte %00000000  ;b1
   .byte %00000000  ;b2
@@ -70,7 +72,7 @@ cakechar:
   .byte %00000000  ;b7
 
 cakealt1char:
-  .byte $04  ;DDRAM address 
+  .byte CAKEALT1CHAR ;DDRAM address 
   .byte %00000010  ;b0
   .byte %00000000  ;b1
   .byte %00000000  ;b2
@@ -81,7 +83,7 @@ cakealt1char:
   .byte %00000000  ;b7
 
 cakealt2char:
-  .byte $05  ;DDRAM address 
+  .byte CAKEALT2CHAR ;DDRAM address 
   .byte %00000000  ;b0
   .byte %00000100  ;b1
   .byte %00000000  ;b2
