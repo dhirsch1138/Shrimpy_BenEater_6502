@@ -13,7 +13,8 @@
 
 .segment "CHAR_CODE"
 
-.include "characters_statics.inc"
+.include "characters.inc"
+
 ;custom character definitions:
 ;
 ;The datasheet says we get eight usuable custom character address that are in CGRAM (addressible in DDROM as $00 - $08)

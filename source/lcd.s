@@ -38,14 +38,9 @@
 
 ;Includes
 
-.include "via.inc"
-.include "util_macros.inc"
-.include "lcd_defines.inc"
-.include "lcd_statics.inc"
-.include "lcd_macros.inc"
+.include "lcd.inc"
 .include "util.inc"
-.include "defines.inc"
-
+.include "via.inc"
 
 .proc lcd_init
 ;Description

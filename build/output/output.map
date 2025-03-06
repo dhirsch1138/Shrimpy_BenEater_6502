@@ -81,12 +81,14 @@ ACIA_STATUS (acia.o):
     wozmon.o                  source/acia.inc(2)
 VIA1_DDRB (via.o):
     spi.o                     source/via.inc(4)
+    main.o                    source/via.inc(4)
     lcd.o                     source/via.inc(4)
 VIA1_IFR (via.o):
     main.o                    source/via.inc(17)
 VIA1_PORTA (via.o):
     spi.o                     source/via.inc(7)
 VIA1_PORTB (via.o):
+    main.o                    source/via.inc(5)
     lcd.o                     source/via.inc(5)
 VIA1_T1CL (via.o):
     main.o                    source/via.inc(8)

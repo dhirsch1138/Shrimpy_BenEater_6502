@@ -20,15 +20,7 @@
 ;Code
 .segment "UTIL_CODE"
 
-.export delay_ms_1000
-.export delay_ms_500
-.export delay_ms_100
-.export delay_ms_50
-.export delay_ms_10
-.export util_joinnibbles
-
-.include "util_macros.inc"
-.include "defines.inc"
+.include "util.inc"
 
 ;default - if not otherwise defined default to 1 mhz timings
 ;delay for 10000 cycles, which is ~10ms @ 1 mhz

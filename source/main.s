@@ -25,15 +25,10 @@ RTC_DELAY_TARGET:        .dword  $00 ; four bytes
 
 ;Includes
 
-  .include "via.inc"
-  .include "lcd.inc"
-  .include "lcd_macros.inc"
-  .include "lcd_statics.inc"
-  .include "defines.inc"
-  .include "util_macros.inc"
-  .include "util.inc"  
   .include "characters.inc"
-  .include "characters_statics.inc"
+  .include "lcd.inc"
+  .include "util.inc"
+  .include "via.inc"
 
 ;====================================================
 ;Defines
