@@ -1,16 +1,3 @@
-;export custom char set addresses
-.export customcharset
-
-;export custom char def addresses
-.export dinorightchar
-.export dinorightcharalt
-.export fullheartchar
-.export emptyheartchar
-.export cakechar
-.export cakealt1char
-.export cakealt2char
-.export cakealt3char
-
 .segment "CHAR_CODE"
 
 .include "characters.inc"
@@ -51,8 +38,6 @@ dinorightcharalt:
   .byte %00011100  ;b5
   .byte %00010100  ;b6
   .byte %00000000  ;b7
-
-
 
 fullheartchar:
   .byte FULLHEARTCHAR  ;DDRAM address 

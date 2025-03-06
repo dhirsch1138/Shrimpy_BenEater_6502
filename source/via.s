@@ -3,8 +3,7 @@
 ;This file was based on https://github.com/dbuchwald/cc65-tools/blob/main/tutorial/03_blink/blink.s (aside from the comments)
 
 ;====================================================
-;Exports
-  .import __VIA1_START__
+.import __VIA1_START__
 
 VIA_REGISTER_PORTB = $00
 VIA_REGISTER_PORTA = $01
@@ -56,17 +55,6 @@ VIA1_PANH  = __VIA1_START__ + VIA_REGISTER_PANH
 ;Code
 .segment "VIA_CODE"
 
-;default - if not otherwise defined default to 1 mhz timings
-;1000000 / 100 = 10000 = $2710
-.if     .defined(VIA_TIMER_10MS_LOW)
-.else
-VIA_TIMER_10MS_LOW = $10
-.endif
-.if     .defined(VIA_TIMER_10MS_HIGH)
-.else
-VIA_TIMER_10MS_HIGH = $27
-.endif
-
 via_init:
 ;Description
 ;  sets all the known via to input states
@@ -84,8 +72,6 @@ via_init:
   sta VIA1_DDRB
   lda #%00000000 ; set the ACR to a known starting state
   sta VIA1_ACR
-  nop ; TODO: research why this is needed further, via freaks out if I don't do this
-  nop
   lda #%01111111 ; disable all interrupts
   sta VIA1_IER
   rts
@@ -123,8 +109,6 @@ via1_init_timer_1:
   pla ; pull the ACR onto the stack
   ror ; rotate the carry bit onto the ACR - %AB543210
   sta VIA1_ACR ; store the new ACR
-  nop ; TODO: research why this is needed further, via freaks out if I don't do this
-  nop
   lda #%11000000 ; set interrupt - timer 1
   sta VIA1_IER
   lda #VIA_TIMER_10MS_LOW

@@ -5,11 +5,6 @@
 ;
 
 ;====================================================
-;Exports
-.export interrupt
-.export reset
-
-;====================================================
 ;Reserve RAM addresses
 .segment "MAIN_RAM"
 MAIN_LOOPCOUNTER:        .byte  $00
@@ -27,6 +22,7 @@ RTC_DELAY_TARGET:        .dword  $00 ; four bytes
 
   .include "characters.inc"
   .include "lcd.inc"
+  .include "main.inc"
   .include "util.inc"
   .include "via.inc"
 
@@ -85,7 +81,8 @@ interrupt:
 ;  None
 ;Side Effects
 ;  Handles and (hopefully) clears interrupts
-  jsr service_via1
+  jmp service_via1
+via1_clear:
 interrupt_cleared:
   rti
 
@@ -101,15 +98,14 @@ service_via1:
 ;  Handles:
 ;    * T1 interrupts - setting TIMERFLAG if is not already set
   bit VIA1_IFR ; if the interrupt didn't come from via then fallback
-  bpl @via_clear
+  bpl via1_clear
   bvc @not_t1 ; if the interrupt didn't come from timer one then continue checking
   ;interrupt is from timer1
   bit VIA1_T1CL ; clear t1 interrupt by reading from lower order counter
   inc_dword_at_addr_macro RTC_CLOCK
-  bra @via_clear ; jmp
+  jmp interrupt_cleared
 @not_t1: ; other interrupts would be handled here
-@via_clear: ; once all interrupts for via1 have been accounted for
-  rts 
+  jmp via1_clear
 
 main_loop:
 ;Description

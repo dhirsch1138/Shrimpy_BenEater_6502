@@ -22,18 +22,6 @@
 
 .include "util.inc"
 
-;default - if not otherwise defined default to 1 mhz timings
-;delay for 10000 cycles, which is ~10ms @ 1 mhz
-.if     .defined(DELAY10MS_A)
-.else
-DELAY10MS_A = $04
-.endif
-.if     .defined(DELAY10MS_B)
-.else
-DELAY10MS_B = $54
-.endif
-
-
 delay_ms_10:
 ;Description
 ;  Delays by 10 ms
