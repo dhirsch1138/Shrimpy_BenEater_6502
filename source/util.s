@@ -1,26 +1,42 @@
 ;PURPOSE - provide general utilities
 
-;====================================================
-;Exports
-;nothing here
-
-;====================================================
-;Reserve RAM addresses
-
-.segment "UTIL_RAM"
-;====================================================
-;Macros
-
-;====================================================
-
-;Defines
-
-;====================================================
-
 ;Code
 .segment "UTIL_CODE"
 
 .include "util.inc"
+.include "define_oscillator.inc"
+
+
+.if .not .defined(DEFINE_OSCILLATOR)
+.error "DEFINE_OSCILLATOR must be defined in define_oscillator.inc"
+.endif
+
+;Define the VIA 10MS timer high and low constants based on the oscillator
+
+.if DEFINE_OSCILLATOR = 1000
+;1 mhz
+;delay for 10000 cycles, which is ~10ms @ 1 mhz
+DELAY10MS_A = $04
+DELAY10MS_B = $54
+.elseif  DEFINE_OSCILLATOR = 1843
+;1.843 mhz
+;delay for 18430 cycles, which is ~10ms @ 1.843mhz
+DELAY10MS_A = $07
+DELAY10MS_B = $FD
+.elseif  DEFINE_OSCILLATOR = 2000
+;2 mhz
+;delay for 20000 cycles, which is ~10ms @ 1 mhz
+DELAY10MS_A = $08
+DELAY10MS_B = $AB
+.elseif  DEFINE_OSCILLATOR = 4000
+;4 mhz
+;delay for 40000 cycles, which is ~10ms @ 1 mhz
+DELAY10MS_A = $11
+DELAY10MS_B = $59
+.else
+.error "DEFINE_OSCILLATOR defined is not recognized, check define_oscillator.inc"
+.endif
+
 
 delay_ms_10:
 ;Description

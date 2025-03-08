@@ -1,5 +1,6 @@
 ;PURPOSE - Imports needed symbols defined in spi.s
+; No adjustable defines in this file.
 
-.import SPI_INIT
-.import SPI_BYTEIN
-.import SPI_BYTEOUT
+.global SPI_INIT
+.global SPI_BYTEIN
+.global SPI_BYTEOUT

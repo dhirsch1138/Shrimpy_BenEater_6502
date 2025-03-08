@@ -5,13 +5,7 @@
 ;Awesome algorithm by Jeff Laughton (http://forum.6502.org/viewtopic.php?p=45555#p45555), with tweaks
 ;by Paul Dorish (https://www.youtube.com/watch?v=siKiNMOqcDA https://github.com/dourish/mitemon/blob/master/apps/spiv.a65)
 
-
-.export SPI_INIT
-.export SPI_BYTEIN
-.export SPI_BYTEOUT
-
-.segment "SPI_RAM"
-
+;this has been adapted and modified from the originals by github.com/dhirsch1138
 
 .segment "SPI_CODE"
 

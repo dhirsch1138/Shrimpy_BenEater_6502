@@ -45,15 +45,48 @@ VIA1_PANH  = __VIA1_START__ + VIA_REGISTER_PANH
 
 ;====================================================
 ;Includes
-  .include "via.inc"
 
-;====================================================
-;Macros
-;nothing here
+.include "via.inc"
+.include "define_oscillator.inc"
+
+;VIA defines
+;==========================
+
+.if .not .defined(DEFINE_OSCILLATOR)
+.error "DEFINE_OSCILLATOR must be defined in define_oscillator.inc"
+.endif
+
+;Define the VIA 10MS timer high and low constants based on the oscillator
+
+.if DEFINE_OSCILLATOR = 1000
+;1 mhz
+;1000000 / 100 = 10000 = $2710
+VIA_TIMER_10MS_LOW = $10
+VIA_TIMER_10MS_HIGH = $27
+.elseif  DEFINE_OSCILLATOR = 1843
+;1.843 mhz
+;1843000 / 100 = 18430 = $47FE
+VIA_TIMER_10MS_LOW = $FE
+VIA_TIMER_10MS_HIGH = $47
+.elseif  DEFINE_OSCILLATOR = 2000
+;2 mhz
+;2000000 / 100 = 20000 = $4E20
+VIA_TIMER_10MS_LOW = $20
+VIA_TIMER_10MS_HIGH = $4E
+.elseif  DEFINE_OSCILLATOR = 4000
+;4 mhz
+;4000000 / 100 = 40000 = $9C40
+VIA_TIMER_10MS_LOW = $40
+VIA_TIMER_10MS_HIGH = $9C
+.else
+.error "DEFINE_OSCILLATOR defined is not recognized, check define_oscillator.inc"
+.endif
+
 
 ;====================================================
 ;Code
 .segment "VIA_CODE"
+
 
 via_init:
 ;Description

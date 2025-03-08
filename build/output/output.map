@@ -99,19 +99,19 @@ __VIA1_START__ ([linker generated]):
 customcharset (characters.o):
     main.o                    source/characters.inc(4)
 interrupt (main.o):
-    reset_interrupt.o         source/main.inc(3)
-lcd_init (lcd.o):
-    main.o                    source/lcd.inc(5)
-lcd_instruction (lcd.o):
-    main.o                    source/lcd.inc(4)
-lcd_print_hex (lcd.o):
-    main.o                    source/lcd.inc(7)
-lcd_send_byte (lcd.o):
-    main.o                    source/lcd.inc(6)
-reset (main.o):
     reset_interrupt.o         source/main.inc(4)
+lcd_init (lcd.o):
+    main.o                    source/lcd.inc(9)
+lcd_instruction (lcd.o):
+    main.o                    source/lcd.inc(8)
+lcd_print_hex (lcd.o):
+    main.o                    source/lcd.inc(11)
+lcd_send_byte (lcd.o):
+    main.o                    source/lcd.inc(10)
+reset (main.o):
+    reset_interrupt.o         source/main.inc(5)
 util_joinnibbles (util.o):
-    lcd.o                     source/util.inc(8)
+    lcd.o                     source/util.inc(9)
 via1_init_timer_1 (via.o):
     main.o                    source/via.inc(22)
 via_init (via.o):

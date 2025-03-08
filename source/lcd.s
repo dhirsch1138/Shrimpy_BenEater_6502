@@ -7,32 +7,6 @@
 ;
 ;
 
-;====================================================
-;Exports
-
-;subroutines
-.export lcd_instruction
-.export lcd_init
-.export lcd_send_byte
-.export lcd_print_hex
-
-;variables
-
-;====================================================
-;Reserve RAM addresses
-
-.segment "LCD_RAM"
-
-.segment "LCD_PAGEZERO": zeropage
-
-;====================================================
-;Macros
-
-;====================================================
-;Defines
-
-;====================================================
-
 ;Code
 .segment "LCD_CODE"
 

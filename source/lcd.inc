@@ -1,5 +1,9 @@
 ;PURPOSE - Imports needed symbols defined in lcd.s
-;
+; There are defined in this file:
+;  * LCD_VIA_DDR
+;  * LCD_VIA_PORT
+;  * LCD_VIA_OUTPUTMASK
+;  * LCD_VIA_INPUTMASK
 
 .global lcd_instruction
 .global lcd_init
