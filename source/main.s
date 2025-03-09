@@ -77,8 +77,7 @@ interrupt:
 ;  None
 ;Side Effects
 ;  Handles and (hopefully) clears interrupts
-  jmp service_via1
-via1_clear:
+  jsr service_via1
 interrupt_cleared:
   rti
 
@@ -94,14 +93,15 @@ service_via1:
 ;  Handles:
 ;    * T1 interrupts - setting TIMERFLAG if is not already set
   bit VIA1_IFR ; if the interrupt didn't come from via then fallback
-  bpl via1_clear
+  bpl @via1_clear
   bvc @not_t1 ; if the interrupt didn't come from timer one then continue checking
   ;interrupt is from timer1
   bit VIA1_T1CL ; clear t1 interrupt by reading from lower order counter
   inc_dword_at_addr_macro RTC_CLOCK
-  jmp interrupt_cleared
+  jmp @via1_clear
 @not_t1: ; other interrupts would be handled here
-  jmp via1_clear
+@via1_clear:
+  rts
 
 main_loop:
 ;Description
