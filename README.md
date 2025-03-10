@@ -1,12 +1,10 @@
 # Shrimpy
 This is my attempt at slowly building up a 6502 based microcomputer loosely structured around Ben Eater's lessons. I will wander off and chase squirrels, wrestle with interesting problems, and generally follow the "rule of cool" when deciding what to do next.
 
-02/25/2025 Note: schematic does not include IC AND being used for combining interrupts per [6502 primer](https://wilsonminesco.com/6502primer/IRQconx.html)
 ![schematic](schematics/shrimpy.png)
 
-
 # Current Status
-3/1/2025 - Figured out interrupts and am now using a VIA timer to drive the delay on the main loop. Now I can WAI most of the time, theoretically saving a lot of power and effort.  
+3/9/2025 - Schematic updated, got most of the wiring down for the UART, just figuring out which clock I want to use
 
 # Goals
 See [Shopping List](shopping_list.md) for parts that I would need to get for these.
@@ -24,17 +22,17 @@ See [Shopping List](shopping_list.md) for parts that I would need to get for the
 
 # Current Features
 ## Hardware
-* 4-bit implementation of the LCD
 * Wire wrap connections for pretty much everything except for power for durablity and ease of maintenance. Seriously, wire wrapping goes SO GOOD with breadboard prototyping.
-* Enhanced durability by removing fragile potentiometers and replacing them with resistors
-  * I just dialed in the desired resistence on a potentiometer, measured it using my trusty multimeter, and swapped it out with a resistor. Like the wire wrapped connections, durability is the name of the game.
-  * LCD potentiometer was replaced by 3.9K resistor
 * 28 pin ZIF socket for the EEPROM. [https://www.pcbway.com/project/shareproject/Breadboard_to_28p_wide_ZIF_adapter_fc6528ee.html]
-* Replaced the 74LS00 address decoder PLD [(ATF22V10C)](https://www.mouser.com/ProductDetail/Microchip-Technology/ATF22V10CQZ-20PU?qs=2mdvTlUeTfCbTTksYbflfg%3D%3D&countryCode=US&currencyCode=USD)
-* Replaced BE's capacitor/resistor reset circuit with a DS1813 (thank you Garth Wilson @ http://wilsonminesco.com/6502primer/RSTreqs.html)
-* Using logic AND IC to combine interrupts
+### Datasheets
+* [w65c02s - MPU](doc/w65c02s.pdf)
+* [w65c22 - VIA](doc/w65c22.pdf)
+* [HD44780 - LCD](doc/HD44780.pdf) - implemented in 4 bit mode
+* [ATF22V10CQZ - Address decoder PLD](doc/doc0778-3445105.pdf) - using logic from Daryl Rictor @ https://sbc.rictor.org/decoder.html
+* [DS1813 - Reset Supervisor](doc/DS1813-3468265.pdf) - Thank you Garth Wilson @ http://wilsonminesco.com/6502primer/RSTreqs.html
+* [SN74HC11 - Interrupt combiner](doc/sn74hc11.pdf)
 ## Software
-Project was initially based on Ben Eater's keyboard.s [https://eater.net/downloads/keyboard.s]
+Project was initially based on Ben Eater's [keyboard.s](https://eater.net/downloads/keyboard.s)
 * Modularized development (no monolithic code, I tried to break the project into distinct files that could be re-used in future efforts)
 * Leaning into CC65's provided functionality including:
   * Using the linker configuration file to declare memory blocks, and map segments to the respective memory blocks
