@@ -3,17 +3,20 @@ Modules list:
 acia.o:
 characters.o:
     CHAR_CODE         Offs=000000  Size=000049  Align=00001  Fill=0000
+i2c.o:
+    I2C_RAM           Offs=000000  Size=000001  Align=00001  Fill=0000
+    I2C_CODE          Offs=000000  Size=0000B2  Align=00001  Fill=0000
 lcd.o:
     LCD_CODE          Offs=000000  Size=0000C5  Align=00001  Fill=0000
 main.o:
-    CODE              Offs=000000  Size=000181  Align=00001  Fill=0000
+    CODE              Offs=000000  Size=000187  Align=00001  Fill=0000
     MAIN_RAM          Offs=000000  Size=000009  Align=00001  Fill=0000
 reset_interrupt.o:
     VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
 spi.o:
     SPI_CODE          Offs=000000  Size=00003E  Align=00001  Fill=0000
 util.o:
-    UTIL_CODE         Offs=000000  Size=00003D  Align=00001  Fill=0000
+    UTIL_CODE         Offs=000000  Size=000042  Align=00001  Fill=0000
 via.o:
     VIA_CODE          Offs=000000  Size=000039  Align=00001  Fill=0000
 wozmon.o:
@@ -28,14 +31,16 @@ Name                   Start     End    Size  Align
 ----------------------------------------------------
 WOZ_PAGEZERO          000000  000007  000008  00001
 MAIN_RAM              000300  000308  000009  00001
-WOZ_RAM               000309  000387  00007F  00001
-CODE                  008000  008180  000181  00001
-VIA_CODE              008181  0081B9  000039  00001
-LCD_CODE              0081BA  00827E  0000C5  00001
-SPI_CODE              00827F  0082BC  00003E  00001
-WOZ_CODE              0082BD  0083B6  0000FA  00001
-UTIL_CODE             0083B7  0083F3  00003D  00001
-CHAR_CODE             0083F4  00843C  000049  00001
+I2C_RAM               000309  000309  000001  00001
+WOZ_RAM               00030A  000388  00007F  00001
+CODE                  008000  008186  000187  00001
+VIA_CODE              008187  0081BF  000039  00001
+LCD_CODE              0081C0  008284  0000C5  00001
+SPI_CODE              008285  0082C2  00003E  00001
+WOZ_CODE              0082C3  0083BC  0000FA  00001
+UTIL_CODE             0083BD  0083FE  000042  00001
+CHAR_CODE             0083FF  008447  000049  00001
+I2C_CODE              008448  0084F9  0000B2  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
@@ -43,30 +48,32 @@ Exports list by name:
 ---------------------
 ACIA_CMD                  000212 REA    ACIA_CTRL                 000213 REA    
 ACIA_DATA                 000210 REA    ACIA_STATUS               000211 REA    
-VIA1_DDRB                 000202 REA    VIA1_IFR                  00020D REA    
-VIA1_PORTA                000201 REA    VIA1_PORTB                000200 REA    
-VIA1_T1CL                 000204 REA    __ACIA1_START__           000210 RLA    
-__VIA1_START__            000200 RLA    customcharset             0083F4 RLA    
-interrupt                 008027 RLA    lcd_init                  0081BA RLA    
-lcd_instruction           0081D4 RLA    lcd_print_hex             0081FC RLA    
-lcd_send_byte             0081E6 RLA    reset                     008000 RLA    
-util_joinnibbles          0083E2 RLA    via1_init_timer_1         008194 RLA    
-via_init                  008181 RLA    
+VIA1_DDRA                 000203 REA    VIA1_DDRB                 000202 REA    
+VIA1_IFR                  00020D REA    VIA1_PORTA                000201 REA    
+VIA1_PORTB                000200 REA    VIA1_T1CL                 000204 REA    
+__ACIA1_START__           000210 RLA    __VIA1_START__            000200 RLA    
+customcharset             0083FF RLA    interrupt                 008027 RLA    
+lcd_init                  0081C0 RLA    lcd_instruction           0081DA RLA    
+lcd_print_hex             008202 RLA    lcd_send_byte             0081EC RLA    
+reset                     008000 RLA    util_joinnibbles          0083ED RLA    
+via1_init_timer_1         00819A RLA    via_init                  008187 RLA    
+
 
 
 Exports list by value:
 ----------------------
 VIA1_PORTB                000200 REA    __VIA1_START__            000200 RLA    
 VIA1_PORTA                000201 REA    VIA1_DDRB                 000202 REA    
-VIA1_T1CL                 000204 REA    VIA1_IFR                  00020D REA    
-ACIA_DATA                 000210 REA    __ACIA1_START__           000210 RLA    
-ACIA_STATUS               000211 REA    ACIA_CMD                  000212 REA    
-ACIA_CTRL                 000213 REA    reset                     008000 RLA    
-interrupt                 008027 RLA    via_init                  008181 RLA    
-via1_init_timer_1         008194 RLA    lcd_init                  0081BA RLA    
-lcd_instruction           0081D4 RLA    lcd_send_byte             0081E6 RLA    
-lcd_print_hex             0081FC RLA    util_joinnibbles          0083E2 RLA    
-customcharset             0083F4 RLA    
+VIA1_DDRA                 000203 REA    VIA1_T1CL                 000204 REA    
+VIA1_IFR                  00020D REA    ACIA_DATA                 000210 REA    
+__ACIA1_START__           000210 RLA    ACIA_STATUS               000211 REA    
+ACIA_CMD                  000212 REA    ACIA_CTRL                 000213 REA    
+reset                     008000 RLA    interrupt                 008027 RLA    
+via_init                  008187 RLA    via1_init_timer_1         00819A RLA    
+lcd_init                  0081C0 RLA    lcd_instruction           0081DA RLA    
+lcd_send_byte             0081EC RLA    lcd_print_hex             008202 RLA    
+util_joinnibbles          0083ED RLA    customcharset             0083FF RLA    
+
 
 
 Imports list:
@@ -79,16 +86,17 @@ ACIA_DATA (acia.o):
     wozmon.o                  source/acia.inc(1)
 ACIA_STATUS (acia.o):
     wozmon.o                  source/acia.inc(2)
+VIA1_DDRA (via.o):
+    i2c.o                     source/via.inc(6)
 VIA1_DDRB (via.o):
     spi.o                     source/via.inc(4)
-    main.o                    source/via.inc(4)
     lcd.o                     source/via.inc(4)
 VIA1_IFR (via.o):
     main.o                    source/via.inc(17)
 VIA1_PORTA (via.o):
     spi.o                     source/via.inc(7)
+    i2c.o                     source/via.inc(7)
 VIA1_PORTB (via.o):
-    main.o                    source/via.inc(5)
     lcd.o                     source/via.inc(5)
 VIA1_T1CL (via.o):
     main.o                    source/via.inc(8)

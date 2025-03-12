@@ -47,13 +47,13 @@ VIA1_PANH  = __VIA1_START__ + VIA_REGISTER_PANH
 ;Includes
 
 .include "via.inc"
-.include "define_oscillator.inc"
+.include "defines.inc"
 
 ;VIA defines
 ;==========================
 
 .if .not .defined(DEFINE_OSCILLATOR)
-.error "DEFINE_OSCILLATOR must be defined in define_oscillator.inc"
+.error "DEFINE_OSCILLATOR must be defined in defines.inc"
 .endif
 
 ;Define the VIA 10MS timer high and low constants based on the oscillator
@@ -79,7 +79,7 @@ VIA_TIMER_10MS_HIGH = $4E
 VIA_TIMER_10MS_LOW = $40
 VIA_TIMER_10MS_HIGH = $9C
 .else
-.error "DEFINE_OSCILLATOR defined is not recognized, check define_oscillator.inc"
+.error "DEFINE_OSCILLATOR defined is not recognized, check defines.inc"
 .endif
 
 

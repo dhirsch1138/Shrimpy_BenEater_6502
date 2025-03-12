@@ -4,11 +4,11 @@
 .segment "UTIL_CODE"
 
 .include "util.inc"
-.include "define_oscillator.inc"
+.include "defines.inc"
 
 
 .if .not .defined(DEFINE_OSCILLATOR)
-.error "DEFINE_OSCILLATOR must be defined in define_oscillator.inc"
+.error "DEFINE_OSCILLATOR must be defined in defines.inc"
 .endif
 
 ;Define the VIA 10MS timer high and low constants based on the oscillator
@@ -34,7 +34,7 @@ DELAY10MS_B = $AB
 DELAY10MS_A = $11
 DELAY10MS_B = $59
 .else
-.error "DEFINE_OSCILLATOR defined is not recognized, check define_oscillator.inc"
+.error "DEFINE_OSCILLATOR defined is not recognized, check defines.inc"
 .endif
 
 
@@ -49,7 +49,7 @@ delay_ms_10:
 ;  Delays by 10ms
   phx
   ldx #$01
-  bra delay_ms_deca
+  jmp delay_ms_deca
 
 delay_ms_50:
 ;Description
@@ -62,7 +62,7 @@ delay_ms_50:
 ;  Delays by 50ms
   phx
   ldx #$05
-  bra delay_ms_deca
+  jmp delay_ms_deca
 
 delay_ms_100:
 ;Description
@@ -75,7 +75,7 @@ delay_ms_100:
 ;  Delays by 50ms
   phx
   ldx #$0A
-  bra delay_ms_deca
+  jmp delay_ms_deca
 
 delay_ms_500:
 ;Description
@@ -88,7 +88,7 @@ delay_ms_500:
 ;  Delays by 50ms
   phx
   ldx #$32
-  bra delay_ms_deca
+  jmp delay_ms_deca
 
 delay_ms_1000:
 ;Description

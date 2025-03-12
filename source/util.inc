@@ -81,6 +81,7 @@
   dey
   sbc #0
   bcs @delay
+  clc
   ply
   pla
 .endmacro
@@ -121,6 +122,7 @@
   bne @skiphigh
   inc addr+1
 @skiphigh:
+  clc
 .endmacro
 .endif
 
@@ -139,6 +141,7 @@
 ;Note
 ;  I am still working on how 32 bit values are handled in an 8 bit context, so there might be better ways to do this
 .local @no_carry
+  pha
   inc addr
   bne @no_carry
   inc addr + 1
@@ -147,6 +150,8 @@
   bne @no_carry
   inc addr + 3
 @no_carry:
+  clc
+  pla
 .endmacro
 .endif
 
@@ -169,7 +174,7 @@
 ;Note
 ;  I am still working on how 3 bit values are handled in an 8 bit context, so there might be better ways to do this
 .local @no_carry
-  clc
+  pha
   lda addr
   adc value
   sta addr
@@ -180,6 +185,8 @@
   bne @no_carry
   inc addr + 3
 @no_carry:
+  clc
+  pla
 .endmacro
 .endif
 

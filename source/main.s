@@ -25,6 +25,7 @@ RTC_DELAY_TARGET:        .dword  $00 ; four bytes
 .include "main.inc"
 .include "util.inc"
 .include "via.inc"
+.include "i2c.inc"
 
 reset:
 ;Description
@@ -44,8 +45,9 @@ reset:
   ldx #$ff
   txs
   jsr via_init
+ ; jsr INIT_I2C
   jsr setup_lcd
-  jsr setup_via_timers   
+  jsr setup_via_timers  
   cli
   jmp main_loop
 
@@ -129,7 +131,7 @@ main_loop:
   compare_dwords_at_addrs_macro RTC_CLOCK, RTC_DELAY_TARGET ; the carry flag will reflect if RTC_CLOCK >= RTC_DELAY_TARGET
   cli
   bcs @end_delay ; IF the RTC_CLOCK >= RTC_DELAY_TARGET THEN we have hit (or surpassed) the delay target
-  bra @delay ; ELSE continue waiting
+  jmp @delay ; ELSE continue waiting
 @end_delay:
   inc MAIN_LOOPCOUNTER ; increment the loop counter. 
   jmp @loop ; loop forever

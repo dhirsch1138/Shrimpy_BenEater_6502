@@ -12,9 +12,62 @@
 
 ;Includes
 
-.include "lcd.inc"
 .include "util.inc"
 .include "via.inc"
+.include "defines.inc"
+.include "lcd.inc"
+.include "i2c.inc"
+
+;LCD defines from defines.inc
+;========================================================================================================
+.if LCD_USES_VIA_PORT = 'B'
+LCD_VIA_DDR = VIA1_DDRB
+LCD_VIA_PORT = VIA1_PORTB
+.elseif LCD_USES_VIA_PORT = 'A'
+LCD_VIA_DDR = VIA1_DDRA
+LCD_VIA_PORT = VIA1_PORTA
+.else
+.error "LCD_USES_VIA_PORT defined is not recognized, check defines.inc"
+.endif
+
+;*** DDR masks that will be applied to the LCD_VIA_DDR
+; Current implementation is using ports D0 - D6
+LCD_VIA_OUTPUTMASK = LCD_USES_VIA_OUTPUTMASK 
+LCD_VIA_INPUTMASK = LCD_USES_VIA_INPUTMASK
+
+
+.macro SendByteToI2C_macro
+  pha
+  jsr CLR_I2C
+  jsr I2C_START
+  lda #LCD_I2C_ADDR
+  asl
+  clc
+  jsr SEND_I2C_BYTE
+  pla
+  jsr SEND_I2C_BYTE
+  jsr I2C_STOP
+.endmacro
+
+.macro ReadByteFromI2C_macro
+  jsr CLR_I2C
+  jsr I2C_START
+  lda #LCD_I2C_ADDR
+  sec
+  rol
+  clc
+  jsr SEND_I2C_BYTE
+  jsr RCV_I2C_BYTE
+  lda I2C_TEMP
+  pha
+  jsr I2C_NAK
+  jsr I2C_STOP
+  pla
+.endmacro
+
+
+;LCD code
+;========================================================================================================
 
 .proc lcd_init
 ;Description
@@ -186,31 +239,6 @@ hexmap:
 
 .endproc ; end scope of lcd_print_hex
 
-lcd_send_nibble:
-;Description
-;  Sends the nibble to the LCD, toggling the E flag.
-;  The instructions are full byte, of course, but as this is a 4-bit connection
-;  only the lower nibble of the byte in the accumulator are actually sent.
-;Arguments
-;  A - LCD byte
-;Precondition
-;  LCD has powered up
-;Side Effects
-;  * LCD output mask is applied to the VIA DD
-;  * The nibble is sent to the LCD port via the VIA, strobing the E input 
-;None
-  pha
-  lda LCD_VIA_DDR ; Set LCD output mask
-  ora #(LCD_VIA_OUTPUTMASK)
-  sta LCD_VIA_DDR
-  pla
-  sta LCD_VIA_PORT
-  ora #(LCD_PIN_E) ; Set E bit to send instruction
-  sta LCD_VIA_PORT
-  eor #(LCD_PIN_E) ; Clear E bit
-  sta LCD_VIA_PORT
-  rts
-
 lcd_wait:
 ;Description
 ;  Loops until the LCD no longer shows a busy status
@@ -261,6 +289,35 @@ lcd_read_byte:
   rts
 
 
+; **********************************************************************
+; private hardware calls
+; **********************************************************************
+.if LCD_CONNECTION = 'V'
+lcd_send_nibble:
+;Description
+;  Sends the nibble to the LCD, toggling the E flag.
+;  The instructions are full byte, of course, but as this is a 4-bit connection
+;  only the lower nibble of the byte in the accumulator are actually sent.
+;Arguments
+;  A - LCD byte
+;Precondition
+;  LCD has powered up
+;Side Effects
+;  * LCD output mask is applied to the VIA DD
+;  * The nibble is sent to the LCD port via the VIA, strobing the E input 
+;None
+  pha
+  lda LCD_VIA_DDR ; Set LCD output mask
+  ora #(LCD_VIA_OUTPUTMASK)
+  sta LCD_VIA_DDR
+  pla
+  sta LCD_VIA_PORT
+  ora #(LCD_PIN_E) ; Set E bit to send instruction
+  sta LCD_VIA_PORT
+  eor #(LCD_PIN_E) ; Clear E bit
+  sta LCD_VIA_PORT
+  rts
+
 lcd_read_nibble:
 ;Description
 ;  reads nibble from lcd in 4-bit mode (note the RS flag is not set, so this is for reading the register right now)
@@ -292,3 +349,61 @@ lcd_read_nibble:
   pla
   plx
   rts
+.elseif LCD_CONNECTION = 'I'
+lcd_send_nibble:
+;Description
+;  Sends the nibble to the LCD, toggling the E flag.
+;  The instructions are full byte, of course, but as this is a 4-bit connection
+;  only the lower nibble of the byte in the accumulator are actually sent.
+;Arguments
+;  A - LCD byte
+;Precondition
+;  LCD has powered up
+;Side Effects
+;  * LCD output mask is applied to the VIA DD
+;  * The nibble is sent to the LCD port via the VIA, strobing the E input 
+;None
+  phx
+  tax
+  SendByteToI2C_macro 
+  txa
+  ora #(LCD_PIN_E) ; Set E bit to send instruction
+  SendByteToI2C_macro 
+  txa
+  SendByteToI2C_macro 
+  plx
+  rts
+
+lcd_read_nibble:
+;Description
+;  reads nibble from lcd in 4-bit mode (note the RS flag is not set, so this is for reading the register right now)
+;Arguments
+;  A - #LCD_PIN_RS mask OR #LCD_REGISTER_READ
+;Uses
+;  X - enabled read byte
+;Preconditions
+;  LCD is initialized and has its parameters set
+;  LCD is in 4 bit mode
+;Side Effects
+;  The read nibble is put into the accumulator as xxxx####
+  phx
+  pha
+  ora #LCD_PIN_RW ; apply the RW pin mask so that the lcd knows we are reading
+  SendByteToI2C_macro ; write the command
+  pla
+  pha
+  ora #LCD_PIN_E
+  SendByteToI2C_macro ; write the command
+  pla  
+  tax
+  ReadByteFromI2C_macro
+  pha 
+  txa
+  eor #LCD_PIN_E ; turn off enable strobe
+  SendByteToI2C_macro ; write the command  
+  pla
+  plx
+  rts
+.else
+.error "LCD_CONNECTION defined is not recognized, check defines.inc"
+.endif
