@@ -37,20 +37,24 @@ LCD_VIA_INPUTMASK = LCD_USES_VIA_INPUTMASK
 
 
 .macro SendByteToI2C_macro
+  phx
   pha
-  jsr CLR_I2C
   jsr I2C_START
   lda #LCD_I2C_ADDR
   asl
   clc
   jsr SEND_I2C_BYTE
   pla
+  pha
+  swn_macro
   jsr SEND_I2C_BYTE
   jsr I2C_STOP
+  pla
+  plx
 .endmacro
 
 .macro ReadByteFromI2C_macro
-  jsr CLR_I2C
+  phx
   jsr I2C_START
   lda #LCD_I2C_ADDR
   sec
@@ -63,6 +67,7 @@ LCD_VIA_INPUTMASK = LCD_USES_VIA_INPUTMASK
   jsr I2C_NAK
   jsr I2C_STOP
   pla
+  plx
 .endmacro
 
 
@@ -363,15 +368,11 @@ lcd_send_nibble:
 ;  * LCD output mask is applied to the VIA DD
 ;  * The nibble is sent to the LCD port via the VIA, strobing the E input 
 ;None
-  phx
-  tax
-  SendByteToI2C_macro 
-  txa
+  SendByteToI2C_macro
   ora #(LCD_PIN_E) ; Set E bit to send instruction
   SendByteToI2C_macro 
-  txa
+  eor #(LCD_PIN_E) ; Clear E bit
   SendByteToI2C_macro 
-  plx
   rts
 
 lcd_read_nibble:
@@ -387,20 +388,16 @@ lcd_read_nibble:
 ;Side Effects
 ;  The read nibble is put into the accumulator as xxxx####
   phx
-  pha
   ora #LCD_PIN_RW ; apply the RW pin mask so that the lcd knows we are reading
-  SendByteToI2C_macro ; write the command
-  pla
-  pha
+  SendByteToI2C_macro 
   ora #LCD_PIN_E
-  SendByteToI2C_macro ; write the command
-  pla  
+  SendByteToI2C_macro
   tax
-  ReadByteFromI2C_macro
-  pha 
+  ReadByteFromI2C_macro ; Read nibble
+  pha
   txa
-  eor #LCD_PIN_E ; turn off enable strobe
-  SendByteToI2C_macro ; write the command  
+  eor #LCD_PIN_E
+  SendByteToI2C_macro ; turn off enable strobe
   pla
   plx
   rts

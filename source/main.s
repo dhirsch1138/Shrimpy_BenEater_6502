@@ -45,7 +45,7 @@ reset:
   ldx #$ff
   txs
   jsr via_init
- ; jsr INIT_I2C
+  jsr INIT_I2C
   jsr setup_lcd
   jsr setup_via_timers  
   cli
@@ -79,8 +79,14 @@ interrupt:
 ;  None
 ;Side Effects
 ;  Handles and (hopefully) clears interrupts
+  pha
+  phy
+  phx
   jsr service_via1
 interrupt_cleared:
+  plx
+  ply
+  pla
   rti
 
 
