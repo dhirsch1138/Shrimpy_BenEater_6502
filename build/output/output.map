@@ -5,9 +5,9 @@ characters.o:
     CHAR_CODE         Offs=000000  Size=000049  Align=00001  Fill=0000
 i2c.o:
     I2C_RAM           Offs=000000  Size=000001  Align=00001  Fill=0000
-    I2C_CODE          Offs=000000  Size=00011A  Align=00001  Fill=0000
+    I2C_CODE          Offs=000000  Size=0000B2  Align=00001  Fill=0000
 lcd.o:
-    LCD_CODE          Offs=000000  Size=00016B  Align=00001  Fill=0000
+    LCD_CODE          Offs=000000  Size=0000C5  Align=00001  Fill=0000
 main.o:
     CODE              Offs=000000  Size=000190  Align=00001  Fill=0000
     MAIN_RAM          Offs=000000  Size=000009  Align=00001  Fill=0000
@@ -35,12 +35,12 @@ I2C_RAM               000309  000309  000001  00001
 WOZ_RAM               00030A  000388  00007F  00001
 CODE                  008000  00818F  000190  00001
 VIA_CODE              008190  0081C8  000039  00001
-LCD_CODE              0081C9  008333  00016B  00001
-SPI_CODE              008334  008371  00003E  00001
-WOZ_CODE              008372  00846B  0000FA  00001
-UTIL_CODE             00846C  0084AD  000042  00001
-CHAR_CODE             0084AE  0084F6  000049  00001
-I2C_CODE              0084F7  008610  00011A  00001
+LCD_CODE              0081C9  00828D  0000C5  00001
+SPI_CODE              00828E  0082CB  00003E  00001
+WOZ_CODE              0082CC  0083C5  0000FA  00001
+UTIL_CODE             0083C6  008407  000042  00001
+CHAR_CODE             008408  008450  000049  00001
+I2C_CODE              008451  008502  0000B2  00001
 VECTORS               00FFFA  00FFFF  000006  00001
 
 
@@ -48,20 +48,16 @@ Exports list by name:
 ---------------------
 ACIA_CMD                  000212 REA    ACIA_CTRL                 000213 REA    
 ACIA_DATA                 000210 REA    ACIA_STATUS               000211 REA    
-I2C_NAK                   008559 RLA    I2C_START                 0084F7 RLA    
-I2C_STOP                  00851C RLA    I2C_TEMP                  000309 RLA    
-INIT_I2C                  00857E RLA    RCV_I2C_BYTE              0085E6 RLA    
-SEND_I2C_BYTE             0085B6 RLA    VIA1_DDRA                 000203 REA    
+INIT_I2C                  0084A3 RLA    VIA1_DDRA                 000203 REA    
 VIA1_DDRB                 000202 REA    VIA1_IFR                  00020D REA    
 VIA1_PORTA                000201 REA    VIA1_PORTB                000200 REA    
 VIA1_T1CL                 000204 REA    __ACIA1_START__           000210 RLA    
-__VIA1_START__            000200 RLA    customcharset             0084AE RLA    
-delay_ms_10               00846C RLA    interrupt                 00802A RLA    
-lcd_init                  0081C9 RLA    lcd_instruction           0081E3 RLA    
-lcd_print_hex             00820B RLA    lcd_send_byte             0081F5 RLA    
-reset                     008000 RLA    util_joinnibbles          00849C RLA    
-via1_init_timer_1         0081A3 RLA    via_init                  008190 RLA    
-
+__VIA1_START__            000200 RLA    customcharset             008408 RLA    
+interrupt                 00802A RLA    lcd_init                  0081C9 RLA    
+lcd_instruction           0081E3 RLA    lcd_print_hex             00820B RLA    
+lcd_send_byte             0081F5 RLA    reset                     008000 RLA    
+util_joinnibbles          0083F6 RLA    via1_init_timer_1         0081A3 RLA    
+via_init                  008190 RLA    
 
 
 Exports list by value:
@@ -72,16 +68,12 @@ VIA1_DDRA                 000203 REA    VIA1_T1CL                 000204 REA
 VIA1_IFR                  00020D REA    ACIA_DATA                 000210 REA    
 __ACIA1_START__           000210 RLA    ACIA_STATUS               000211 REA    
 ACIA_CMD                  000212 REA    ACIA_CTRL                 000213 REA    
-I2C_TEMP                  000309 RLA    reset                     008000 RLA    
-interrupt                 00802A RLA    via_init                  008190 RLA    
-via1_init_timer_1         0081A3 RLA    lcd_init                  0081C9 RLA    
-lcd_instruction           0081E3 RLA    lcd_send_byte             0081F5 RLA    
-lcd_print_hex             00820B RLA    delay_ms_10               00846C RLA    
-util_joinnibbles          00849C RLA    customcharset             0084AE RLA    
-I2C_START                 0084F7 RLA    I2C_STOP                  00851C RLA    
-I2C_NAK                   008559 RLA    INIT_I2C                  00857E RLA    
-SEND_I2C_BYTE             0085B6 RLA    RCV_I2C_BYTE              0085E6 RLA    
-
+reset                     008000 RLA    interrupt                 00802A RLA    
+via_init                  008190 RLA    via1_init_timer_1         0081A3 RLA    
+lcd_init                  0081C9 RLA    lcd_instruction           0081E3 RLA    
+lcd_send_byte             0081F5 RLA    lcd_print_hex             00820B RLA    
+util_joinnibbles          0083F6 RLA    customcharset             008408 RLA    
+INIT_I2C                  0084A3 RLA    
 
 
 Imports list:
@@ -94,20 +86,8 @@ ACIA_DATA (acia.o):
     wozmon.o                  source/acia.inc(1)
 ACIA_STATUS (acia.o):
     wozmon.o                  source/acia.inc(2)
-I2C_NAK (i2c.o):
-    lcd.o                     source/i2c.inc(4)
-I2C_START (i2c.o):
-    lcd.o                     source/i2c.inc(1)
-I2C_STOP (i2c.o):
-    lcd.o                     source/i2c.inc(2)
-I2C_TEMP (i2c.o):
-    lcd.o                     source/i2c.inc(10)
 INIT_I2C (i2c.o):
     main.o                    source/i2c.inc(7)
-RCV_I2C_BYTE (i2c.o):
-    lcd.o                     source/i2c.inc(6)
-SEND_I2C_BYTE (i2c.o):
-    lcd.o                     source/i2c.inc(5)
 VIA1_DDRA (via.o):
     i2c.o                     source/via.inc(6)
 VIA1_DDRB (via.o):
@@ -128,8 +108,6 @@ __VIA1_START__ ([linker generated]):
     via.o                     source/via.s(6)
 customcharset (characters.o):
     main.o                    source/characters.inc(4)
-delay_ms_10 (util.o):
-    i2c.o                     source/util.inc(8)
 interrupt (main.o):
     reset_interrupt.o         source/main.inc(4)
 lcd_init (lcd.o):
