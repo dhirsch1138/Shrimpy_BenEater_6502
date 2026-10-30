@@ -1,3 +1,5 @@
+*** This feature is not being actively maintained, you are welcome to fork it and improve upon it ***
+
 # Shrimpy
 This is my attempt at slowly building up a 6502 based microcomputer loosely structured around Ben Eater's lessons. I will wander off and chase squirrels, wrestle with interesting problems, and generally follow the "rule of cool" when deciding what to do next.
 
